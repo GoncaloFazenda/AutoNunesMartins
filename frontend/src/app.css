@@ -1,0 +1,518 @@
+@import 'tailwindcss';
+
+@import '@fontsource/barlow/400.css';
+@import '@fontsource/barlow/500.css';
+@import '@fontsource/barlow/600.css';
+@import '@fontsource/barlow/700.css';
+@import '@fontsource/barlow/800.css';
+@import '@fontsource/barlow/900.css';
+@import '@fontsource/barlow/600-italic.css';
+@import '@fontsource/barlow/700-italic.css';
+@import '@fontsource/barlow/800-italic.css';
+@import '@fontsource/barlow/900-italic.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+
+@theme {
+  /* ───────── Brand ───────── */
+  --color-red: #e30613;
+  --color-red-soft: #ff3b49;
+  --color-red-deep: #a8030d;
+
+  /* ───────── Surfaces (dark default) ───────── */
+  --color-bg-0: #0a0a0b;
+  --color-bg-1: #131316;
+  --color-bg-2: #1b1c20;
+  --color-bg-3: #25262b;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.22);
+  --color-text: #f4f4f2;
+  --color-text-muted: #a8a8a4;
+  --color-text-faint: #6e6f73;
+
+  /* ───────── Semantic ───────── */
+  --color-success: #34c480;
+  --color-warning: #e0a040;
+  --color-info: #5c8def;
+
+  /* ───────── Typography ───────── */
+  --font-display: 'Barlow', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ───────── Radii (user's 2.2× scale) ───────── */
+  --radius-card: 6.6px;
+  --radius-btn: 4.4px;
+  --radius-chip: 0px;
+
+  /* ───────── Motion ───────── */
+  --ease-brand: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ───────── Light theme override ───────── */
+[data-theme='light'] {
+  --color-bg-0: #f4f2ee;
+  --color-bg-1: #ffffff;
+  --color-bg-2: #faf8f2;
+  --color-bg-3: #eeebe3;
+  --color-border: rgba(15, 15, 17, 0.08);
+  --color-border-strong: rgba(15, 15, 17, 0.18);
+  --color-text: #0f0f11;
+  --color-text-muted: #5a5c61;
+  --color-text-faint: #8a8c92;
+
+  --color-success: #1a7a4f;
+  --color-warning: #b26b00;
+  --color-info: #1e5bc2;
+}
+
+/* ───────── Base reset ───────── */
+html,
+body {
+  background: var(--color-bg-0);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  /*
+    Programmatic scrolls (anchor links, scrollIntoView, etc.) glide instead
+    of snapping. User-respect: clients with prefers-reduced-motion get the
+    instant default via the media query at the bottom of this file.
+  */
+  scroll-behavior: smooth;
+  /*
+    Reserve the scrollbar gutter so toggling overflow doesn't cause a
+    horizontal layout shift when the scrollbar appears/disappears.
+  */
+  scrollbar-gutter: stable;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  /*
+    Stop overscroll chaining at the body — keeps the rubber-band/refresh
+    gesture from triggering on the page edges when scrolling inside an
+    inner panel (notifications, search dropdown, kanban columns).
+  */
+  overscroll-behavior-y: contain;
+}
+
+/* ───────── Custom scrollbars ─────────
+   Thin, near-invisible by default. Track stays transparent so the page
+   chrome doesn't get a heavy gutter line. Thumb is a soft pill that
+   brightens on hover; the 2px transparent border + background-clip:
+   content-box trick keeps a little breathing room around the pill so it
+   never touches the surface edges. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+:global([data-theme='light']) * {
+  scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:active {
+  background: var(--color-red);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+[data-theme='light'] *::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+  background-clip: content-box;
+}
+[data-theme='light'] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.32);
+  background-clip: content-box;
+}
+[data-theme='light'] *::-webkit-scrollbar-thumb:active {
+  background: var(--color-red);
+  background-clip: content-box;
+}
+
+/* Honour reduced-motion: instantly snap programmatic scrolls instead of
+   sliding when the user prefers it. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+::selection {
+  background: var(--color-red);
+  color: white;
+}
+
+/*
+  ─── Icon stroke weight ─────────────────────────────────────────────────
+  The index.html prototype draws its icons with stroke-width: 1.8 (see the
+  `Sv` component on line 1413). lucide-svelte defaults to stroke-width: 2,
+  which makes the same Feather-style glyphs read visibly chunkier than the
+  prototype. Overriding to 1.8 across the board brings every lucide icon
+  in the app in line with the prototype's exact line weight.
+
+  This applies to ALL lucide icons including the activity log feed — the
+  feed's color + icon mapping is unchanged; only the stroke weight is
+  thinned, which actually makes the colors read cleaner.
+*/
+svg.lucide {
+  stroke-width: 1.8;
+}
+
+/* ───────── Interactive cursor (Tailwind v4 dropped this default) ───────── */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+[type='button']:not(:disabled),
+[type='submit']:not(:disabled),
+[type='reset']:not(:disabled),
+a[href],
+summary,
+label:has(input[type='checkbox']),
+label:has(input[type='radio']),
+label:has(input[type='file']),
+select:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role='button'][aria-disabled='true'],
+[type='button']:disabled,
+[type='submit']:disabled,
+[type='reset']:disabled,
+a[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+input[type='text']:not(:disabled),
+input[type='email']:not(:disabled),
+input[type='password']:not(:disabled),
+input[type='search']:not(:disabled),
+input[type='number']:not(:disabled),
+input[type='url']:not(:disabled),
+input[type='tel']:not(:disabled),
+input[type='date']:not(:disabled),
+textarea:not(:disabled) {
+  cursor: text;
+}
+
+/* ───────── Brand DNA: type recipes (match prototype index.html) ─────────
+   Prototype uses different weights / line-heights / tracking per element,
+   so we no longer group them under one rule. Each consumer applies its own. */
+.font-italic-hero {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.025em;
+  line-height: 0.92;
+}
+
+.font-mono-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/*
+  Canonical recipe for any numeric VALUE (KPI values, prices, chart totals,
+  hero stats, table number cells). The combination of JetBrains Mono +
+  tabular figures + normal style + slight negative tracking is what gives
+  the engineered, panel-like look in the prototype.
+
+  Verify in DevTools: font-feature-settings must resolve to "tnum" 1.
+  If it's empty, this rule didn't apply (likely overridden by italic class).
+  Use !important so existing utility classes like `italic`, `font-display`,
+  `font-bold` can stay on the element for layout sizing without fighting
+  the recipe.
+*/
+.num-value {
+  font-family: var(--font-mono) !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  font-feature-settings: 'tnum' 1 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* ───────── Brand DNA: red wedge (fixed right edge) ───────── */
+.app-wedge {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  background: linear-gradient(180deg, #e30613 0%, #b30410 100%);
+  z-index: 3;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/*
+  ─── Brand DNA: ambient red glow backdrop ───────────────────────────────
+  Matches the prototype's `.app::after` exactly: two soft red radial
+  gradients pinned to opposite corners of the full viewport. Anchored to
+  the viewport (position: fixed, inset: 0) so the glow doesn't move when
+  the page scrolls, and lives BEHIND the main content (the sibling
+  `.relative z-10` block puts content above it).
+*/
+.header-ambient {
+  position: fixed !important;
+  inset: 0 !important;
+}
+.header-ambient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(800px 500px at 20% 0%,
+      rgba(227, 6, 19, 0.10), transparent 60%),
+    radial-gradient(700px 400px at 90% 100%,
+      rgba(227, 6, 19, 0.08), transparent 70%);
+}
+/* Light theme — softer per prototype line 1382-1386. */
+[data-theme='light'] .header-ambient::before {
+  background:
+    radial-gradient(800px 500px at 20% 0%,
+      rgba(227, 6, 19, 0.04), transparent 60%),
+    radial-gradient(700px 400px at 90% 100%,
+      rgba(227, 6, 19, 0.03), transparent 70%);
+}
+
+/* ───────── Brand DNA: red icon | divider | label row ───────── */
+.spec-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.spec-row .spec-icon {
+  /* White icon, red divider — the dealership wants neutral icons with the red divider as the brand accent */
+  color: var(--color-text);
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  flex: 0 0 22px;
+}
+.spec-row .spec-icon svg,
+.spec-row svg.spec-icon {
+  width: 22px;
+  height: 22px;
+}
+.spec-row .spec-sep {
+  width: 1.5px;
+  height: 22px;
+  background: var(--color-red);
+  flex: 0 0 1.5px;
+}
+.spec-row .spec-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ───────── Animations ───────── */
+* {
+  transition-timing-function: var(--ease-brand);
+}
+
+@keyframes pulse-red {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, #e30613 50%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.ping-dot::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-red);
+  animation: pulse-red 2s var(--ease-brand) infinite;
+}
+
+/*
+  ─── Clerk widget dark-mode text overrides ──────────────────────────────
+  Even with `baseTheme: dark`, Clerk's <SignIn> and <UserProfile> have a few
+  text elements that fall back to dark colors and become unreadable on our
+  dark canvas (form descriptions, helper text, the "use another method" link,
+  the "or" divider, the verification code hint, etc.).
+
+  Targets Clerk's stable `cl-*` element classes and forces high-contrast
+  colors when the app is in dark mode. Light mode is left untouched (Clerk's
+  defaults are fine there).
+*/
+[data-theme='dark'] :is(.cl-rootBox, .cl-card) {
+  color: var(--color-text);
+}
+
+[data-theme='dark']
+  :is(
+    .cl-headerTitle,
+    .cl-formFieldLabel,
+    .cl-formFieldInput,
+    .cl-formFieldInputShowPasswordButton,
+    .cl-otpCodeFieldInput,
+    .cl-identityPreviewText,
+    .cl-userButtonOuterIdentifier,
+    .cl-profileSectionTitleText,
+    .cl-profileSectionPrimaryButton,
+    .cl-accordionTriggerButton,
+    .cl-menuButton,
+    .cl-tableCell,
+    .cl-navbarButtonText,
+    .cl-navbarButton,
+    .cl-pageScrollBox,
+    .cl-pageHeading,
+    .cl-text,
+    .cl-headerBackLink,
+    .cl-userPreviewMainIdentifier,
+    .cl-profilePage
+  ) {
+  color: var(--color-text) !important;
+}
+
+[data-theme='dark']
+  :is(
+    .cl-headerSubtitle,
+    .cl-formFieldHintText,
+    .cl-formFieldInfoText,
+    .cl-formFieldSuccessText,
+    .cl-footerActionText,
+    .cl-formResendCodeLink,
+    .cl-otpCodeFieldErrorText,
+    .cl-formFieldErrorText,
+    .cl-dividerText,
+    .cl-userPreviewSecondaryIdentifier,
+    .cl-profileSectionContent,
+    .cl-profileSectionSubtitle,
+    .cl-badge,
+    .cl-helperText,
+    .cl-formHeaderSubtitle,
+    .cl-formHeaderTitle,
+    .cl-navbarMobileMenuRow,
+    .cl-tagPillText
+  ) {
+  color: var(--color-text-muted) !important;
+}
+
+/* Inputs: ensure the typed value is light on dark surface. */
+[data-theme='dark'] .cl-formFieldInput,
+[data-theme='dark'] .cl-otpCodeFieldInput,
+[data-theme='dark'] .cl-input {
+  background: #1b1c20 !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border-strong) !important;
+}
+[data-theme='dark'] .cl-formFieldInput::placeholder,
+[data-theme='dark'] .cl-input::placeholder {
+  color: var(--color-text-faint) !important;
+}
+
+/* Selected dropdown items / hover items inside Clerk popovers */
+[data-theme='dark'] :is(.cl-selectButton, .cl-menuItem, .cl-dropdownActionButton) {
+  color: var(--color-text) !important;
+  background: transparent !important;
+}
+[data-theme='dark']
+  :is(.cl-selectButton:hover, .cl-menuItem:hover, .cl-dropdownActionButton:hover) {
+  background: color-mix(in oklab, var(--color-red) 8%, transparent) !important;
+}
+
+/* Action links (e.g. "Forgot password?", "Use another method", footer
+   "Sign up" link) — already brand-red, but ensure they stay visible. */
+[data-theme='dark']
+  :is(
+    .cl-footerActionLink,
+    .cl-formResendCodeLink,
+    .cl-alternativeMethodsBlockButton,
+    .cl-formFieldAction,
+    .cl-headerBackLink
+  ) {
+  color: var(--color-red) !important;
+}
+[data-theme='dark']
+  :is(
+    .cl-footerActionLink:hover,
+    .cl-formResendCodeLink:hover,
+    .cl-alternativeMethodsBlockButton:hover,
+    .cl-formFieldAction:hover
+  ) {
+  color: var(--color-red-soft) !important;
+}
+
+/* Profile page navbar (left rail) — keep text legible in both states. */
+[data-theme='dark'] .cl-navbarButton {
+  color: var(--color-text-muted) !important;
+}
+[data-theme='dark'] .cl-navbarButton:hover,
+[data-theme='dark'] .cl-navbarButton[data-active='true'] {
+  color: var(--color-text) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Buttons inside the profile page (Add email / Update password / etc.) */
+[data-theme='dark'] .cl-profileSectionPrimaryButton {
+  color: var(--color-text) !important;
+}
+[data-theme='dark'] .cl-profileSectionPrimaryButton:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Icons inside Clerk widgets — neutralize hardcoded dark fills. */
+[data-theme='dark']
+  :is(
+    .cl-userButtonPopoverActionButtonIcon,
+    .cl-menuButtonEllipsis,
+    .cl-formFieldInputShowPasswordIcon
+  ) {
+  color: var(--color-text-muted) !important;
+}

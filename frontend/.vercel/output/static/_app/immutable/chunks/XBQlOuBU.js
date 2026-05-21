@@ -1,0 +1,6 @@
+import{l as n,a as c}from"./CwE2NVlH.js";import"./DRjSiAu2.js";import{V as i,ac as p,y as m}from"./BdTmDimc.js";import{s as d}from"./Dn5YTF8g.js";import{I as $}from"./DJtQMN7z.js";function y(t,a){const s=n(a,["children","$$slots","$$events","$$legacy"]);/**
+ * @license lucide-svelte v0.460.1 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const o=[["path",{d:"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"}],["circle",{cx:"12",cy:"12",r:"3"}]];$(t,c({name:"settings"},()=>s,{get iconNode(){return o},children:(r,f)=>{var l=i(),e=p(l);d(e,a,"default",{},null),m(r,l)},$$slots:{default:!0}}))}export{y as S};

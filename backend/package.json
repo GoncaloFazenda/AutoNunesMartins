@@ -1,0 +1,55 @@
+{
+  "name": "@anm/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "check:env": "tsx scripts/check-env.ts",
+    "supabase:bucket": "tsx scripts/create-bucket.ts"
+  },
+  "dependencies": {
+    "@anm/types": "workspace:^",
+    "@clerk/express": "^1.3.21",
+    "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.46.2",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "decimal.js": "^10.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "helmet": "^8.0.0",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0",
+    "pino-pretty": "^13.0.0",
+    "svix": "^1.42.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
+    "eslint": "^9.17.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

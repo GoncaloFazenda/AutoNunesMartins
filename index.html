@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="color-scheme" content="dark"/>
+<title>Painel · v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Saira+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --red: #E30613;
+  --red-soft: #FF3B49;
+  --red-deep: #A8030D;
+  --bg-0: #0A0A0B;          /* page */
+  --bg-1: #131316;          /* cards */
+  --bg-2: #1B1C20;          /* elevated cards */
+  --bg-3: #25262B;          /* surface-2 */
+  --border: rgba(255,255,255,.06);
+  --border-strong: rgba(255,255,255,.12);
+  --text: #F4F4F2;
+  --text-muted: #A8A8A4;
+  --text-faint: #6E6F73;
+  --success: #34C480;
+  --warning: #E0A040;
+  --info: #5C8DEF;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Barlow", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg-0);
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 4px; border: 2px solid var(--bg-0); }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); }
+
+/* ============== App shell ============== */
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+/* The red diagonal wedge from brand graphics — pinned to the right edge */
+.app::before {
+  content: "";
+  position: fixed;
+  top: -8%;
+  right: -8%;
+  width: 28vw;
+  height: 120vh;
+  background: linear-gradient(180deg, #E30613 0%, #B30410 100%);
+  clip-path: polygon(45% 0%, 100% 0%, 100% 100%, 18% 100%);
+  z-index: 0;
+  pointer-events: none;
+  opacity: .88;
+}
+.app::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(800px 500px at 20% 0%, rgba(227,6,19,.10), transparent 60%),
+    radial-gradient(700px 400px at 90% 100%, rgba(227,6,19,.08), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============== Sidebar ============== */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: linear-gradient(180deg, #0A0A0B 0%, #0E0E10 100%);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  z-index: 2;
+}
+.sb-brand {
+  padding: 22px 22px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.sb-brand .logo {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 20px;
+  letter-spacing: -.02em;
+  line-height: .95;
+}
+.sb-brand .logo .red { color: var(--red); }
+.sb-brand .logo .stack { display: flex; flex-direction: column; }
+.sb-brand .logo .stack span:nth-child(2) { padding-left: 6px; }
+.sb-brand .tag {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .25em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+.sb-brand .tag-it {
+  font-family: "Barlow", sans-serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+  text-transform: none;
+  margin-top: 2px;
+  display: block;
+}
+
+.sb-section {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .22em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  padding: 18px 22px 8px;
+}
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 22px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  position: relative;
+  transition: color .12s, background .12s;
+}
+.sb-item:hover { color: var(--text); background: rgba(255,255,255,.02); }
+.sb-item.active {
+  color: var(--text);
+  background: rgba(227,6,19,.08);
+}
+.sb-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 3px;
+  background: var(--red);
+}
+.sb-item .icn { width: 18px; height: 18px; flex: 0 0 18px; color: var(--red); }
+.sb-item:not(.active) .icn { color: var(--text-faint); }
+.sb-item:hover:not(.active) .icn { color: var(--red); }
+.sb-item .badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  background: var(--red);
+  color: white;
+  border-radius: 2px;
+  font-weight: 600;
+}
+.sb-item .badge.dim {
+  background: rgba(255,255,255,.06);
+  color: var(--text-muted);
+}
+
+.sb-foot {
+  margin-top: auto;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sb-foot .av {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red), var(--red-deep));
+  color: white;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.sb-foot .av::after {
+  content: "";
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 10px; height: 10px;
+  background: var(--success);
+  border: 2px solid #0E0E10;
+  border-radius: 50%;
+}
+.sb-foot .who { line-height: 1.15; min-width: 0; }
+.sb-foot .nm { font-weight: 600; font-size: 13px; }
+.sb-foot .role { font-size: 11px; color: var(--text-faint); }
+.sb-foot button {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+}
+.sb-foot button:hover { color: var(--text); background: rgba(255,255,255,.04); }
+
+/* ============== Main ============== */
+.main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 36px 60px;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--border);
+}
+.crumbs {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.crumbs .red-tick {
+  width: 6px; height: 6px;
+  background: var(--red);
+  display: inline-block;
+}
+.crumbs b { color: var(--text); font-weight: 600; }
+
+.search {
+  flex: 1;
+  max-width: 440px;
+  position: relative;
+}
+.search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px; height: 15px;
+  color: var(--text-faint);
+}
+.search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px 0 38px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color .15s, background .15s;
+}
+.search input:focus { border-color: var(--red); background: rgba(255,255,255,.05); }
+.search .kbd {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  display: flex; gap: 3px;
+}
+.kbd-key {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+}
+
+.spacer { flex: 1; }
+.tb-actions { display: flex; align-items: center; gap: 8px; }
+.icbtn {
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all .12s;
+}
+.icbtn:hover { border-color: var(--red); color: var(--text); }
+.icbtn .ping {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 2px solid var(--bg-0);
+}
+.cta {
+  height: 38px;
+  padding: 0 18px;
+  background: var(--red);
+  color: white;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-style: italic;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  transition: background .12s;
+}
+.cta:hover { background: var(--red-soft); }
+
+/* ============== Hero block ============== */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 0;
+  margin-top: 28px;
+  margin-bottom: 28px;
+  background: linear-gradient(135deg, #131316 0%, #0F0F11 100%);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero-left {
+  padding: 36px 36px 32px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .25em;
+  color: var(--red);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.hero-eyebrow::before {
+  content: "";
+  width: 20px; height: 1px;
+  background: var(--red);
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 56px;
+  line-height: .92;
+  letter-spacing: -.025em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+.hero-title .red { color: var(--red); }
+.hero-sub {
+  color: var(--text-muted);
+  font-size: 14.5px;
+  line-height: 1.5;
+  max-width: 360px;
+  margin: 0 0 28px;
+}
+
+/* The signature red-icon │ divider │ value spec list */
+.spec-list {
+  display: grid;
+  gap: 14px;
+  margin-bottom: auto;
+}
+.spec-row {
+  display: grid;
+  grid-template-columns: 26px 1px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+.spec-row .ic {
+  width: 26px; height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+}
+.spec-row .ic svg { width: 22px; height: 22px; }
+.spec-row .sep {
+  background: var(--red);
+  width: 1.5px;
+  height: 26px;
+  justify-self: center;
+}
+.spec-row .val {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: .005em;
+  color: var(--text);
+}
+.spec-row .val small {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+  margin-top: 2px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+}
+.btn-pri {
+  padding: 11px 18px;
+  background: var(--red);
+  color: white;
+  border: 0;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-style: italic;
+  transition: background .12s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-pri:hover { background: var(--red-soft); }
+.btn-out {
+  padding: 11px 18px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .12s;
+  font-family: var(--font-display);
+  font-style: italic;
+}
+.btn-out:hover { border-color: var(--red); }
+
+.hero-right {
+  position: relative;
+  background: linear-gradient(135deg, #1A1A1D 0%, #0A0A0B 100%);
+  overflow: hidden;
+  min-height: 460px;
+}
+.hero-right::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  right: -15%;
+  width: 50%;
+  height: 130%;
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-deep) 100%);
+  clip-path: polygon(35% 0%, 100% 0%, 100% 100%, 5% 100%);
+  opacity: .92;
+}
+.hero-right::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 380px at 30% 70%, rgba(227,6,19,.18), transparent 60%),
+    repeating-linear-gradient(90deg, transparent 0 60px, rgba(255,255,255,.015) 60px 61px);
+}
+.hero-right .car {
+  position: absolute;
+  bottom: 8%;
+  left: 4%;
+  right: 8%;
+  z-index: 1;
+}
+.hero-right .car svg { width: 100%; height: auto; filter: drop-shadow(0 30px 40px rgba(0,0,0,.6)); }
+.hero-tag {
+  position: absolute;
+  top: 24px; left: 24px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .25em;
+  color: rgba(255,255,255,.45);
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.hero-tag .dot { width: 6px; height: 6px; background: white; border-radius: 50%; }
+.hero-plate {
+  position: absolute;
+  bottom: 24px; left: 24px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0,0,0,.5);
+  border: 1px solid rgba(255,255,255,.15);
+  padding: 4px 10px 4px 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .15em;
+  color: white;
+}
+.hero-plate::before {
+  content: "PT";
+  background: var(--info);
+  color: white;
+  font-size: 9px;
+  padding: 4px 5px;
+  margin-right: 8px;
+  letter-spacing: .1em;
+  font-weight: 700;
+}
+.hero-stats {
+  position: absolute;
+  top: 24px; right: 24px;
+  z-index: 2;
+  display: flex;
+  gap: 0;
+}
+.hero-stat {
+  text-align: right;
+  padding: 0 18px;
+  border-right: 1px solid rgba(255,255,255,.18);
+}
+.hero-stat:last-child { border-right: 0; padding-right: 0; }
+.hero-stat .n {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -.01em;
+  color: white;
+  line-height: 1;
+}
+.hero-stat .l {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: rgba(255,255,255,.65);
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+/* ============== Value props strip (from social media) ============== */
+.values-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  background: linear-gradient(180deg, #0E0E10 0%, #131316 100%);
+  border: 1px solid var(--border);
+  border-top: 0;
+  margin-top: -28px;
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 1;
+}
+.value-cell {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 18px 24px;
+  border-right: 1px solid var(--border);
+}
+.value-cell:last-child { border-right: 0; }
+.value-cell .check {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--red);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+.value-cell .lbl {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.25;
+  letter-spacing: -.005em;
+}
+.value-cell .lbl small {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .15em;
+  color: var(--text-faint);
+  font-weight: 400;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* ============== KPIs ============== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+.gc-3 { grid-column: span 3; }
+.gc-4 { grid-column: span 4; }
+.gc-5 { grid-column: span 5; }
+.gc-6 { grid-column: span 6; }
+.gc-7 { grid-column: span 7; }
+.gc-8 { grid-column: span 8; }
+.gc-12 { grid-column: span 12; }
+@media (max-width: 1280px) {
+  .gc-3, .gc-4, .gc-5, .gc-7, .gc-8 { grid-column: span 6; }
+}
+
+.kpi {
+  background: linear-gradient(180deg, #131316 0%, #101012 100%);
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--red);
+  opacity: 0;
+  transition: opacity .15s;
+}
+.kpi:hover::before { opacity: 1; }
+.kpi-row {
+  display: grid;
+  grid-template-columns: 26px 1px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.kpi-row .ic { color: var(--red); width: 22px; height: 22px; }
+.kpi-row .sep { background: var(--red); width: 1.5px; height: 26px; }
+.kpi-row .lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.kpi .v {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 38px;
+  line-height: .95;
+  letter-spacing: -.025em;
+}
+.kpi .v small {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+.kpi .delta {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.kpi .delta.up { color: var(--success); }
+.kpi .delta.down { color: var(--red-soft); }
+.kpi .delta .vs { color: var(--text-faint); margin-left: 6px; }
+.kpi .spark {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 50%; height: 36px;
+  opacity: .6;
+}
+
+/* ============== Panels ============== */
+.panel {
+  background: linear-gradient(180deg, #131316 0%, #101012 100%);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.panel-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-hd .ttl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.panel-hd .ttl .ic {
+  color: var(--red);
+  width: 18px; height: 18px;
+}
+.panel-hd .ttl .sep {
+  background: var(--red);
+  width: 1.5px;
+  height: 22px;
+}
+.panel-hd .ttl h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 18px;
+  letter-spacing: -.01em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.panel-hd .sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .15em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+.panel-hd .actions { display: flex; gap: 8px; align-items: center; }
+.panel-bd { padding: 22px; }
+.panel-bd.flush { padding: 0; }
+
+.chip-grp {
+  display: inline-flex;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  padding: 3px;
+}
+.chip-grp button {
+  background: transparent;
+  border: 0;
+  padding: 4px 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.chip-grp button.on {
+  background: var(--red);
+  color: white;
+}
+
+/* Sales chart */
+.chart-totals { display: flex; gap: 28px; margin-bottom: 14px; }
+.chart-totals .num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 26px;
+  letter-spacing: -.02em;
+  line-height: 1;
+}
+.chart-totals .lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .15em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+/* AI Leads */
+.ai-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .12s;
+}
+.ai-row:hover { background: rgba(227,6,19,.04); }
+.ai-row:last-child { border-bottom: 0; }
+.ai-score {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: conic-gradient(from -90deg, var(--red) var(--p), rgba(255,255,255,.08) var(--p));
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ai-score::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: #131316;
+  border-radius: 50%;
+}
+.ai-score span {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  color: white;
+}
+.ai-row .nm { font-weight: 600; font-size: 13.5px; }
+.ai-row .det {
+  color: var(--text-faint);
+  font-size: 11.5px;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+.ai-row .arr { color: var(--red); width: 16px; height: 16px; }
+
+.panel-ft {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 22px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+.panel-ft a {
+  color: var(--red);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Schedule */
+.sch-row {
+  display: grid;
+  grid-template-columns: 60px 1px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.sch-row:last-child { border-bottom: 0; }
+.sch-row .h {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--red);
+  letter-spacing: -.01em;
+  line-height: 1;
+  text-align: right;
+}
+.sch-row .h small {
+  display: block;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: var(--text-faint);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.sch-row .sep { background: var(--red); width: 1.5px; height: 32px; justify-self: center; }
+.sch-row .body .who { font-weight: 600; font-size: 14px; }
+.sch-row .body .what { color: var(--text-muted); font-size: 12px; margin-top: 3px; }
+.sch-row .tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .15em;
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.sch-row .tag.red { color: var(--red); border-color: var(--red); }
+.sch-row .tag.gold { color: var(--warning); border-color: rgba(224,160,64,.4); }
+.sch-row .tag.blue { color: var(--info); border-color: rgba(92,141,239,.4); }
+.sch-row .tag.green { color: var(--success); border-color: rgba(52,196,128,.4); }
+
+/* Pipeline */
+.pipe {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.pipe-col { border-right: 1px solid var(--border); min-height: 280px; }
+.pipe-col:last-child { border-right: 0; }
+.pipe-h {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pipe-h .nm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text);
+  font-weight: 600;
+}
+.pipe-h .nm .dot { width: 7px; height: 7px; border-radius: 50%; }
+.pipe-h .ct {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  background: rgba(255,255,255,.06);
+  color: var(--text-muted);
+}
+.pipe-b { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.deal {
+  background: rgba(255,255,255,.025);
+  border: 1px solid var(--border);
+  padding: 12px;
+  cursor: grab;
+  transition: border-color .12s, transform .12s;
+}
+.deal:hover { border-color: var(--red); transform: translateY(-1px); }
+.deal .car {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: -.005em;
+}
+.deal .meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.deal .price { color: var(--red); font-weight: 700; }
+.deal .who { color: var(--text-faint); display: inline-flex; align-items: center; gap: 6px; }
+.deal .who .av {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: linear-gradient(135deg, #2C2D31, #4A4D54);
+  color: white;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+}
+
+/* Inventory table */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tbl th, .tbl td {
+  text-align: left;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.tbl th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  background: rgba(255,255,255,.02);
+}
+.tbl tbody tr { transition: background .1s; cursor: pointer; }
+.tbl tbody tr:hover { background: rgba(227,6,19,.05); }
+.tbl .nm-cell { display: flex; align-items: center; gap: 12px; }
+.tbl .thumb {
+  width: 44px; height: 32px;
+  background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(0,0,0,.4));
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+}
+.tbl .nm-cell .nm { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+.tbl .nm-cell .vin { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-faint); letter-spacing: .04em; margin-top: 2px; }
+.tbl .num { font-family: var(--font-mono); }
+.tbl .price { color: var(--red); font-weight: 700; }
+.tbl .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  padding: 3px 8px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.tbl .badge .d { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.tbl .badge.green { color: var(--success); border-color: rgba(52,196,128,.4); }
+.tbl .badge.gold { color: var(--warning); border-color: rgba(224,160,64,.4); }
+.tbl .badge.blue { color: var(--info); border-color: rgba(92,141,239,.4); }
+.tbl .badge.red { color: var(--red); border-color: rgba(227,6,19,.5); }
+
+/* Tiny utility */
+.flex { display: flex; }
+.mt-1 { margin-top: 16px; }
+.mt-2 { margin-top: 28px; }
+
+/* Page head */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  margin-top: 28px;
+}
+.page-head h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 38px;
+  letter-spacing: -.025em;
+  margin: 0 0 4px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.page-head h1 em { color: var(--red); font-style: italic; }
+.page-head .sub-info {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+.page-head .sub-info .red { color: var(--red); }
+.page-head-actions { display: flex; gap: 8px; }
+
+/* ============================================
+   TWEAKS — runtime knobs
+   ============================================ */
+:root { --r-scale: 0.5; --wedge-opacity: .88; }
+
+/* Font presets */
+[data-font="barlow"]    { --font-display: "Barlow", system-ui, sans-serif;          --font-sans: "Inter", system-ui, sans-serif; }
+[data-font="oswald"]    { --font-display: "Oswald", system-ui, sans-serif;          --font-sans: "DM Sans", system-ui, sans-serif; }
+[data-font="bebas"]     { --font-display: "Bebas Neue", system-ui, sans-serif;      --font-sans: "Manrope", system-ui, sans-serif; }
+[data-font="saira"]     { --font-display: "Saira Condensed", system-ui, sans-serif; --font-sans: "IBM Plex Sans", system-ui, sans-serif; }
+[data-font="editorial"] { --font-display: "Playfair Display", Georgia, serif;       --font-sans: "Inter", system-ui, sans-serif; }
+
+/* Single-weight display fonts: don't try to bold them */
+[data-font="bebas"] .hero-title,
+[data-font="bebas"] .page-head h1,
+[data-font="bebas"] .kpi .v,
+[data-font="bebas"] .panel-hd .ttl h3,
+[data-font="bebas"] .deal .car,
+[data-font="bebas"] .tbl .nm-cell .nm,
+[data-font="bebas"] .sch-row .h,
+[data-font="bebas"] .btn-pri,
+[data-font="bebas"] .cta { font-weight: 400; letter-spacing: .01em; }
+
+[data-font="editorial"] .hero-title,
+[data-font="editorial"] .page-head h1 { font-weight: 500; }
+
+/* Radius scale (v2 is sharp by default; tweak lifts it) */
+.kpi, .panel, .deal, .hero, .pipe-card, .tbl, .hero-right { border-radius: calc(3px * var(--r-scale, 0)); }
+.btn-pri, .btn-out, .cta, .icbtn { border-radius: calc(2px * var(--r-scale, 0)); }
+
+/* Density */
+[data-density="compact"] .panel-bd { padding: 14px; }
+[data-density="compact"] .panel-hd { padding: 12px 16px 10px; }
+[data-density="compact"] .kpi { padding: 14px 16px; }
+[data-density="compact"] .hero-left { padding: 24px 24px 22px; }
+[data-density="compact"] .main { padding: 0 22px 40px; }
+[data-density="comfy"] .panel-bd { padding: 30px; }
+[data-density="comfy"] .panel-hd { padding: 22px 28px 18px; }
+[data-density="comfy"] .kpi { padding: 26px 28px; }
+[data-density="comfy"] .hero-left { padding: 44px 44px 40px; }
+[data-density="comfy"] .main { padding: 0 48px 80px; }
+
+/* Border emphasis */
+[data-border="hairline"] { --border: rgba(255,255,255,.03); --border-strong: rgba(255,255,255,.07); }
+[data-border="crisp"]    { --border: rgba(255,255,255,.12); --border-strong: rgba(255,255,255,.22); }
+
+/* Accent style */
+[data-accent="outline"] .btn-pri,
+[data-accent="outline"] .cta {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+[data-accent="outline"] .btn-pri:hover,
+[data-accent="outline"] .cta:hover {
+  background: rgba(227,6,19,.08);
+}
+[data-accent="muted"] .btn-pri,
+[data-accent="muted"] .cta {
+  background: #1F2024;
+  color: white;
+  border: 1px solid rgba(255,255,255,.14);
+}
+[data-accent="muted"] .btn-pri:hover,
+[data-accent="muted"] .cta:hover {
+  background: #2A2B2F;
+}
+
+/* Uppercase labels */
+[data-upper="0"] .hero-eyebrow,
+[data-upper="0"] .crumbs,
+[data-upper="0"] .sb-section,
+[data-upper="0"] .kpi-row .lbl,
+[data-upper="0"] .hero-stat .l,
+[data-upper="0"] .panel-hd .ttl h3,
+[data-upper="0"] .panel-hd .sub,
+[data-upper="0"] .chart-totals .lbl,
+[data-upper="0"] .chip-grp button,
+[data-upper="0"] .page-head h1,
+[data-upper="0"] .hero-title,
+[data-upper="0"] .tbl th,
+[data-upper="0"] .pipe-h .nm,
+[data-upper="0"] .tbl .badge,
+[data-upper="0"] .sch-row .tag,
+[data-upper="0"] .sb-brand .tag,
+[data-upper="0"] .hero-tag,
+[data-upper="0"] .page-head .sub-info {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Mono numerics */
+[data-mono-num="1"] .kpi .v,
+[data-mono-num="1"] .chart-totals .num,
+[data-mono-num="1"] .tbl .price,
+[data-mono-num="1"] .hero-stat .n,
+[data-mono-num="1"] .deal .price {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -.01em;
+}
+
+/* Italic headlines */
+[data-italic-h="0"] .hero-title,
+[data-italic-h="0"] .panel-hd .ttl h3,
+[data-italic-h="0"] .kpi .v,
+[data-italic-h="0"] .page-head h1,
+[data-italic-h="0"] .btn-pri,
+[data-italic-h="0"] .cta,
+[data-italic-h="0"] .deal .car,
+[data-italic-h="0"] .tbl .nm-cell .nm,
+[data-italic-h="0"] .sch-row .h,
+[data-italic-h="0"] .hero-stat .n,
+[data-italic-h="0"] .sb-brand .logo {
+  font-style: normal;
+}
+
+/* Gradient mode */
+[data-gradient="off"] .kpi,
+[data-gradient="off"] .panel { background: var(--bg-1); }
+[data-gradient="off"] .hero { background: var(--bg-1); }
+[data-gradient="off"] .hero-right { background: linear-gradient(135deg, #161618 0%, #0C0C0E 100%); }
+[data-gradient="off"] .app::after { display: none; }
+[data-gradient="off"] .values-strip { background: var(--bg-1); }
+
+[data-gradient="rich"] .app::after {
+  background:
+    radial-gradient(1000px 700px at 15% 0%, rgba(227,6,19,.18), transparent 60%),
+    radial-gradient(900px 600px at 90% 100%, rgba(227,6,19,.14), transparent 70%) !important;
+  opacity: 1 !important;
+}
+
+/* Wedge intensity + position */
+.app::before { opacity: var(--wedge-opacity, .88); }
+
+[data-wedge="off"] .app::before { display: none; }
+[data-wedge="edge"] .app::before {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 100vh;
+  clip-path: none;
+  background: linear-gradient(180deg, #E30613 0%, #B30410 100%);
+  position: fixed;
+}
+[data-wedge="header"] .app::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 38%;
+  height: 380px;
+  clip-path: polygon(35% 0%, 100% 0%, 100% 100%, 62% 100%);
+  background: linear-gradient(180deg, #E30613 0%, #B30410 100%);
+}
+
+/* ============================================
+   LIGHT THEME
+   ============================================ */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-0: #F4F2EE;
+  --bg-1: #FFFFFF;
+  --bg-2: #FAF8F2;
+  --bg-3: #EEEBE3;
+  --border: rgba(15,15,17,.08);
+  --border-strong: rgba(15,15,17,.18);
+  --text: #0F0F11;
+  --text-muted: #5A5C61;
+  --text-faint: #8A8C92;
+}
+
+/* Sidebar */
+[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAF8F2 100%);
+  border-right: 1px solid var(--border);
+}
+[data-theme="light"] .sb-brand,
+[data-theme="light"] .sb-foot { border-color: var(--border); }
+[data-theme="light"] .sb-foot button:hover { background: rgba(15,15,17,.05); color: var(--text); }
+[data-theme="light"] .sb-foot .av::after { border-color: #FFFFFF; }
+[data-theme="light"] .sb-item:hover { background: rgba(15,15,17,.04); color: var(--text); }
+[data-theme="light"] .sb-item.active { background: rgba(227,6,19,.08); color: var(--text); }
+[data-theme="light"] .sb-item:not(.active) .icn { color: var(--text-faint); }
+[data-theme="light"] .sb-item .badge.dim { background: rgba(15,15,17,.06); color: var(--text-muted); }
+[data-theme="light"] .sb-section { color: var(--text-faint); }
+[data-theme="light"] .sb-foot .role { color: var(--text-faint); }
+[data-theme="light"] .sb-brand .tag { color: var(--text-faint); }
+[data-theme="light"] .sb-brand .tag-it { color: var(--text-muted); }
+
+/* Topbar elements */
+[data-theme="light"] .search input {
+  background: rgba(15,15,17,.03);
+  border-color: rgba(15,15,17,.10);
+  color: var(--text);
+}
+[data-theme="light"] .search input::placeholder { color: var(--text-faint); }
+[data-theme="light"] .search input:focus {
+  background: rgba(15,15,17,.05);
+  border-color: var(--red);
+}
+[data-theme="light"] .kbd-key {
+  background: rgba(15,15,17,.05);
+  border-color: rgba(15,15,17,.10);
+  color: var(--text-muted);
+}
+[data-theme="light"] .icbtn {
+  background: rgba(15,15,17,.03);
+  border-color: rgba(15,15,17,.10);
+  color: var(--text-muted);
+}
+[data-theme="light"] .icbtn:hover {
+  background: rgba(15,15,17,.06);
+  color: var(--text);
+  border-color: var(--red);
+}
+[data-theme="light"] .icbtn .ping { border-color: var(--bg-0); }
+[data-theme="light"] .crumbs b { color: var(--text); }
+
+/* Hero (left side becomes light; right side stays dark for drama) */
+[data-theme="light"] .hero {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FAF8F2 100%);
+  border-color: var(--border);
+}
+[data-theme="light"] .hero-sub { color: var(--text-muted); }
+[data-theme="light"] .hero-sub strong { color: var(--text); }
+[data-theme="light"] .spec-row .val { color: var(--text); }
+[data-theme="light"] .spec-row .val small { color: var(--text-muted); }
+[data-theme="light"] .btn-out { border-color: var(--border-strong); color: var(--text); }
+[data-theme="light"] .btn-out:hover { border-color: var(--red); }
+
+/* Values strip */
+[data-theme="light"] .values-strip {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAF8F2 100%);
+  border-color: var(--border);
+}
+[data-theme="light"] .value-cell { border-right-color: var(--border); }
+
+/* KPI cards */
+[data-theme="light"] .kpi {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAF8F2 100%);
+  border-color: var(--border);
+}
+[data-theme="light"] .kpi-row .lbl { color: var(--text-muted); }
+
+/* Panel base */
+[data-theme="light"] .panel {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAF8F2 100%);
+  border-color: var(--border);
+}
+[data-theme="light"] .panel-hd { border-bottom-color: var(--border); }
+[data-theme="light"] .panel-ft { border-top-color: var(--border); color: var(--text-faint); }
+[data-theme="light"] .chip-grp {
+  background: rgba(15,15,17,.04);
+  border-color: var(--border);
+}
+[data-theme="light"] .chip-grp button { color: var(--text-muted); }
+[data-theme="light"] .panel-hd .sub { color: var(--text-faint); }
+
+/* AI panel — keep dark for high contrast */
+[data-theme="light"] .ai-row { border-bottom-color: rgba(255,255,255,.05); }
+[data-theme="light"] .ai-score::after { background: #131316; }
+
+/* Pipeline */
+[data-theme="light"] .pipe-col { background: var(--bg-1); border-right-color: var(--border); }
+[data-theme="light"] .pipe-h { border-bottom-color: var(--border); }
+[data-theme="light"] .pipe-h .ct {
+  background: rgba(15,15,17,.06);
+  color: var(--text-muted);
+}
+[data-theme="light"] .deal {
+  background: #FFFFFF;
+  border-color: var(--border);
+}
+[data-theme="light"] .deal:hover { border-color: var(--red); }
+[data-theme="light"] .deal .who .av {
+  background: linear-gradient(135deg, #6E6F73, #2C2D31);
+  color: white;
+}
+
+/* Schedule */
+[data-theme="light"] .sch-row { border-bottom-color: var(--border); }
+[data-theme="light"] .sch-row .h small { color: var(--text-faint); }
+[data-theme="light"] .sch-row .body .what { color: var(--text-muted); }
+[data-theme="light"] .sch-row .tag { border-color: var(--border-strong); color: var(--text-muted); }
+
+/* Table */
+[data-theme="light"] .tbl th {
+  background: rgba(15,15,17,.03);
+  color: var(--text-faint);
+}
+[data-theme="light"] .tbl th,
+[data-theme="light"] .tbl td { border-bottom-color: var(--border); }
+[data-theme="light"] .tbl tbody tr:hover { background: rgba(227,6,19,.04); }
+[data-theme="light"] .tbl .thumb {
+  background: linear-gradient(135deg, #FAF8F2, #EEEBE3);
+  border-color: var(--border);
+}
+[data-theme="light"] .tbl .nm-cell .vin { color: var(--text-faint); }
+[data-theme="light"] .tbl .badge { border-color: var(--border-strong); color: var(--text-muted); }
+
+/* Page head */
+[data-theme="light"] .page-head .sub-info { color: var(--text-faint); }
+
+/* Ambient app::after — softer in light */
+[data-theme="light"] .app::after {
+  background:
+    radial-gradient(800px 500px at 20% 0%, rgba(227,6,19,.04), transparent 60%),
+    radial-gradient(700px 400px at 90% 100%, rgba(227,6,19,.03), transparent 70%);
+}
+
+/* Scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(15,15,17,.10); border-color: var(--bg-0); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(15,15,17,.20); }
+
+/* Hero-tag and hero-plate stay on dark hero-right — no change needed */
+
+/* Gradient-off light overrides */
+[data-theme="light"][data-gradient="off"] .kpi,
+[data-theme="light"][data-gradient="off"] .panel,
+[data-theme="light"][data-gradient="off"] .hero,
+[data-theme="light"][data-gradient="off"] .values-strip { background: #FFFFFF; }
+[data-theme="light"][data-gradient="off"] .pipe-col { background: #FFFFFF; }
+
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+
+
+<script type="text/babel">
+const Sv = ({size=20, sw=1.8, ch}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{ch}</svg>
+);
+const I = {
+  Dash: p=><Sv {...p} ch={<><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></>}/>,
+  Car: p=><Sv {...p} ch={<><path d="M5 17h14M5 17v2H3v-7l2-5h14l2 5v7h-2v-2M2 12h20"/><circle cx="7" cy="14" r="1.2" fill="currentColor"/><circle cx="17" cy="14" r="1.2" fill="currentColor"/></>}/>,
+  Cal: p=><Sv {...p} ch={<><rect x="3" y="5" width="18" height="16"/><path d="M3 9h18M8 3v4M16 3v4"/></>}/>,
+  Gauge: p=><Sv {...p} ch={<><path d="M12 14L17 8"/><circle cx="12" cy="14" r="1.6" fill="currentColor"/><path d="M3.5 14a8.5 8.5 0 1 1 17 0"/></>}/>,
+  Tag: p=><Sv {...p} ch={<><path d="M20.6 13.4l-9 9-9-9V3h10.6z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></>}/>,
+  Engine: p=><Sv {...p} ch={<><path d="M5 9V7h3V5h4v2h2l2 2h3v2h-2v3h2v2h-3l-2 2H12v2H8v-2H5v-7z"/></>}/>,
+  Deal: p=><Sv {...p} ch={<><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></>}/>,
+  Lead: p=><Sv {...p} ch={<><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M16 11h5M18.5 8.5v5"/></>}/>,
+  Doc: p=><Sv {...p} ch={<><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></>}/>,
+  Sparkles: p=><Sv {...p} ch={<path d="M12 3l1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7z"/>}/>,
+  Bolt: p=><Sv {...p} ch={<path d="M13 2L3 14h7l-1 8 11-12h-7l0-8z"/>}/>,
+  Calc: p=><Sv {...p} ch={<><rect x="5" y="3" width="14" height="18"/><path d="M8 7h8M9 12h6M9 16h6"/></>}/>,
+  WA: p=><Sv {...p} ch={<path d="M4 20l1.5-4.5A8 8 0 1 1 9 19l-5 1z"/>}/>,
+  Users: p=><Sv {...p} ch={<><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M16 8.5a2.5 2.5 0 1 0 0 5"/></>}/>,
+  Chart: p=><Sv {...p} ch={<path d="M3 3v18h18M7 14l3-3 3 3 5-6"/>}/>,
+  Set: p=><Sv {...p} ch={<><circle cx="12" cy="12" r="3"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.5-2-3.4-2.3.9c-.7-.5-1.5-1-2.4-1.4L13.5 3h-3l-.7 2.2c-.9.4-1.7.9-2.4 1.4l-2.3-.9-2 3.4 2 1.5C5 11 5 11.5 5 12s0 1 .1 1.4l-2 1.5 2 3.4 2.3-.9c.7.5 1.5 1 2.4 1.4l.7 2.2h3l.7-2.2c.9-.4 1.7-.9 2.4-1.4l2.3.9 2-3.4-2-1.5z"/></>}/>,
+  Search: p=><Sv {...p} ch={<><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></>}/>,
+  Bell: p=><Sv {...p} ch={<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/>}/>,
+  Plus: p=><Sv {...p} ch={<path d="M12 5v14M5 12h14"/>}/>,
+  Filter: p=><Sv {...p} ch={<path d="M3 5h18l-7 9v6l-4-2v-4L3 5z"/>}/>,
+  Dl: p=><Sv {...p} ch={<path d="M12 3v12M6 11l6 6 6-6M5 21h14"/>}/>,
+  Right: p=><Sv {...p} ch={<path d="M5 12h14M12 5l7 7-7 7"/>}/>,
+  ChevR: p=><Sv {...p} ch={<path d="M9 6l6 6-6 6"/>}/>,
+  Up: p=><Sv {...p} ch={<path d="M12 19V5M5 12l7-7 7 7"/>}/>,
+  Down: p=><Sv {...p} ch={<path d="M12 5v14M5 12l7 7 7-7"/>}/>,
+  Check: p=><Sv {...p} ch={<path d="M5 12l4 4L19 6"/>}/>,
+  Receipt: p=><Sv {...p} ch={<><path d="M5 3h14v18l-3-2-3 2-3-2-3 2-2-2V3z"/><path d="M9 8h6M9 12h6M9 16h4"/></>}/>,
+  Logout: p=><Sv {...p} ch={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></>}/>,
+  Phone: p=><Sv {...p} ch={<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>}/>,
+  Camera: p=><Sv {...p} ch={<><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="4"/></>}/>,
+  Sun: p=><Sv {...p} ch={<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></>}/>,
+  Moon: p=><Sv {...p} ch={<path d="M21 13a8 8 0 1 1-10-10 6 6 0 0 0 10 10z"/>}/>,
+  Mail: p=><Sv {...p} ch={<><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></>}/>,
+  Lock: p=><Sv {...p} ch={<><rect x="4" y="11" width="16" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></>}/>,
+  Eye: p=><Sv {...p} ch={<><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></>}/>,
+  EyeOff: p=><Sv {...p} ch={<><path d="M3 3l18 18M10.6 6.1A10.5 10.5 0 0 1 12 6c6 0 10 6 10 6a17 17 0 0 1-3.5 4M6.5 7.5C3.5 9.7 2 12 2 12s4 7 10 7c1.7 0 3.3-.5 4.7-1.3"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></>}/>,
+  More: p=><Sv {...p} sw="3" ch={<><circle cx="5" cy="12" r=".5"/><circle cx="12" cy="12" r=".5"/><circle cx="19" cy="12" r=".5"/></>}/>,
+};
+
+// Sidebar
+const Sidebar = ({page, setPage}) => {
+  const sections = [
+    ["Operação", [
+      ["dashboard", "Dashboard", I.Dash],
+      ["viaturas", "Viaturas", I.Car],
+      ["clientes", "Clientes", I.Users],
+      ["tarefas", "Tarefas", I.Deal],
+    ]],
+    ["Finanças", [
+      ["financeiro", "Financeiro", I.Chart],
+      ["lucro", "Lucro por Viatura", I.Receipt],
+    ]],
+    ["Recursos", [
+      ["guia", "Guia de Fluxo", I.Doc],
+      ["set", "Definições", I.Set],
+    ]],
+  ];
+  return (
+    <aside className="sidebar">
+      <div className="sb-brand">
+        <div className="logo">
+          <div className="stack">
+            <span><span className="red">AUTO</span>{"{MARCA}"}</span>
+            <span>{"{SUB}"}</span>
+          </div>
+          <div className="tag-it">comércio de automóveis</div>
+        </div>
+        <span className="tag">Painel · v1</span>
+      </div>
+      <div style={{flex:1, overflowY:"auto"}}>
+        {sections.map(([sec, items])=>(
+          <React.Fragment key={sec}>
+            <div className="sb-section">{sec}</div>
+            {items.map(([id, lbl, Icn, badge, kind])=>(
+              <div key={id} className={`sb-item ${page===id?"active":""}`} onClick={()=>setPage(id)}>
+                <Icn className="icn" size={17}/>
+                <span>{lbl}</span>
+                {badge && <span className={`badge ${kind||""}`}>{badge}</span>}
+              </div>
+            ))}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="sb-foot">
+        <div className="av">A</div>
+        <div className="who">
+          <div className="nm">Admin</div>
+          <div className="role">Gerente</div>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+// Topbar
+const Topbar = ({theme, setTheme}) => (
+  <header className="topbar">
+    <div className="crumbs">
+      <span className="red-tick"></span>
+      <span>PAINEL</span>
+      <span style={{color:"var(--text-faint)"}}>/</span>
+      <b>DASHBOARD</b>
+    </div>
+    <div className="search">
+      <I.Search size={15}/>
+      <input placeholder="Pesquisar viaturas, clientes, negócios…"/>
+      <span className="kbd"><span className="kbd-key">⌘</span><span className="kbd-key">K</span></span>
+    </div>
+    <div className="spacer"></div>
+    <div className="tb-actions">
+      <button className="icbtn" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Tema claro" : "Tema escuro"} aria-label="Alternar tema">
+        {theme === "dark" ? <I.Sun size={15}/> : <I.Moon size={15}/>}
+      </button>
+      <button className="icbtn"><I.Filter size={15}/></button>
+      <button className="icbtn"><I.Dl size={15}/></button>
+      <button className="icbtn"><I.Bell size={15}/><span className="ping"></span></button>
+      <button className="cta"><I.Plus size={14}/> Novo Negócio</button>
+    </div>
+  </header>
+);
+
+// HERO Featured Car
+// KPI
+const Spark = ({d, color="#E30613"}) => {
+  const w=120, h=36, pad=2;
+  const max=Math.max(...d), min=Math.min(...d), r=max-min||1;
+  const sx=(w-pad*2)/(d.length-1);
+  const pts = d.map((v,i)=>[pad+i*sx, h-pad-((v-min)/r)*(h-pad*2)]);
+  const path = pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const area = path+` L${(w-pad).toFixed(1)} ${h-pad} L${pad} ${h-pad} Z`;
+  return <svg className="spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+    <path d={area} fill={color} opacity=".15"/>
+    <path d={path} fill="none" stroke={color} strokeWidth="1.5"/>
+  </svg>;
+};
+const KPI = ({Icn, label, v, unit, prefix, delta, spark}) => (
+  <div className="kpi">
+    <div className="kpi-row">
+      <Icn className="ic" size={20}/>
+      <div className="sep"></div>
+      <div className="lbl">{label}</div>
+    </div>
+    <div className="v">{prefix}{v}{unit && <small>{unit}</small>}</div>
+    <div className={`delta ${delta>=0?"up":"down"}`}>
+      {delta>=0 ? <I.Up size={11}/> : <I.Down size={11}/>}
+      {Math.abs(delta)}%
+      <span className="vs">vs. mês anterior</span>
+    </div>
+    {spark && <Spark d={spark}/>}
+  </div>
+);
+
+// Hero — featured car block
+const Hero = () => (
+  <section>
+    <div className="hero">
+      <div className="hero-left">
+        <div className="hero-eyebrow">Destaque · 30 Abr 2026</div>
+        <h2 className="hero-title">Dacia<br/><span className="red">Jogger</span> Extreme</h2>
+        <p className="hero-sub">Acabamento topo de gama, 7 lugares, recém-entrado no stand. Margem projetada de <strong style={{color:"#fff"}}>18%</strong> · pronto para entrega.</p>
+
+        <div className="spec-list">
+          <div className="spec-row">
+            <div className="ic"><I.Cal size={22}/></div>
+            <div className="sep"></div>
+            <div className="val">2024<small>14 meses em garantia oficial</small></div>
+          </div>
+          <div className="spec-row">
+            <div className="ic"><I.Gauge size={22}/></div>
+            <div className="sep"></div>
+            <div className="val">67.000 km<small>Histórico Dacia certificado</small></div>
+          </div>
+          <div className="spec-row">
+            <div className="ic"><I.Tag size={22}/></div>
+            <div className="sep"></div>
+            <div className="val">17.950 €<small>Financiamento desde €189/mês</small></div>
+          </div>
+          <div className="spec-row">
+            <div className="ic"><I.Engine size={22}/></div>
+            <div className="sep"></div>
+            <div className="val">1.000cc · 90cv<small>Gasolina · transmissão manual</small></div>
+          </div>
+        </div>
+
+        <div className="hero-actions">
+          <button className="btn-pri">Ver Ficha Completa <I.Right size={12}/></button>
+          <button className="btn-out">Marcar Test Drive</button>
+        </div>
+      </div>
+
+      <div className="hero-right">
+        <div className="hero-tag">
+          <span className="dot"></span>
+          STAND · 03/14 FOTOS
+        </div>
+        <div className="hero-stats">
+          <div className="hero-stat">
+            <div className="n">142</div>
+            <div className="l">Em Stock</div>
+          </div>
+          <div className="hero-stat">
+            <div className="n">38</div>
+            <div className="l">Vendas · Mês</div>
+          </div>
+          <div className="hero-stat">
+            <div className="n">€2.4M</div>
+            <div className="l">Faturação YTD</div>
+          </div>
+        </div>
+
+        <div className="car">
+          <svg viewBox="0 0 700 280" fill="none">
+            <defs>
+              <linearGradient id="body" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#9CA0A8"/>
+                <stop offset="60%" stopColor="#5A5D62"/>
+                <stop offset="100%" stopColor="#2A2C30"/>
+              </linearGradient>
+              <linearGradient id="glass" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#1a1a1f"/>
+                <stop offset="100%" stopColor="#0a0a0d"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="350" cy="245" rx="280" ry="14" fill="#000" opacity=".5"/>
+            <path d="M50 200 Q90 130, 200 110 L260 95 Q300 80, 380 80 L460 85 Q540 90, 600 105 L640 125 Q660 145, 660 180 L660 205 L50 205 Z" fill="url(#body)"/>
+            <path d="M210 110 Q240 70, 300 65 L420 60 Q480 65, 520 90 L530 105" stroke="#3a3d42" strokeWidth="2" fill="none" opacity=".8"/>
+            <path d="M230 108 Q255 75, 310 72 L410 68 Q470 72, 510 95 L520 108 Z" fill="url(#glass)" opacity=".75"/>
+            <path d="M345 70 L345 108" stroke="#0a0a0d" strokeWidth="1.5"/>
+            <path d="M395 68 L395 108" stroke="#0a0a0d" strokeWidth="1.5"/>
+            <path d="M80 160 L640 160" stroke="#1a1a1f" strokeWidth="1" opacity=".5"/>
+            <path d="M55 145 L95 150 L92 162 L55 158 Z" fill="#FFF5DD" opacity=".85"/>
+            <path d="M635 145 L605 152 L608 165 L635 158 Z" fill="#E30613" opacity=".8"/>
+            <circle cx="180" cy="210" r="36" fill="#0a0a0d" stroke="#3a3d42" strokeWidth="2"/>
+            <circle cx="180" cy="210" r="22" fill="#1a1a1f"/>
+            <circle cx="180" cy="210" r="8" fill="#0a0a0d"/>
+            <circle cx="540" cy="210" r="36" fill="#0a0a0d" stroke="#3a3d42" strokeWidth="2"/>
+            <circle cx="540" cy="210" r="22" fill="#1a1a1f"/>
+            <circle cx="540" cy="210" r="8" fill="#0a0a0d"/>
+            <path d="M210 130 Q280 105, 380 100 L450 102" stroke="rgba(255,255,255,.25)" strokeWidth="1" fill="none"/>
+            <path d="M120 175 L600 175" stroke="rgba(255,255,255,.08)" strokeWidth="1.5"/>
+          </svg>
+        </div>
+
+        <div className="hero-plate">BG·64·VP</div>
+      </div>
+    </div>
+
+    <div className="values-strip">
+      <div className="value-cell">
+        <div className="check"><I.Check size={16}/></div>
+        <div className="lbl"><small>Promessa Stand</small>Apoio Personalizado</div>
+      </div>
+      <div className="value-cell">
+        <div className="check"><I.Check size={16}/></div>
+        <div className="lbl"><small>Condições</small>Acessíveis e Ajustáveis</div>
+      </div>
+      <div className="value-cell">
+        <div className="check"><I.Check size={16}/></div>
+        <div className="lbl"><small>Equipa</small>Consultoria Disponível</div>
+      </div>
+    </div>
+  </section>
+);
+
+// Sales chart
+const SalesChart = () => {
+  const months = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const sold = [22,28,24,31,27,33,29,35,30,38,42,36];
+  const target = [25,25,28,28,30,30,32,32,34,34,36,36];
+  const w=720, h=200, pL=36, pR=14, pT=10, pB=26, max=50;
+  const sX=(w-pL-pR)/(months.length-1);
+  const yF=v=>pT+(1-v/max)*(h-pT-pB);
+  const linePath = arr => arr.map((v,i)=>(i?"L":"M")+(pL+i*sX).toFixed(1)+" "+yF(v).toFixed(1)).join(" ");
+  const area = linePath(sold)+` L${(pL+(sold.length-1)*sX).toFixed(1)} ${h-pB} L${pL} ${h-pB} Z`;
+  return (
+    <div className="panel">
+      <div className="panel-hd">
+        <div className="ttl">
+          <I.Chart className="ic" size={18}/>
+          <div className="sep"></div>
+          <h3>Vendas Mensais</h3>
+        </div>
+        <div className="chip-grp">
+          <button>Semana</button>
+          <button className="on">Mês</button>
+          <button>Trim.</button>
+        </div>
+      </div>
+      <div className="panel-bd">
+        <div className="chart-totals">
+          <div>
+            <div className="num">375 <span style={{fontSize:13, color:"var(--success)", fontFamily:"var(--font-sans)", fontStyle:"normal"}}>+18%</span></div>
+            <div className="lbl">Vendidos YTD</div>
+          </div>
+          <div>
+            <div className="num">€2.4M</div>
+            <div className="lbl">Faturação</div>
+          </div>
+          <div>
+            <div className="num">14.2<span style={{fontSize:14, color:"var(--text-muted)", fontFamily:"var(--font-sans)", fontStyle:"normal"}}>%</span></div>
+            <div className="lbl">Margem Média</div>
+          </div>
+        </div>
+        <svg viewBox={`0 0 ${w} ${h}`} width="100%" height="220" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="sg" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#E30613" stopOpacity=".4"/>
+              <stop offset="100%" stopColor="#E30613" stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          {[0,10,20,30,40,50].map(v=>(
+            <g key={v}>
+              <line x1={pL} x2={w-pR} y1={yF(v)} y2={yF(v)} stroke="rgba(255,255,255,.05)" strokeDasharray="2 4"/>
+              <text x={pL-8} y={yF(v)+3} fontSize="10" fill="var(--text-faint)" textAnchor="end" fontFamily="JetBrains Mono">{v}</text>
+            </g>
+          ))}
+          <path d={linePath(target)} fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="1.5" strokeDasharray="4 4"/>
+          <path d={area} fill="url(#sg)"/>
+          <path d={linePath(sold)} fill="none" stroke="var(--red)" strokeWidth="2.2"/>
+          {sold.map((v,i)=>(
+            <circle key={i} cx={pL+i*sX} cy={yF(v)} r={i===sold.length-1?5:3}
+                    fill={i===sold.length-1?"var(--red)":"#131316"}
+                    stroke="var(--red)" strokeWidth="2"/>
+          ))}
+          {months.map((m,i)=>(
+            <text key={m} x={pL+i*sX} y={h-8} fontSize="10" fill="var(--text-faint)"
+                  textAnchor="middle" fontFamily="JetBrains Mono">{m.toUpperCase()}</text>
+          ))}
+          <g transform={`translate(${pL+(sold.length-1)*sX-44}, ${yF(sold[sold.length-1])-36})`}>
+            <rect width="88" height="22" fill="var(--red)"/>
+            <text x="44" y="15" fontSize="11" fill="white" textAnchor="middle" fontWeight="700" fontFamily="JetBrains Mono">36 CARROS</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+// AI Leads
+const BestSellers = () => {
+  const rows = [
+    ["01", "Dacia Jogger", "12 vendidos · 12M"],
+    ["02", "BMW Série 3", "9 vendidos · 12M"],
+    ["03", "Audi Q3", "8 vendidos · 12M"],
+    ["04", "Peugeot 3008", "6 vendidos · 12M"],
+  ];
+  return (
+    <div className="panel">
+      <div className="panel-hd">
+        <div className="ttl">
+          <I.Car className="ic" size={18}/>
+          <div className="sep"></div>
+          <h3>Mais Vendidos · 12M</h3>
+        </div>
+        <span className="sub">35 modelos · ano</span>
+      </div>
+      {rows.map(([rank, nm, det], i)=>(
+        <div key={i} className="ai-row">
+          <div className="ai-score" style={{"--p": `0deg`}}><span>{rank}</span></div>
+          <div>
+            <div className="nm">{nm}</div>
+            <div className="det">{det}</div>
+          </div>
+          <I.ChevR className="arr" size={16}/>
+        </div>
+      ))}
+      <div className="panel-ft">
+        <span>Top 4 · últimos 12 meses</span>
+        <a href="#">Ver detalhes <I.Right size={11}/></a>
+      </div>
+    </div>
+  );
+};
+
+// Today's tasks
+const TodayTasks = () => {
+  const items = [
+    ["URG", "Renovar seguro do stand", "Anual · vence hoje", "red", "Urgente"],
+    ["ALT", "Tratar IMT — Audi Q3", "Documentos pendentes", "gold", "Alta"],
+    ["MED", "Contactar Maria João Reis", "Cliente recorrente · 2 anos", "blue", "Média"],
+    ["BX", "Atualizar fotos — Peugeot 3008", "Galeria viatura", "green", "Baixa"],
+  ];
+  return (
+    <div className="panel">
+      <div className="panel-hd">
+        <div className="ttl">
+          <I.Cal className="ic" size={18}/>
+          <div className="sep"></div>
+          <h3>Tarefas · Hoje</h3>
+        </div>
+        <span className="sub">QUI · 30 ABR · 4 ativas</span>
+      </div>
+      {items.map((it, i)=>(
+        <div className="sch-row" key={i}>
+          <div className="h">{it[0]}<small>HOJE</small></div>
+          <div className="sep"></div>
+          <div className="body">
+            <div className="who">{it[1]}</div>
+            <div className="what">{it[2]}</div>
+          </div>
+          <span className={`tag ${it[3]}`}>{it[4]}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Stock-aging (vehicles in stock > 60 days)
+const StockAging = () => {
+  const rows = [
+    ["Dacia Jogger Extreme", "UU1JJDH00LN042551", "2024", "67.000", "€17 950", "72 dias", "red"],
+    ["BMW M340i xDrive Touring", "WBA8E5C00LCD92733", "2022", "18.450", "€58 900", "84 dias", "red"],
+    ["Tesla Model 3 Long Range", "5YJ3E1EA0LF608811", "2022", "32.100", "€38 500", "65 dias", "gold"],
+    ["Audi Q3 35 TDI quattro", "WAUZZZ8U9LR012883", "2022", "41.200", "€34 200", "91 dias", "red"],
+    ["Peugeot 3008 GT BlueHDi", "VF3MJEHZRMS049122", "2022", "28.300", "€28 900", "68 dias", "gold"],
+    ["BMW X1 sDrive18d", "WBAJG7C09M5K23901", "2021", "55.800", "€31 200", "103 dias", "red"],
+  ];
+  return (
+    <div className="panel">
+      <div className="panel-hd">
+        <div className="ttl">
+          <I.Car className="ic" size={18}/>
+          <div className="sep"></div>
+          <h3>Em Stock 60+ Dias</h3>
+          <span className="sub" style={{marginLeft:14}}>6 viaturas paradas</span>
+        </div>
+        <div style={{display:"flex", gap:8}}>
+          <button className="btn-out" style={{padding:"7px 12px", fontSize:11}}>Ver Stock Completo <I.Right size={11}/></button>
+        </div>
+      </div>
+      <div className="panel-bd flush">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Viatura</th>
+              <th>Ano</th>
+              <th className="num">Km</th>
+              <th className="num">Preço</th>
+              <th>Dias em Stock</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i)=>(
+              <tr key={i}>
+                <td>
+                  <div className="nm-cell">
+                    <span className="thumb"><I.Car size={16}/></span>
+                    <div>
+                      <div className="nm">{r[0]}</div>
+                      <div className="vin">VIN · {r[1]}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="num">{r[2]}</td>
+                <td className="num">{r[3]}</td>
+                <td className="num price">{r[4]}</td>
+                <td><span className={`badge ${r[6]}`}><span className="d"></span>{r[5]}</span></td>
+                <td style={{textAlign:"right"}}><I.More size={16} style={{color:"var(--text-faint)"}}/></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Page
+const Dashboard = ({theme, setTheme}) => (
+  <>
+    <Topbar theme={theme} setTheme={setTheme}/>
+
+    <div className="page-head">
+      <div>
+        <h1>Bom dia, <em>Admin.</em></h1>
+        <div className="sub-info">
+          QUINTA · 30 ABRIL 2026 <span className="red">●</span> PAINEL · v1
+        </div>
+      </div>
+      <div className="page-head-actions">
+        <button className="btn-out"><I.Dl size={12}/> Exportar</button>
+        <button className="btn-pri"><I.Plus size={12}/> Adicionar Viatura</button>
+      </div>
+    </div>
+
+    <Hero/>
+
+    <div className="grid mt-1">
+      <div className="gc-3">
+        <KPI Icn={I.Car} label="Vendas · Mês" v="36" unit=" un" delta={18}
+             spark={[18,22,21,25,23,28,30,32,29,33,35,36]}/>
+      </div>
+      <div className="gc-3">
+        <KPI Icn={I.Receipt} label="Faturação · Mês" prefix="€" v="248" unit="k" delta={12}
+             spark={[120,140,160,150,180,200,210,205,225,232,240,248]}/>
+      </div>
+      <div className="gc-3">
+        <KPI Icn={I.Chart} label="Lucro · Mês" prefix="€" v="35" unit="k" delta={9}
+             spark={[18,20,22,24,26,28,29,30,32,33,34,35]}/>
+      </div>
+      <div className="gc-3">
+        <KPI Icn={I.Gauge} label="Margem Média" v="14.2" unit="%" delta={2}
+             spark={[11,12,13,12.5,13.2,13,13.5,13.8,14,14.1,14.2,14.2]}/>
+      </div>
+    </div>
+
+    <div className="grid mt-1">
+      <div className="gc-8"><SalesChart/></div>
+      <div className="gc-4"><BestSellers/></div>
+    </div>
+
+    <div className="grid mt-1">
+      <div className="gc-7"><StockAging/></div>
+      <div className="gc-5"><TodayTasks/></div>
+    </div>
+  </>
+);
+
+// Final design tokens — baked from the tweaks panel used during design iteration.
+const DESIGN_TOKENS = {
+  fontPreset: "barlow",
+  radiusScale: 2.2,
+  accentStyle: "solid",
+  density: "compact",
+  borderEmphasis: "crisp",
+  uppercaseLabels: true,
+  monoNumerics: true,
+  wedgePosition: "edge",
+  wedgeIntensity: 0.8,
+  italicHeadlines: true,
+  gradientMode: "soft",
+};
+
+const App = () => {
+  const [page, setPage] = React.useState("dashboard");
+  const [theme, setTheme] = React.useState(() => localStorage.getItem("painel-theme") || "dark");
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("painel-theme", theme);
+  }, [theme]);
+
+  React.useEffect(() => {
+    const r = document.documentElement;
+    const t = DESIGN_TOKENS;
+    r.style.setProperty("--r-scale", t.radiusScale);
+    r.style.setProperty("--wedge-opacity", t.wedgeIntensity);
+    r.setAttribute("data-font", t.fontPreset);
+    r.setAttribute("data-density", t.density);
+    r.setAttribute("data-border", t.borderEmphasis);
+    r.setAttribute("data-accent", t.accentStyle);
+    r.setAttribute("data-upper", t.uppercaseLabels ? "1" : "0");
+    r.setAttribute("data-mono-num", t.monoNumerics ? "1" : "0");
+    r.setAttribute("data-italic-h", t.italicHeadlines ? "1" : "0");
+    r.setAttribute("data-gradient", t.gradientMode);
+    r.setAttribute("data-wedge", t.wedgePosition);
+  }, []);
+
+  return (
+    <div className="app">
+      <Sidebar page={page} setPage={setPage}/>
+      <main className="main"><Dashboard theme={theme} setTheme={setTheme}/></main>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

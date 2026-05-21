@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:COREPACK_ENABLE_DOWNLOAD_PROMPT='0'; Set-Location \"C:\\\\Users\\\\Goncalo\\\\Desktop\\\\AI\\\\AutoNunesMartins\\\\backend\"; yarn tsx -e \"import\\('./src/env.js'\\).then\\(m => { const e = m.getEnv\\(\\); console.log\\('OK. Keys present:'\\); Object.keys\\(e\\).forEach\\(k => console.log\\('  -', k, ':', k.includes\\('SECRET'\\) || k.includes\\('URL'\\) ? '[set]' : e[k]\\)\\); console.log\\('Supabase server key:', m.getSupabaseServerKey\\(\\).slice\\(0,12\\) + '...'\\); }\\).catch\\(err => { console.error\\('FAIL:', err.message\\); process.exit\\(1\\); }\\)\")",
+      "Bash(curl -sf http://localhost:4000/health)",
+      "Bash(curl -sf http://localhost:5173/)",
+      "Bash(curl -s http://localhost:4000/health)",
+      "Bash(curl -s -o /dev/null -w \"frontend: HTTP %{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(yarn dev *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} \\(size %{size_download} bytes\\)\\\\n\" http://localhost:5173/)",
+      "PowerShell($env:COREPACK_ENABLE_DOWNLOAD_PROMPT='0'; Set-Location \"C:\\\\Users\\\\Goncalo\\\\Desktop\\\\AI\\\\AutoNunesMartins\\\\backend\"; yarn typecheck 2>&1 | Select-Object -Last 30; \"EXIT=$LASTEXITCODE\")",
+      "Bash(curl -s -o /dev/null -w \"customers \\(unauth\\): %{http_code}\\\\n\" http://localhost:4000/api/customers)",
+      "Bash(curl -s -o /dev/null -w \"vehicles \\(unauth\\): %{http_code}\\\\n\" http://localhost:4000/api/vehicles)",
+      "Bash(curl -s -o /dev/null -w \"sales \\(unauth\\): %{http_code}\\\\n\" http://localhost:4000/api/sales/x)",
+      "Bash(curl -s -o /dev/null -w \"tasks \\(unauth\\): %{http_code}\\\\n\" http://localhost:4000/api/tasks)",
+      "Bash(curl -s -o /dev/null -w \"users \\(unauth\\): %{http_code}\\\\n\" http://localhost:4000/api/users)",
+      "PowerShell($pids = \\(Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue\\).OwningProcess | Sort-Object -Unique; if \\($pids\\) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }; Start-Sleep -Seconds 1; \"port-free\")",
+      "Bash(curl -s -o /dev/null -w \"dashboard \\(unauth\\): %{http_code}\\\\n\" http://localhost:4000/api/dashboard)",
+      "Bash(curl -s -o /dev/null -w \"operational-expenses: %{http_code}\\\\n\" http://localhost:4000/api/operational-expenses)",
+      "Bash(curl -s -o /dev/null -w \"financial/profit-by-vehicle: %{http_code}\\\\n\" http://localhost:4000/api/financial/profit-by-vehicle)",
+      "Bash(yarn workspace *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(echo \"frontend=$?\")",
+      "Bash(echo \"backend=$?\")",
+      "Bash(echo \"fe=$?\")",
+      "Bash(echo \"be=$?\")",
+      "Bash(gh --version)",
+      "Bash(git config *)",
+      "Bash(git add *)"
+    ]
+  }
+}

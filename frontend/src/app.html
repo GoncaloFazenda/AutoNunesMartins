@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-PT" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0A0A0B" />
+    <title>Auto Nunes Martins · Painel</title>
+
+    <!--
+      Google Fonts — same source the index.html prototype uses for Barlow,
+      Inter, and JetBrains Mono. Loaded directly to guarantee the same render
+      as the prototype, and as a belt-and-suspenders alongside the
+      @fontsource imports in app.css (in case Vite/fontsource resolution
+      hiccups in production).
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Apply persisted theme + sidebar state before paint to prevent FOUC
+      (function () {
+        try {
+          var theme = localStorage.getItem('app-theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+          var sb = localStorage.getItem('app-sidebar');
+          if (sb === 'expanded' || sb === 'collapsed') {
+            document.documentElement.setAttribute('data-sidebar', sb);
+          }
+        } catch (_e) {
+          /* localStorage unavailable */
+        }
+      })();
+    </script>
+    %sveltekit.head%
+  </head>
+  <!--
+    preload-code="eager"  : compile + download the JS for every visible link
+                            (sidebar, topbar) as soon as the page is parsed.
+    preload-data="hover"  : fetch the load function's data on mouseover so
+                            a subsequent click navigates instantly.
+    SvelteKit also automatically caches loaded data per route; combined with
+    the backend's in-memory cache, repeat navigations within the same session
+    serve from memory and skip the skeleton flash entirely.
+  -->
+  <body data-sveltekit-preload-code="eager" data-sveltekit-preload-data="hover">
+    <div style="display: contents">%sveltekit.body%</div>
+  </body>
+</html>

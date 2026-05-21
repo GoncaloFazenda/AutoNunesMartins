@@ -1,0 +1,49 @@
+# fly.toml — Fly.io configuration for the Auto Nunes Martins backend.
+# Run from the repo root:
+#   flyctl launch --copy-config --no-deploy
+#   flyctl deploy --config backend/fly.toml --dockerfile backend/Dockerfile
+#
+# Secrets (set via `flyctl secrets set KEY=value -a auto-nunes-martins-api`):
+#   DATABASE_URL, DIRECT_URL,
+#   CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET,
+#   SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_STORAGE_BUCKET,
+#   FRONTEND_ORIGIN (e.g. https://auto-nunes-martins.vercel.app)
+
+app = "auto-nunes-martins-api"
+primary_region = "mad"            # Madrid — closest Fly region to Portugal
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "4000"
+  NODE_ENV = "production"
+  LOG_LEVEL = "info"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"     # save money when idle
+  auto_start_machines = true
+  min_machines_running = 0        # cold-start tolerated (admin app, low traffic)
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 200
+    soft_limit = 100
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

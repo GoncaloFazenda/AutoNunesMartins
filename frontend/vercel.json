@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "sveltekit",
+  "buildCommand": "yarn workspace @anm/types build && yarn workspace @anm/frontend build",
+  "installCommand": "corepack enable && yarn install --immutable",
+  "outputDirectory": ".svelte-kit/output",
+  "regions": ["cdg1"],
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}

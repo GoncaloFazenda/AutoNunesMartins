@@ -1,0 +1,61 @@
+<!--
+  Hand-drawn car silhouette ported from the index.html prototype.
+  Used on the Login art panel and as Dashboard hero placeholder.
+-->
+<svg
+  viewBox="0 0 800 360"
+  xmlns="http://www.w3.org/2000/svg"
+  class="w-full h-auto"
+  aria-hidden="true"
+  style="filter: drop-shadow(0 30px 40px rgba(0,0,0,.6));"
+>
+  <defs>
+    <linearGradient id="car-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6b6e75" />
+      <stop offset="55%" stop-color="#3d3f45" />
+      <stop offset="100%" stop-color="#222428" />
+    </linearGradient>
+    <linearGradient id="car-glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1c20" />
+      <stop offset="100%" stop-color="#0a0a0b" />
+    </linearGradient>
+  </defs>
+
+  <!-- main body -->
+  <path
+    d="M 80 240 Q 100 180 170 170 L 280 168 Q 320 130 410 120 L 540 122 Q 600 140 640 178 L 720 195 Q 750 210 745 235 L 740 255 Q 735 265 720 265 L 95 265 Q 80 265 80 250 Z"
+    fill="url(#car-body)"
+  />
+
+  <!-- greenhouse (windows) -->
+  <path
+    d="M 230 168 Q 270 130 360 122 L 520 124 Q 560 145 590 175 L 220 175 Z"
+    fill="url(#car-glass)"
+    opacity="0.92"
+  />
+
+  <!-- divider pillar (B-pillar hint) -->
+  <line x1="395" y1="125" x2="395" y2="175" stroke="#1a1c20" stroke-width="3" />
+
+  <!-- left headlight (white) -->
+  <ellipse cx="115" cy="220" rx="22" ry="9" fill="#f4f4f2" opacity="0.92" />
+  <!-- right taillight (red) -->
+  <ellipse cx="700" cy="218" rx="22" ry="9" fill="#e30613" opacity="0.95" />
+
+  <!-- wheels -->
+  <g>
+    <circle cx="225" cy="270" r="42" fill="#0a0a0b" />
+    <circle cx="225" cy="270" r="28" fill="#2a2b30" />
+    <circle cx="225" cy="270" r="14" fill="#1a1c20" />
+    <circle cx="225" cy="270" r="6" fill="#3d3f45" />
+  </g>
+  <g>
+    <circle cx="595" cy="270" r="42" fill="#0a0a0b" />
+    <circle cx="595" cy="270" r="28" fill="#2a2b30" />
+    <circle cx="595" cy="270" r="14" fill="#1a1c20" />
+    <circle cx="595" cy="270" r="6" fill="#3d3f45" />
+  </g>
+
+  <!-- ground shadow line -->
+  <line x1="60" y1="312" x2="760" y2="312" stroke="#000" stroke-width="2" opacity="0.4" />
+</svg>

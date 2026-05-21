@@ -1,0 +1,12 @@
+node_modules
+.svelte-kit
+build
+dist
+.yarn
+yarn.lock
+*.min.js
+*.min.css
+coverage
+playwright-report
+test-results
+prisma/migrations
