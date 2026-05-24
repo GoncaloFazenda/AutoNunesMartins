@@ -37,7 +37,10 @@ interface ActorContext {
 export async function createSale(
   data: SaleCreate,
   actor: ActorContext,
-): Promise<{ id: string; figures: { margin: string; vatAmount: string; realProfit: string } }> {
+): Promise<{
+  id: string;
+  figures: { margin: string; vatAmount: string; commission: string; realProfit: string };
+}> {
   return prisma.$transaction(async (tx) => {
     const vehicle = await tx.vehicle.findUnique({
       where: { id: data.vehicleId },
@@ -53,10 +56,14 @@ export async function createSale(
     if (!customer) throw new Error(`Customer ${data.customerId} not found`);
 
     const expensesTotal = await sumVehicleExpenses(tx, vehicle.id);
+    // Zod default ensures `commission` is always a string here; if a caller
+    // bypasses the schema we fall back to "0" defensively.
+    const commission = (data.commission as string | undefined) ?? '0';
     const figures = computeSaleFigures({
       salePrice: data.salePrice,
       purchasePrice: vehicle.purchasePrice.toString(),
       expensesTotal,
+      commission,
     });
 
     const sale = await tx.sale.create({
@@ -65,6 +72,7 @@ export async function createSale(
         customerId: customer.id,
         salePrice: new Decimal(data.salePrice as string),
         vatAmount: new Decimal(figures.vatAmount.toString()),
+        commission: new Decimal(figures.commission.toString()),
         realProfit: new Decimal(figures.realProfit.toString()),
         saleDate: data.saleDate,
         deliveryDate: data.deliveryDate ?? null,
@@ -109,6 +117,7 @@ export async function createSale(
       figures: {
         margin: figures.margin.toString(),
         vatAmount: figures.vatAmount.toString(),
+        commission: figures.commission.toString(),
         realProfit: figures.realProfit.toString(),
       },
     };
@@ -166,6 +175,7 @@ export async function getSaleById(id: string) {
           model: true,
           year: true,
           vin: true,
+          licensePlate: true,
           mileage: true,
           fuel: true,
           purchasePrice: true,
@@ -183,6 +193,7 @@ export async function getSaleById(id: string) {
     ...sale,
     salePrice: sale.salePrice.toString(),
     vatAmount: sale.vatAmount.toString(),
+    commission: sale.commission.toString(),
     realProfit: sale.realProfit.toString(),
     vehicle: {
       ...sale.vehicle,

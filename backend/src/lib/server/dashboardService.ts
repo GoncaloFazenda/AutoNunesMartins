@@ -14,9 +14,22 @@ export interface DashboardKpis {
   vendasMes: { count: number; previousCount: number; deltaPct: number | null };
   faturacaoMes: MonthlyKpi;
   lucroMes: MonthlyKpi;
+  /**
+   * Sum of intermediation commissions (e.g. financing referrals) booked on
+   * sales in the period. VAT-exempt under art. 9.º, 27.º, a) CIVA — already
+   * folded into `lucroMes`, surfaced separately so the dashboard can show
+   * how much of the bottom line depends on credit referrals.
+   */
+  comissoesMes: MonthlyKpi;
   margemMedia: { current: number | null; previous: number | null; deltaPct: number | null };
   /** 6-point sparkline trends for the last 6 months (oldest first). */
-  sparklines: { vendas: number[]; faturacao: number[]; lucro: number[]; margem: number[] };
+  sparklines: {
+    vendas: number[];
+    faturacao: number[];
+    lucro: number[];
+    comissoes: number[];
+    margem: number[];
+  };
 }
 
 export interface SalesChartData {
@@ -41,6 +54,7 @@ export interface StockAgedRow {
   model: string;
   year: number;
   vin: string;
+  licensePlate: string | null;
   mileage: number;
   salePrice: string | null;
   thumbnailUrl: string | null;
@@ -106,6 +120,7 @@ interface MonthlyBucket {
   count: number;
   revenue: number;
   profit: number;
+  commission: number;
 }
 
 /**
@@ -121,6 +136,7 @@ async function loadMonthlyBuckets(now: Date): Promise<MonthlyBucket[]> {
     sold: bigint;
     revenue: Prisma.Decimal | null;
     profit: Prisma.Decimal | null;
+    commission: Prisma.Decimal | null;
   }
 
   const rows = await prisma.$queryRaw<Row[]>`
@@ -128,7 +144,8 @@ async function loadMonthlyBuckets(now: Date): Promise<MonthlyBucket[]> {
       date_trunc('month', "saleDate")::timestamp AS month,
       COUNT(*)::bigint                            AS sold,
       SUM("salePrice")                            AS revenue,
-      SUM("realProfit")                           AS profit
+      SUM("realProfit")                           AS profit,
+      SUM("commission")                           AS commission
     FROM "Sale"
     WHERE "saleDate" >= ${earliestMonth}
     GROUP BY date_trunc('month', "saleDate")
@@ -142,6 +159,7 @@ async function loadMonthlyBuckets(now: Date): Promise<MonthlyBucket[]> {
       count: Number(r.sold),
       revenue: r.revenue ? Number(r.revenue.toString()) : 0,
       profit: r.profit ? Number(r.profit.toString()) : 0,
+      commission: r.commission ? Number(r.commission.toString()) : 0,
     });
   }
 
@@ -150,14 +168,15 @@ async function loadMonthlyBuckets(now: Date): Promise<MonthlyBucket[]> {
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const k = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
-    buckets.push(byKey.get(k) ?? { count: 0, revenue: 0, profit: 0 });
+    buckets.push(byKey.get(k) ?? { count: 0, revenue: 0, profit: 0, commission: 0 });
   }
   return buckets;
 }
 
 function buildKpis(buckets: MonthlyBucket[]): DashboardKpis {
-  const cur = buckets[11] ?? { count: 0, revenue: 0, profit: 0 };
-  const prev = buckets[10] ?? { count: 0, revenue: 0, profit: 0 };
+  const empty = { count: 0, revenue: 0, profit: 0, commission: 0 };
+  const cur = buckets[11] ?? empty;
+  const prev = buckets[10] ?? empty;
 
   const curMargin =
     cur.revenue > 0 ? (cur.profit / cur.revenue) * 100 : cur.count > 0 ? 0 : null;
@@ -182,6 +201,11 @@ function buildKpis(buckets: MonthlyBucket[]): DashboardKpis {
       previous: prev.profit.toFixed(2),
       deltaPct: pctDelta(cur.profit, prev.profit),
     },
+    comissoesMes: {
+      current: cur.commission.toFixed(2),
+      previous: prev.commission.toFixed(2),
+      deltaPct: pctDelta(cur.commission, prev.commission),
+    },
     margemMedia: {
       current: curMargin,
       previous: prevMargin,
@@ -194,6 +218,7 @@ function buildKpis(buckets: MonthlyBucket[]): DashboardKpis {
       vendas: last6.map((b) => b.count),
       faturacao: last6.map((b) => b.revenue),
       lucro: last6.map((b) => b.profit),
+      comissoes: last6.map((b) => b.commission),
       margem: last6.map((b) => (b.revenue > 0 ? (b.profit / b.revenue) * 100 : 0)),
     },
   };
@@ -260,6 +285,7 @@ async function loadStockAged(now: Date): Promise<StockAgedRow[]> {
       model: true,
       year: true,
       vin: true,
+      licensePlate: true,
       mileage: true,
       salePrice: true,
       acquisitionDate: true,
@@ -283,6 +309,7 @@ async function loadStockAged(now: Date): Promise<StockAgedRow[]> {
     model: r.model,
     year: r.year,
     vin: r.vin,
+    licensePlate: r.licensePlate,
     mileage: r.mileage,
     salePrice: r.salePrice?.toString() ?? null,
     thumbnailUrl: r.photos[0] ? (signed.get(r.photos[0]) ?? null) : null,

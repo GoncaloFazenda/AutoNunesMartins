@@ -20,6 +20,7 @@ export interface FeaturedVehiclePayload {
   fuel: string;
   mileage: number;
   vin: string;
+  licensePlate: string | null;
   status: string;
   salePrice: string | null;
   purchasePrice: string;
@@ -62,6 +63,7 @@ async function loadFeaturedVehicle(): Promise<FeaturedVehiclePayload | null> {
     fuel: v.fuel,
     mileage: v.mileage,
     vin: v.vin,
+    licensePlate: v.licensePlate,
     status: v.status,
     salePrice: v.salePrice?.toString() ?? null,
     purchasePrice: v.purchasePrice.toString(),

@@ -38,6 +38,7 @@ export interface CustomerDetailSale {
     model: string;
     year: number;
     vin: string;
+    licensePlate: string | null;
     photos: string[];
   };
 }

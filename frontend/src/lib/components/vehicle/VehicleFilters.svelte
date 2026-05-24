@@ -70,8 +70,10 @@
 </script>
 
 <div class="space-y-4">
-  <!-- Search row -->
-  <div class="flex items-center gap-3">
+  <!-- Search row. flex-wrap so the "Limpar filtros" chip drops to its own
+       row on a narrow viewport instead of squeezing the input below
+       readable width. -->
+  <div class="flex flex-wrap items-center gap-3">
     <div
       class="flex-1 relative flex items-center h-11 px-3 border border-[var(--color-border)] bg-[var(--color-bg-1)] focus-within:border-[var(--color-red)] transition-colors"
       style="border-radius: var(--radius-btn);"

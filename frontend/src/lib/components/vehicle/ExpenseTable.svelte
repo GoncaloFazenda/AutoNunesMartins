@@ -187,7 +187,8 @@
       Sem despesas registadas
     </div>
   {:else}
-    <table class="w-full text-[13px]">
+    <div class="overflow-x-auto">
+    <table class="w-full text-[13px] min-w-[560px]">
       <thead>
         <tr class="border-b border-[var(--color-border)]">
           <th
@@ -427,5 +428,6 @@
         {/each}
       </tbody>
     </table>
+    </div>
   {/if}
 </section>

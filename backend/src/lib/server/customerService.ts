@@ -132,6 +132,7 @@ export async function getCustomerForDetail(id: string) {
       ...s,
       salePrice: s.salePrice.toString(),
       vatAmount: s.vatAmount.toString(),
+      commission: s.commission.toString(),
       realProfit: s.realProfit.toString(),
     })),
   };

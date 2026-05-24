@@ -21,6 +21,10 @@ function parseFormToVehicleCreate(formData: FormData) {
     fuel: get('fuel'),
     mileage: get('mileage'),
     vin: get('vin').toUpperCase(),
+    // Matrícula is optional — the schema's preprocess maps "" → undefined
+    // so we only need to forward the raw value as-is. Backend Zod handles
+    // canonicalization to "XX-XX-XX".
+    licensePlate: getOptional('licensePlate'),
     purchasePrice: get('purchasePrice'),
     salePrice: getOptional('salePrice'),
     status: get('status') || 'AVAILABLE',

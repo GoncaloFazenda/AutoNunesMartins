@@ -35,6 +35,9 @@ function parseForm(fd: FormData) {
     saleDate: get('saleDate'),
     deliveryDate: get('deliveryDate') || undefined,
     deliveryStatus: get('deliveryStatus') || 'PENDING',
+    // Empty field → "0" so the schema's default kicks in cleanly and the
+    // resulting sale row stores 0 rather than NULL or a stray string.
+    commission: get('commission') || '0',
   };
 }
 

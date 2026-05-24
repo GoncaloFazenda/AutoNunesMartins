@@ -30,7 +30,7 @@
 </script>
 
 <article
-  class="kpi-surface group relative overflow-hidden border border-[var(--color-border)] py-[14px] px-[16px] transition-colors"
+  class="kpi-surface group relative overflow-hidden border border-[var(--color-border)] py-[14px] px-[16px] transition-colors aspect-square md:aspect-auto flex flex-col"
   style="border-radius: var(--radius-card); box-shadow: inset 0 1px 0 rgba(255,255,255,.04);"
 >
   <!-- red left rail on hover -->
@@ -46,13 +46,17 @@
   </div>
 
   <!-- Value with smaller dim suffix.
-       num-value applies the canonical recipe (mono + non-italic + tnum + 600). -->
+       num-value applies the canonical recipe (mono + non-italic + tnum + 600).
+       On mobile the value scales 38→28 and the suffix 18→14 so a 2-col
+       square tile (~156px) doesn't overflow horizontally. -->
   <div class="flex items-baseline gap-1.5 relative z-[1] my-3">
-    <span class="num-value text-[38px] leading-[0.95] text-[var(--color-text)]">
+    <span
+      class="num-value text-[28px] md:text-[38px] leading-[0.95] text-[var(--color-text)]"
+    >
       {value}
     </span>
     {#if suffix}
-      <span class="num-value text-[18px] text-[var(--color-text-muted)]">
+      <span class="num-value text-[14px] md:text-[18px] text-[var(--color-text-muted)]">
         {suffix}
       </span>
     {/if}
@@ -68,8 +72,12 @@
           <BrandDown class="h-3 w-3" />
         {/if}
         <span class="tabular-nums">{positive ? '+' : ''}{deltaPct.toFixed(1)}%</span>
+        <!-- "vs. mês anterior" caption is desktop-only — at 2-col square
+             tiles on mobile it would wrap onto a second line and break the
+             tight delta-row rhythm. The arrow + percentage carries the
+             signal alone. -->
         <span
-          class="font-mono text-[11px] font-normal text-[var(--color-text-faint)] ml-1.5"
+          class="hidden md:inline font-mono text-[11px] font-normal text-[var(--color-text-faint)] ml-1.5"
         >
           {deltaCaption}
         </span>

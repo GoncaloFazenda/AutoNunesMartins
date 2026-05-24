@@ -8,6 +8,7 @@ export interface SaleDetailResponse {
   customerId: string;
   salePrice: string;
   vatAmount: string;
+  commission: string;
   realProfit: string;
   saleDate: string;
   deliveryDate: string | null;
@@ -20,6 +21,7 @@ export interface SaleDetailResponse {
     model: string;
     year: number;
     vin: string;
+    licensePlate: string | null;
     mileage: number;
     fuel: string;
     purchasePrice: string;
@@ -37,7 +39,7 @@ export interface SaleDetailResponse {
 
 export interface CreateSaleResponse {
   id: string;
-  figures: { margin: string; vatAmount: string; realProfit: string };
+  figures: { margin: string; vatAmount: string; commission: string; realProfit: string };
 }
 
 type Ev = Pick<RequestEvent, 'locals' | 'fetch'>;

@@ -127,6 +127,11 @@
   function openTask(id: string) {
     goto(`/tarefas/${id}/editar`);
   }
+
+  // Mobile: which column is currently shown. The segmented control above
+  // the board toggles it. Desktop renders all three columns in a grid
+  // regardless of this value.
+  let mobileColumn = $state<TaskStatus>('TODO');
 </script>
 
 <svelte:head>
@@ -135,11 +140,11 @@
 
 <section class="pt-8 pb-12 space-y-6">
   <!-- Page header -->
-  <div class="flex items-end justify-between gap-6">
-    <div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+    <div class="min-w-0">
       <ItalicHero text="Tarefas" size="lg" />
       <div
-        class="mt-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]"
+        class="mt-2 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]"
       >
         <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-red)]"></span>
         {formatDateLong(today)}
@@ -148,11 +153,19 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <Button variant="outline" size="md" href="/tarefas/export?format=csv">
+      <Button variant="outline" size="md" href="/tarefas/export?format=csv" class="hidden md:inline-flex">
         <Download class="h-4 w-4" />
         Exportar
       </Button>
-      <Button variant="primary" size="md" href="/tarefas/nova">
+      <a
+        href="/tarefas/nova"
+        class="inline-flex md:hidden items-center justify-center h-10 w-10 text-white bg-[var(--color-red)] hover:bg-[var(--color-red-soft)] transition-colors"
+        style="border-radius: var(--radius-btn);"
+        aria-label="Nova tarefa"
+      >
+        <Plus class="h-4 w-4" />
+      </a>
+      <Button variant="primary" size="md" href="/tarefas/nova" class="hidden md:inline-flex">
         <Plus class="h-4 w-4" />
         Nova Tarefa
       </Button>
@@ -235,9 +248,44 @@
     </Panel>
   {/if}
 
+  <!--
+    Mobile segmented control. Below md the board shows one column at a time;
+    this strip picks which one. Active state uses the column's own color for
+    the dot + a brand-red top rail so it reads as part of the same DNA as
+    the sidebar's left-rail active state.
+  -->
+  <div class="md:hidden">
+    <div
+      class="grid grid-cols-3 border border-[var(--color-border)] overflow-hidden"
+      style="border-radius: var(--radius-card); background: var(--color-bg-1);"
+      role="tablist"
+      aria-label="Estado da tarefa"
+    >
+      {#each COLUMN_DEFS as col (col.status)}
+        {@const active = mobileColumn === col.status}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={active}
+          onclick={() => (mobileColumn = col.status)}
+          class="tab-pill {active ? 'is-active' : ''}"
+        >
+          <span class="flex items-center justify-center gap-1.5">
+            <span class="h-2 w-2 rounded-full flex-shrink-0" style="background: {col.color};"></span>
+            <span class="font-mono text-[10px] uppercase tracking-[0.15em]">{col.label}</span>
+          </span>
+          <span class="font-mono text-[10px] tabular-nums opacity-70 mt-0.5">
+            {board[col.status].length}
+          </span>
+        </button>
+      {/each}
+    </div>
+  </div>
+
   <!-- Kanban -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     {#each COLUMN_DEFS as col (col.status)}
+      <div class={col.status === mobileColumn ? 'block' : 'hidden md:block'}>
       <Panel>
         <header
           class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)]"
@@ -300,6 +348,54 @@
           {/if}
         </div>
       </Panel>
+      </div>
     {/each}
   </div>
 </section>
+
+<style>
+  /*
+    Segmented-control button. Mirrors the brand language: mono uppercase
+    label + red top rail when active (matching the sidebar's left-rail
+    active state and the bottom-nav's top-rail active state).
+  */
+  .tab-pill {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 10px 6px;
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: color 0.12s, background-color 0.12s;
+  }
+  .tab-pill:last-child {
+    border-right: 0;
+  }
+  .tab-pill:hover {
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  :global([data-theme='light']) .tab-pill:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+  .tab-pill.is-active {
+    color: var(--color-text);
+    background: color-mix(in oklab, var(--color-red) 6%, transparent);
+  }
+  .tab-pill.is-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    background: var(--color-red);
+    box-shadow: 0 0 10px color-mix(in oklab, var(--color-red) 50%, transparent);
+  }
+</style>

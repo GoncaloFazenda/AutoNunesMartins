@@ -51,3 +51,21 @@ function create() {
 }
 
 export const sidebar = create();
+
+/*
+  Mobile drawer state — independent of the desktop expanded/collapsed
+  persistence. Transient: never saved to localStorage; resets to closed on
+  every load. The topbar hamburger toggles it, the backdrop and Escape close
+  it, and route changes auto-close in the layout.
+*/
+function createMobileDrawer() {
+  const { subscribe, set, update } = writable<boolean>(false);
+  return {
+    subscribe,
+    open: () => set(true),
+    close: () => set(false),
+    toggle: () => update((v) => !v),
+  };
+}
+
+export const mobileDrawer = createMobileDrawer();

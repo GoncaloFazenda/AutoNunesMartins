@@ -27,10 +27,23 @@ export function buildVehicleWhere(filter: VehicleFilter): Prisma.VehicleWhereInp
     if (filter.mileageMax !== undefined) where.mileage.lte = filter.mileageMax;
   }
   if (filter.q) {
+    // We store the plate canonically as "XX-XX-XX". Users typically type
+    // it without dashes, so we also try the dash-injected form of the
+    // query: every two characters → group → "AA-00-AA". Both forms get
+    // OR'd in so "12AB34", "12-AB-34", or even "12AB" all match.
+    const compact = filter.q.replace(/[\s-]/g, '').toUpperCase();
+    const dashed =
+      compact.length >= 3 && compact.length <= 6
+        ? compact.replace(/(.{2})/g, '$1-').replace(/-$/, '')
+        : null;
     where.OR = [
       { brand: { contains: filter.q, mode: 'insensitive' } },
       { model: { contains: filter.q, mode: 'insensitive' } },
       { vin: { contains: filter.q, mode: 'insensitive' } },
+      { licensePlate: { contains: filter.q, mode: 'insensitive' } },
+      ...(dashed
+        ? [{ licensePlate: { contains: dashed, mode: 'insensitive' as const } }]
+        : []),
     ];
   }
   return where;
@@ -59,6 +72,7 @@ export async function listVehicles(tx: TxClient, params: ListVehiclesParams) {
         fuel: true,
         mileage: true,
         vin: true,
+        licensePlate: true,
         purchasePrice: true,
         salePrice: true,
         status: true,

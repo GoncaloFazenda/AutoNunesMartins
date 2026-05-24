@@ -14,7 +14,7 @@
   import BrandLogout from '$lib/components/brand/icons/BrandLogout.svelte';
   import { SignOutButton, useClerkContext } from 'svelte-clerk';
   import Wordmark from '$lib/components/brand/Wordmark.svelte';
-  import { sidebar } from '$lib/stores/sidebar';
+  import { sidebar, mobileDrawer } from '$lib/stores/sidebar';
 
   const ctx = useClerkContext();
 
@@ -121,6 +121,7 @@
   }
 
   const collapsed = $derived($sidebar === 'collapsed');
+  const mobileOpen = $derived($mobileDrawer);
 </script>
 
 <!--
@@ -137,7 +138,7 @@
   • Labels fade via opacity; they never change width, never wrap.
 -->
 
-<aside class="sidebar" class:collapsed>
+<aside class="sidebar" class:collapsed class:mobile-open={mobileOpen} aria-hidden={!mobileOpen ? undefined : 'false'}>
   <div class="sidebar-inner">
     <!--
       Brand block:
@@ -252,6 +253,56 @@
   }
   :global([data-theme='light']) .sidebar {
     background: linear-gradient(180deg, #fafaf6 0%, #f4f2ee 100%);
+  }
+
+  /*
+    ─── Mobile drawer mode ─────────────────────────────────────────────
+    Below md: the sidebar is a fixed off-canvas drawer. It's always at its
+    expanded width regardless of the desktop `.collapsed` class (collapse is
+    desktop-only), and slides in/out via translateX. Sits above the
+    backdrop (which is z-30) so it overlays everything.
+  */
+  @media (max-width: 767px) {
+    .sidebar,
+    .sidebar.collapsed {
+      width: var(--sidebar-w-mobile, 280px);
+      transform: translateX(-100%);
+      transition: transform 0.22s var(--ease-brand);
+      z-index: 40;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+    }
+    .sidebar.mobile-open,
+    .sidebar.collapsed.mobile-open {
+      transform: translateX(0);
+    }
+    /* Inner box is the mobile width too — no clipping needed since
+       collapse doesn't apply below md. */
+    .sidebar .sidebar-inner,
+    .sidebar.collapsed .sidebar-inner {
+      width: var(--sidebar-w-mobile, 280px);
+    }
+    /* Hide the desktop collapse chevron — drawer toggle lives in topbar. */
+    .sidebar-toggle {
+      display: none;
+    }
+    /* Brand block reclaims the right padding since toggle is gone. */
+    .brand-block {
+      padding: 18px 22px;
+    }
+    /* Force expanded-state visibility on inner items regardless of the
+       `.collapsed` class (which is desktop-only state). */
+    .sidebar.collapsed .brand-content,
+    .sidebar.collapsed .nav-heading,
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .nav-badge,
+    .sidebar.collapsed .user-meta {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sidebar.collapsed :global(.sign-out) {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   /* Inner box keeps the EXPANDED width even when the sidebar is collapsed —

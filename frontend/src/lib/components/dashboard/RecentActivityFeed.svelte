@@ -125,7 +125,7 @@
                 {item.message}
               </span>
               <span
-                class="font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] flex-shrink-0 flex items-center gap-1.5"
+                class="hidden md:flex font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] flex-shrink-0 items-center gap-1.5"
                 title={`Por ${actorLabel}`}
               >
                 <UserIcon class="h-3 w-3 opacity-70" />
@@ -144,7 +144,7 @@
                 {item.message}
               </span>
               <span
-                class="font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] flex-shrink-0 flex items-center gap-1.5"
+                class="hidden md:flex font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] flex-shrink-0 items-center gap-1.5"
                 title={`Por ${actorLabel}`}
               >
                 <UserIcon class="h-3 w-3 opacity-70" />

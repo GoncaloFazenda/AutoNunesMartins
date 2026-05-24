@@ -10,6 +10,8 @@ export interface VehicleListItem {
   fuel: Fuel;
   mileage: number;
   vin: string;
+  /** Portuguese license plate ("matrícula"), canonical "XX-XX-XX" or null. */
+  licensePlate: string | null;
   purchasePrice: string;
   salePrice: string | null;
   status: VehicleStatus;
@@ -48,6 +50,7 @@ export interface VehicleDetailResponse {
   fuel: Fuel;
   mileage: number;
   vin: string;
+  licensePlate: string | null;
   purchasePrice: string;
   salePrice: string | null;
   status: VehicleStatus;
@@ -60,11 +63,17 @@ export interface VehicleDetailResponse {
   updatedAt: string;
   expenses: VehicleExpenseDto[];
   expensesTotal: string;
-  figures: { margin: string; vatAmount: string; realProfit: string } | null;
+  figures: {
+    margin: string;
+    vatAmount: string;
+    commission: string;
+    realProfit: string;
+  } | null;
   sale: {
     id: string;
     salePrice: string;
     vatAmount: string;
+    commission: string;
     realProfit: string;
     saleDate: string;
     deliveryStatus: string;

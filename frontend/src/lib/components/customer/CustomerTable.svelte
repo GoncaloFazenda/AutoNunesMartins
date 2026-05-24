@@ -10,7 +10,62 @@
   let { items }: Props = $props();
 </script>
 
-<div class="overflow-x-auto">
+<!--
+  Mobile (< md): stacked card list. Each card shows avatar, name+address,
+  contact info, NIF, purchase count, last contact — formatted to fit a
+  360px viewport without horizontal scroll.
+-->
+<div class="md:hidden divide-y divide-[var(--color-border)]">
+  {#each items as c (c.id)}
+    <a
+      href={`/clientes/${c.id}`}
+      class="block px-4 py-3 hover:bg-[color-mix(in_oklab,var(--color-red)_5%,transparent)] transition-colors group"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="h-11 w-11 flex items-center justify-center bg-[var(--color-bg-2)] border border-[var(--color-border)] flex-shrink-0"
+          style="border-radius: var(--radius-btn);"
+        >
+          <UserIcon class="h-5 w-5 text-[var(--color-red)]" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2">
+            <div
+              class="font-display font-bold italic text-[15px] truncate group-hover:text-[var(--color-red)] transition-colors"
+            >
+              {c.name}
+            </div>
+            <span class="num-value text-[18px] flex-shrink-0">
+              {c._count.sales}
+            </span>
+          </div>
+          <div class="font-mono text-[10.5px] text-[var(--color-text-faint)] truncate mt-0.5 tabular-nums">
+            NIF {c.nif}
+          </div>
+        </div>
+      </div>
+      <div class="mt-2.5 flex flex-col gap-1 text-[12px]">
+        <span class="flex items-center gap-1.5 text-[var(--color-text-muted)]">
+          <Phone class="h-3 w-3 text-[var(--color-text-faint)] flex-shrink-0" />
+          <span class="font-mono truncate">{c.phone}</span>
+        </span>
+        {#if c.email}
+          <span class="flex items-center gap-1.5 text-[var(--color-text-muted)]">
+            <Mail class="h-3 w-3 text-[var(--color-text-faint)] flex-shrink-0" />
+            <span class="truncate">{c.email}</span>
+          </span>
+        {/if}
+      </div>
+      {#if c.lastContactDate}
+        <div class="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--color-text-faint)]">
+          Último contacto · {formatDate(c.lastContactDate)}
+        </div>
+      {/if}
+    </a>
+  {/each}
+</div>
+
+<div class="hidden md:block overflow-x-auto">
   <table class="w-full text-[13px]">
     <thead>
       <tr class="border-b border-[var(--color-border)]">

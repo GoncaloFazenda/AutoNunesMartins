@@ -181,17 +181,16 @@
 
 <section class="pb-12 space-y-6">
   <!-- Page header -->
-  <div class="flex items-end justify-between gap-6 pt-[28px]">
-    <div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6 pt-6 md:pt-[28px]">
+    <div class="min-w-0">
       <ItalicHero text="Atividade" size="lg" />
       <div
-        class="mt-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]"
+        class="mt-2 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]"
       >
         <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-red)]"></span>
-        Registo · Todas as ações do painel
+        <span>Registo · Todas as ações do painel</span>
         <span class="text-[var(--color-text-faint)]">·</span>
-        <span class="num-value text-[11px]">{data.result.total}</span>
-        eventos
+        <span><span class="num-value text-[11px]">{data.result.total}</span> eventos</span>
       </div>
     </div>
     {#if hasAnyFilter}
@@ -393,8 +392,7 @@
               {#if href}
                 <a
                   {href}
-                  class="grid items-center gap-4 px-5 py-3 hover:bg-[color-mix(in_oklab,var(--color-red)_4%,transparent)] transition-colors group"
-                  style="grid-template-columns: 36px 1.5px 1fr auto auto;"
+                  class="grid items-center gap-3 md:gap-4 px-5 py-3 grid-cols-[36px_1.5px_1fr_auto] md:grid-cols-[36px_1.5px_1fr_auto_auto] hover:bg-[color-mix(in_oklab,var(--color-red)_4%,transparent)] transition-colors group"
                 >
                   <span class="inline-flex items-center justify-center h-9 w-9 rounded-full" style="background: color-mix(in oklab, {s.color} 12%, transparent);">
                     <Icon class="h-4 w-4" style="color: {s.color};" />
@@ -409,7 +407,7 @@
                     </div>
                   </div>
                   <span
-                    class="font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] flex items-center gap-1.5"
+                    class="hidden md:flex font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] items-center gap-1.5"
                     title={`Por ${actorLabel}`}
                   >
                     <UserIcon class="h-3 w-3 opacity-70" />
@@ -421,8 +419,7 @@
                 </a>
               {:else}
                 <div
-                  class="grid items-center gap-4 px-5 py-3"
-                  style="grid-template-columns: 36px 1.5px 1fr auto auto;"
+                  class="grid items-center gap-3 md:gap-4 px-5 py-3 grid-cols-[36px_1.5px_1fr_auto] md:grid-cols-[36px_1.5px_1fr_auto_auto]"
                 >
                   <span class="inline-flex items-center justify-center h-9 w-9 rounded-full" style="background: color-mix(in oklab, {s.color} 12%, transparent);">
                     <Icon class="h-4 w-4" style="color: {s.color};" />
@@ -437,7 +434,7 @@
                     </div>
                   </div>
                   <span
-                    class="font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] flex items-center gap-1.5"
+                    class="hidden md:flex font-mono text-[9.5px] uppercase tracking-[0.18em] text-[var(--color-text-faint)] items-center gap-1.5"
                     title={`Por ${actorLabel}`}
                   >
                     <UserIcon class="h-3 w-3 opacity-70" />

@@ -64,16 +64,17 @@
       flex space-between with items-end,
       title block on the left, Exportar + Adicionar Viatura buttons on the right.
   -->
-  <div class="flex items-end justify-between gap-6 pt-[28px] pb-[32px]">
-    <div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6 pt-6 md:pt-[28px] pb-6 md:pb-[32px]">
+    <div class="min-w-0">
       <ItalicHero text={`${greeting}, `} accent={firstName ? `${firstName}.` : ''} size="lg" />
       <!--
         Page subtitle — mirrors the prototype's `.page-head .sub-info`:
         mono 11px, font-weight 400 (thinner than our default 500), color
         text-faint (#6E6F73 — dimmer than text-muted), 0.12em tracking.
+        On mobile the row can wrap if the date is long.
       -->
       <div
-        class="mt-2 flex items-center gap-2 font-mono font-normal text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
+        class="mt-2 flex flex-wrap items-center gap-2 font-mono font-normal text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
       >
         {formatDateLong(today)}
         <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-red)]"></span>
@@ -81,7 +82,12 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-2 flex-shrink-0">
+    <!--
+      Action buttons are desktop-only. On mobile the topbar already carries
+      the icon-only red `+` CTA for adding a vehicle, and a one-tap Exportar
+      on a phone is rare enough to not warrant the row space.
+    -->
+    <div class="hidden md:flex items-center gap-2 flex-shrink-0">
       <button
         type="button"
         class="inline-flex items-center gap-2 px-[14px] py-[10px] bg-transparent border border-[var(--color-border-strong)] hover:border-[var(--color-red)] text-[var(--color-text)] font-display font-semibold italic uppercase text-[12px] tracking-[0.1em] transition-colors cursor-pointer"
@@ -105,10 +111,10 @@
   <!-- Streamed dashboard -->
   {#await data.dashboard}
     <!-- Skeleton state -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {#each Array(4) as _, i (i)}
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {#each Array(5) as _, i (i)}
         <Panel>
-          <div class="p-4 space-y-3">
+          <div class="p-4 space-y-3 aspect-square md:aspect-auto">
             <Skeleton width="60%" height="10px" />
             <Skeleton width="80%" height="28px" />
             <Skeleton width="50%" height="10px" />
@@ -154,10 +160,19 @@
       <!-- Smart Alerts banner (renders only when there's something to alert about) -->
       <SmartAlertsBanner alerts={d.alerts} />
 
-      <!-- KPI row — values compact-formatted with smaller dim suffix -->
+      <!-- KPI row — values compact-formatted with smaller dim suffix.
+           5 cards on lg+; on mobile the 5th wraps to a half-width tile under
+           the others (2-2-1 grid). The Comissões card is only meaningful
+           once the dealer has registered a financing referral, so it shows
+           "—" until that happens rather than a misleading zero. -->
       {@const faturacao = formatCompactEUR(d.kpis.faturacaoMes.current)}
       {@const lucro = formatCompactEUR(d.kpis.lucroMes.current)}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {@const comissoes = formatCompactEUR(d.kpis.comissoesMes.current)}
+      {@const hasComissoes =
+        Number(d.kpis.comissoesMes.current) > 0 ||
+        Number(d.kpis.comissoesMes.previous) > 0 ||
+        d.kpis.sparklines.comissoes.some((v) => v > 0)}
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           icon={BrandCar}
           label="Vendas · Mês"
@@ -181,6 +196,15 @@
           suffix={lucro.suffix}
           deltaPct={d.kpis.lucroMes.deltaPct}
           sparkline={d.kpis.sparklines.lucro}
+        />
+        <KPICard
+          icon={BrandReceipt}
+          label="Comissões · Mês"
+          value={hasComissoes ? comissoes.value : '—'}
+          suffix={hasComissoes ? comissoes.suffix : undefined}
+          deltaPct={hasComissoes ? d.kpis.comissoesMes.deltaPct : null}
+          deltaCaption="intermediação · isento IVA"
+          sparkline={hasComissoes ? d.kpis.sparklines.comissoes : undefined}
         />
         <KPICard
           icon={BrandGauge}

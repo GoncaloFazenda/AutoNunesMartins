@@ -26,7 +26,27 @@
       "Bash(echo \"be=$?\")",
       "Bash(gh --version)",
       "Bash(git config *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git remote *)",
+      "Bash(git -c credential.helper= -c core.askPass=true push -u origin main)",
+      "Bash(winget install *)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)",
+      "Bash(git pull *)",
+      "Bash(git push *)",
+      "Bash(yarn svelte-check *)",
+      "Bash(grep -qE \"ready in|Listening on|VITE.*ready|http://localhost\" \"C:\\\\\\\\Users\\\\\\\\Goncalo\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-Goncalo-Desktop-AI-AutoNunesMartins\\\\\\\\0a8c99e5-e060-406e-a661-3654ada27eca\\\\\\\\tasks\\\\\\\\bzgdwe0ke.output\")",
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; head -5 \"{}\"')",
+      "Bash(xargs grep -l \"vatAmount\\\\|realProfit\\\\|Sale\")",
+      "Bash(yarn build *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(yarn vitest *)",
+      "Bash(yarn prisma *)",
+      "Bash(grep -qE \"ready in|Listening on|VITE.*ready|http://localhost\" \"C:\\\\\\\\Users\\\\\\\\Goncalo\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-Goncalo-Desktop-AI-AutoNunesMartins\\\\\\\\0a8c99e5-e060-406e-a661-3654ada27eca\\\\\\\\tasks\\\\\\\\bsrcll6c6.output\")",
+      "Bash(npx vitest *)",
+      "Bash(npx svelte-kit *)",
+      "Bash(npx svelte-check *)"
     ]
   }
 }

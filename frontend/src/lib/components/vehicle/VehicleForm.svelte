@@ -13,6 +13,7 @@
     fuel?: Fuel | '';
     mileage?: number | null;
     vin?: string;
+    licensePlate?: string | null;
     purchasePrice?: string;
     salePrice?: string;
     status?: VehicleStatus;
@@ -74,6 +75,22 @@
 
   const today = new Date().toISOString().slice(0, 10);
   const defaultAcquisitionDate = initial.acquisitionDate ?? today;
+
+  // Matrícula auto-formatter. Reactive: typing reformats the value so the
+  // user sees "12-AB-34" as they go instead of having to hit the dashes
+  // themselves. Stripping non-alphanumerics first, capping at 6 chars,
+  // then re-grouping in pairs separated by "-".
+  let licensePlateInput = $state(initial.licensePlate ?? '');
+  function formatPlate(raw: string): string {
+    const compact = raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
+    if (compact.length <= 2) return compact;
+    if (compact.length <= 4) return `${compact.slice(0, 2)}-${compact.slice(2)}`;
+    return `${compact.slice(0, 2)}-${compact.slice(2, 4)}-${compact.slice(4)}`;
+  }
+  function onPlateInput(e: Event) {
+    const el = e.currentTarget as HTMLInputElement;
+    licensePlateInput = formatPlate(el.value);
+  }
 </script>
 
 <form
@@ -147,9 +164,9 @@
     </label>
   </div>
 
-  <!-- Row 2: VIN + fuel + status -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <label class="flex flex-col md:col-span-1">
+  <!-- Row 2: VIN + Matrícula -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <label class="flex flex-col">
       <span class={fieldLabelClass()}>VIN</span>
       <input
         name="vin"
@@ -163,6 +180,30 @@
         style="border-radius: var(--radius-btn); text-transform: uppercase;"
       />
     </label>
+    <label class="flex flex-col">
+      <span class={fieldLabelClass()} title="Matrícula portuguesa">
+        Matrícula
+        <span class="text-[var(--color-text-faint)] normal-case tracking-normal text-[10.5px] ml-1">
+          · opcional
+        </span>
+      </span>
+      <input
+        name="licensePlate"
+        type="text"
+        maxlength="8"
+        autocomplete="off"
+        spellcheck="false"
+        value={licensePlateInput}
+        oninput={onPlateInput}
+        placeholder="AA-00-AA"
+        class="{inputClass()} font-mono tracking-[0.18em] uppercase"
+        style="border-radius: var(--radius-btn); text-transform: uppercase;"
+      />
+    </label>
+  </div>
+
+  <!-- Row 2b: fuel + status -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <label class="flex flex-col">
       <span class={fieldLabelClass()}>Combustível</span>
       <select

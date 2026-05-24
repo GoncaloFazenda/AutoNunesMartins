@@ -23,6 +23,10 @@
   // Read initial salePrice from data directly (not via $derived `v`) to avoid
   // Svelte 5's state_referenced_locally warning. We only need a default.
   let salePriceInput = $state(data.vehicle.salePrice ?? '');
+  // Optional financing-referral commission. Net amount the dealer actually
+  // pockets from the credit institution — added on top of the vehicle's
+  // net margin in the live preview and persisted on the Sale row.
+  let commissionInput = $state('');
   let submitting = $state(false);
 
   const filteredCustomers = $derived.by(() => {
@@ -43,21 +47,48 @@
     customerId ? data.customers.find((c) => c.id === customerId) : null,
   );
 
-  // Live margin VAT preview (mirrors backend computation)
+  // Live margin VAT preview (mirrors backend computation exactly, including
+  // the manual commission fold-in so the previewed "Lucro Real" matches the
+  // value that will be persisted on submit).
   const figures = $derived.by(() => {
     const price = Number(salePriceInput);
     const purchase = Number(v.purchasePrice);
     const expensesTotal = Number(v.expensesTotal);
+    // Commission may be blank, "0", or a positive number. Treat anything
+    // not parseable as 0 so the preview never reads NaN.
+    const commissionNum = Number(commissionInput);
+    const commission = Number.isFinite(commissionNum) && commissionNum > 0
+      ? commissionNum
+      : 0;
+
     if (!Number.isFinite(price) || price <= 0) {
-      return { margin: '0.00', vat: '0.00', profit: '0.00' };
+      return {
+        margin: '0.00',
+        vat: '0.00',
+        commission: commission.toFixed(2),
+        profit: commission.toFixed(2),
+      };
     }
     const margin = price - purchase - expensesTotal;
     if (margin <= 0) {
-      return { margin: margin.toFixed(2), vat: '0.00', profit: margin.toFixed(2) };
+      // Negative margin + commission can still net positive if the
+      // referral covers the loss.
+      const profit = margin + commission;
+      return {
+        margin: margin.toFixed(2),
+        vat: '0.00',
+        commission: commission.toFixed(2),
+        profit: profit.toFixed(2),
+      };
     }
     const vat = (margin * 23) / 123;
-    const profit = margin - vat;
-    return { margin: margin.toFixed(2), vat: vat.toFixed(2), profit: profit.toFixed(2) };
+    const profit = margin - vat + commission;
+    return {
+      margin: margin.toFixed(2),
+      vat: vat.toFixed(2),
+      commission: commission.toFixed(2),
+      profit: profit.toFixed(2),
+    };
   });
 
   function pickCustomer(id: string) {
@@ -77,10 +108,13 @@
 <section class="pt-8 pb-12 space-y-6">
   <div>
     <ItalicHero text="Registar venda" size="lg" />
-    <p class="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
+    <p class="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] flex flex-wrap items-center gap-x-2 gap-y-1">
       <span class="text-[var(--color-red)]">●</span>
-      {v.brand} {v.model} <span class="text-[var(--color-text-faint)]">·</span> {v.year}
-      <span class="text-[var(--color-text-faint)]">·</span> {v.vin}
+      <span>{v.brand} {v.model}</span>
+      <span class="text-[var(--color-text-faint)]">·</span>
+      <span>{v.year}</span>
+      <span class="text-[var(--color-text-faint)]">·</span>
+      <span>{v.licensePlate ?? v.vin}</span>
     </p>
   </div>
 
@@ -257,6 +291,41 @@
               style="border-radius: var(--radius-btn);"
             />
           </label>
+
+          <!--
+            Manual commission. Spans both columns so it stands apart from
+            the standard sale fields. The hint and tooltip surface the
+            VAT-exempt nature of the income (art. 9.º, 27.º, a) CIVA) so
+            the form documents *why* the user enters a net amount and not
+            a gross value — this matters for the demo's credibility.
+          -->
+          <label class="flex flex-col md:col-span-2">
+            <span
+              class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-2"
+            >
+              Comissão extra (opcional)
+              <span class="text-[var(--color-text-faint)] normal-case tracking-normal text-[10.5px]">
+                · ex: comissão de financiamento paga pelo banco
+              </span>
+            </span>
+            <input
+              name="commission"
+              type="number"
+              step="0.01"
+              min="0"
+              bind:value={commissionInput}
+              placeholder="0.00"
+              title="Valor que a financeira te paga pela intermediação. Isento de IVA ao abrigo do art. 9.º, 27.º, a) do CIVA — introduz o valor líquido tal como o recebes."
+              class="h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] tabular-nums outline-none focus:border-[var(--color-red)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-red)_12%,transparent)] transition-colors"
+              style="border-radius: var(--radius-btn);"
+            />
+            <span class="mt-1.5 font-mono text-[10px] text-[var(--color-text-faint)] uppercase tracking-[0.12em] leading-relaxed">
+              Valor líquido que recebes — somado ao Lucro Real.<br />
+              <span class="normal-case tracking-normal text-[10.5px]">
+                Isento de IVA (art. 9.º, 27.º, a) CIVA) — entra como rendimento para efeitos de IRC.
+              </span>
+            </span>
+          </label>
         </div>
       </Panel>
     </div>
@@ -311,14 +380,35 @@
             </div>
           </div>
 
+          <!--
+            Optional commission line. Only renders when the user has entered
+            a positive value — keeps the preview clean for cash sales.
+          -->
+          {#if Number(figures.commission) > 0}
+            <div
+              class="flex items-center justify-between border-t border-[var(--color-border)] pt-4 -mt-1"
+            >
+              <div
+                class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
+              >
+                + Comissão extra
+              </div>
+              <div
+                class="font-display text-[18px] font-bold italic tabular-nums text-[var(--color-success)]"
+              >
+                {formatEUR(figures.commission)}
+              </div>
+            </div>
+          {/if}
+
           <div class="border-t border-[var(--color-border)] pt-4">
             <div
               class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"
             >
-              Lucro Real (após IVA)
+              Lucro Real (após IVA{Number(figures.commission) > 0 ? ' + comissão' : ''})
             </div>
             <div
-              class="font-display text-[36px] font-extrabold italic tabular-nums tracking-tight"
+              class="font-display text-[26px] md:text-[36px] font-extrabold italic tabular-nums tracking-tight"
               class:text-loss={Number(figures.profit) < 0}
               class:text-profit={Number(figures.profit) >= 0}
             >

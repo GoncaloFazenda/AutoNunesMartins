@@ -29,6 +29,7 @@ function parseForm(formData: FormData) {
     fuel: get('fuel'),
     mileage: get('mileage'),
     vin: get('vin').toUpperCase(),
+    licensePlate: getOptional('licensePlate'),
     purchasePrice: get('purchasePrice'),
     salePrice: getOptional('salePrice'),
     status: get('status'),

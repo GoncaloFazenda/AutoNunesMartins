@@ -51,7 +51,7 @@ export async function getCustomerById(tx: TxClient, id: string) {
         orderBy: { saleDate: 'desc' },
         include: {
           vehicle: {
-            select: { id: true, brand: true, model: true, year: true, vin: true, photos: true },
+            select: { id: true, brand: true, model: true, year: true, vin: true, licensePlate: true, photos: true },
           },
         },
       },

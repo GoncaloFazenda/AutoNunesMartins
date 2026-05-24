@@ -69,14 +69,14 @@
   <!-- Aparência -->
   <Panel>
     <PanelHeader icon={Palette} title="Aparência" />
-    <div class="p-5 flex items-center justify-between gap-4">
-      <div>
+    <div class="p-5 flex flex-wrap items-center justify-between gap-4">
+      <div class="min-w-0 flex-1">
         <div class="text-[14px] text-[var(--color-text)] mb-1">Tema</div>
         <div class="text-[12px] text-[var(--color-text-muted)]">
           Predefinido para escuro. A escolha fica guardada no navegador.
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-shrink-0">
         <button
           type="button"
           onclick={() => theme.set('light')}

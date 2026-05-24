@@ -61,11 +61,31 @@ router.get('/', requireUser, async (req: AuthedRequest, res: Response) => {
             { brand: { contains: needle, mode: 'insensitive' } },
             { model: { contains: needle, mode: 'insensitive' } },
             { vin: { contains: needle, mode: 'insensitive' } },
+            // Match matrícula both as typed and in the canonical dashed
+            // form — see buildVehicleWhere() for the same trick.
+            { licensePlate: { contains: needle, mode: 'insensitive' } },
+            ...(needle.length >= 3 && needle.length <= 6 && /^[\w-]+$/.test(needle)
+              ? [
+                  {
+                    licensePlate: {
+                      contains: needle
+                        .replace(/[\s-]/g, '')
+                        .toUpperCase()
+                        .replace(/(.{2})/g, '$1-')
+                        .replace(/-$/, ''),
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                ]
+              : []),
           ],
         },
         orderBy: { updatedAt: 'desc' },
         take: limit,
-        select: { id: true, brand: true, model: true, year: true, vin: true, status: true },
+        select: {
+          id: true, brand: true, model: true, year: true,
+          vin: true, licensePlate: true, status: true,
+        },
       }),
       prisma.customer.findMany({
         where: {
@@ -96,7 +116,9 @@ router.get('/', requireUser, async (req: AuthedRequest, res: Response) => {
     const vHits: SearchHit[] = vehicles.map((v) => ({
       id: v.id,
       primary: `${v.brand} ${v.model}`,
-      secondary: `${v.year} · VIN ${v.vin} · ${v.status}`,
+      // Prefer matrícula when set — it's how staff refer to a car day-to-day.
+      // VIN stays as a secondary fact when no plate is registered yet.
+      secondary: `${v.year} · ${v.licensePlate ? `Matrícula ${v.licensePlate}` : `VIN ${v.vin}`} · ${v.status}`,
       href: `/viaturas/${v.id}`,
     }));
     const cHits: SearchHit[] = customers.map((c) => ({

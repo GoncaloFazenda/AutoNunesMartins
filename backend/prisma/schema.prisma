@@ -31,6 +31,10 @@ model Vehicle {
   fuel            Fuel
   mileage         Int
   vin             String        @unique
+  /// Portuguese license plate (matrícula), stored canonical as "XX-XX-XX".
+  /// Nullable so legacy rows imported without a registered plate don't break;
+  /// unique when set (Postgres allows multiple NULLs in a unique index).
+  licensePlate    String?       @unique
   purchasePrice   Decimal       @db.Decimal(12, 2)
   salePrice       Decimal?      @db.Decimal(12, 2)
   status          VehicleStatus @default(AVAILABLE)
@@ -89,6 +93,11 @@ model Sale {
   customerId     String
   salePrice      Decimal        @db.Decimal(12, 2)
   vatAmount      Decimal        @db.Decimal(12, 2)
+  /// Manual extra income captured per-sale: typically a referral commission
+  /// paid by a credit institution when the customer financed the purchase
+  /// through them. Folded into `realProfit` so the dashboard KPI and the
+  /// "Lucro por viatura" view automatically include it.
+  commission     Decimal        @default(0) @db.Decimal(12, 2)
   realProfit     Decimal        @db.Decimal(12, 2)
   saleDate       DateTime
   deliveryDate   DateTime?

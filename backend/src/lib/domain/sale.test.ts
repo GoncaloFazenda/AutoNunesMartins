@@ -71,4 +71,54 @@ describe('computeSaleFigures (PT margin scheme)', () => {
     expect(r.vatAmount.toFixed(2)).toBe('588.98');
     expect(r.realProfit.toFixed(2)).toBe('2560.77');
   });
+
+  it('omits commission entirely when not provided (zero echoed back)', () => {
+    const r = computeSaleFigures({
+      salePrice: 12300,
+      purchasePrice: 10000,
+      expensesTotal: 0,
+    });
+    expect(r.commission.toFixed(2)).toBe('0.00');
+    // realProfit unchanged when commission = 0
+    expect(r.realProfit.toFixed(2)).toBe('1869.92');
+  });
+
+  it('adds commission on top of net margin after VAT', () => {
+    const r = computeSaleFigures({
+      salePrice: 12300,
+      purchasePrice: 10000,
+      expensesTotal: 0,
+      commission: 500,
+    });
+    expect(r.margin.toFixed(2)).toBe('2300.00');
+    expect(r.vatAmount.toFixed(2)).toBe('430.08');
+    expect(r.commission.toFixed(2)).toBe('500.00');
+    // (margin - vat) + commission = 1869.92 + 500 = 2369.92
+    expect(r.realProfit.toFixed(2)).toBe('2369.92');
+  });
+
+  it('commission can soften (or offset) a loss', () => {
+    const r = computeSaleFigures({
+      salePrice: 9000,
+      purchasePrice: 10000,
+      expensesTotal: 500,
+      commission: 800,
+    });
+    expect(r.margin.toFixed(2)).toBe('-1500.00');
+    expect(r.vatAmount.toFixed(2)).toBe('0.00');
+    expect(r.commission.toFixed(2)).toBe('800.00');
+    // -1500 + 800 = -700 (still a loss, but smaller)
+    expect(r.realProfit.toFixed(2)).toBe('-700.00');
+  });
+
+  it('accepts string commission inputs and rounds half-up to 2dp', () => {
+    const r = computeSaleFigures({
+      salePrice: 12300,
+      purchasePrice: 10000,
+      expensesTotal: 0,
+      commission: '250.555',
+    });
+    expect(r.commission.toFixed(2)).toBe('250.56');
+    expect(r.realProfit.toFixed(2)).toBe('2120.48');
+  });
 });

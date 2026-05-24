@@ -37,11 +37,11 @@
 
 <section class="pt-8 pb-12 space-y-6">
   <!-- Page header -->
-  <div class="flex items-end justify-between gap-6">
-    <div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+    <div class="min-w-0">
       <ItalicHero text="Clientes" size="lg" />
       <div
-        class="mt-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--color-text-muted)]"
+        class="mt-2 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--color-text-muted)]"
       >
         <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-red)]"></span>
         {formatDateLong(today)}
@@ -51,12 +51,23 @@
         {/await}
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <Button variant="outline" size="md" href="/clientes/export?format=csv">
+    <div class="flex items-center gap-2 md:flex-shrink-0">
+      <!-- Export is desktop-only — rarely the primary action on a phone. -->
+      <Button variant="outline" size="md" href="/clientes/export?format=csv" class="hidden md:inline-flex">
         <Download class="h-4 w-4" />
         Exportar
       </Button>
-      <Button variant="primary" size="md" href="/clientes/novo">
+      <!-- Mobile: icon-only red square (no in-topbar equivalent for "novo
+           cliente"). Desktop: full italic CTA. -->
+      <a
+        href="/clientes/novo"
+        class="inline-flex md:hidden items-center justify-center h-10 w-10 text-white bg-[var(--color-red)] hover:bg-[var(--color-red-soft)] transition-colors"
+        style="border-radius: var(--radius-btn);"
+        aria-label="Novo cliente"
+      >
+        <Plus class="h-4 w-4" />
+      </a>
+      <Button variant="primary" size="md" href="/clientes/novo" class="hidden md:inline-flex">
         <Plus class="h-4 w-4" />
         Novo Cliente
       </Button>
@@ -65,7 +76,7 @@
 
   <!-- Search (renders immediately, independent of data) -->
   <Panel>
-    <div class="p-4 flex items-center gap-3">
+    <div class="p-4 flex flex-wrap items-center gap-3">
       <div
         class="flex-1 relative flex items-center h-11 px-3 border border-[var(--color-border)] bg-[var(--color-bg-1)] focus-within:border-[var(--color-red)] transition-colors"
         style="border-radius: var(--radius-btn);"

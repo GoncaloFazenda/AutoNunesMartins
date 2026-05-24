@@ -8,7 +8,27 @@
   let { rows = 6 }: Props = $props();
 </script>
 
-<div class="overflow-x-auto">
+<!-- Mobile card skeletons mirror CustomerTable's card layout. -->
+<div class="md:hidden divide-y divide-[var(--color-border)]">
+  {#each Array(rows) as _, i (i)}
+    <div class="px-4 py-3">
+      <div class="flex items-center gap-3">
+        <Skeleton width="44px" height="44px" />
+        <div class="flex flex-col gap-1.5 min-w-0 flex-1">
+          <Skeleton width="60%" height="14px" />
+          <Skeleton width="40%" height="10px" />
+        </div>
+        <Skeleton width="32px" height="18px" />
+      </div>
+      <div class="mt-2.5 flex flex-col gap-1.5">
+        <Skeleton width="50%" height="11px" />
+        <Skeleton width="65%" height="11px" />
+      </div>
+    </div>
+  {/each}
+</div>
+
+<div class="hidden md:block overflow-x-auto">
   <table class="w-full text-[13px]">
     <thead>
       <tr class="border-b border-[var(--color-border)]">

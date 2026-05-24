@@ -55,7 +55,7 @@
 
 <section class="hero-block relative overflow-hidden border border-[var(--color-border)] grid grid-cols-1 lg:grid-cols-[1fr_1.4fr]" style="background: linear-gradient(135deg, #131316 0%, #0F0F11 100%);">
   <!-- LEFT: brand-DNA spec list + CTAs -->
-  <div class="p-8 lg:p-9 flex flex-col">
+  <div class="p-5 md:p-8 lg:p-9 flex flex-col">
     <div class="flex items-center gap-3 mb-3.5 font-mono uppercase tracking-[0.25em] text-[10.5px] text-[var(--color-red)]">
       <span class="inline-block w-5 h-px bg-[var(--color-red)]"></span>
       {eyebrow}
@@ -63,7 +63,7 @@
 
     {#if vehicle}
       <h2
-        class="font-display font-black italic uppercase leading-[0.92] tracking-[-0.025em] text-[44px] lg:text-[52px] mb-2"
+        class="font-display font-black italic uppercase leading-[0.92] tracking-[-0.025em] text-[30px] md:text-[44px] lg:text-[52px] mb-2"
       >
         {vehicle.brand}<br />
         <span class="text-[var(--color-red)]">{vehicle.model}</span>
@@ -135,7 +135,11 @@
           <div class="font-display font-semibold text-[17px] tracking-[0.005em] text-[var(--color-text)]">
             {FUEL_LABELS[vehicle.fuel] ?? vehicle.fuel}
             <small class="block text-[13px] font-sans font-normal text-[var(--color-text-muted)] tracking-normal mt-0.5">
-              VIN {vehicle.vin}
+              {#if vehicle.licensePlate}
+                Matrícula {vehicle.licensePlate} <span class="text-[var(--color-text-faint)]">· VIN {vehicle.vin}</span>
+              {:else}
+                VIN {vehicle.vin}
+              {/if}
             </small>
           </div>
         </div>
@@ -161,7 +165,7 @@
     {:else}
       <!-- Empty state: no featured vehicle pinned -->
       <h2
-        class="font-display font-black italic uppercase leading-[0.92] tracking-[-0.025em] text-[44px] lg:text-[52px] mb-2"
+        class="font-display font-black italic uppercase leading-[0.92] tracking-[-0.025em] text-[30px] md:text-[44px] lg:text-[52px] mb-2"
       >
         Sem<br />
         <span class="text-[var(--color-red)]">destaque.</span>
@@ -187,9 +191,10 @@
   </div>
 
   <!-- RIGHT: vehicle photo (or hand-drawn fallback) on a dark gradient panel
-       with the prototype's red diagonal wedge + radial glow overlay. -->
+       with the prototype's red diagonal wedge + radial glow overlay. Mobile
+       gets a shorter min-height so the hero doesn't dominate the fold. -->
   <div
-    class="hero-right relative overflow-hidden min-h-[420px] lg:min-h-[460px]"
+    class="hero-right relative overflow-hidden min-h-[260px] md:min-h-[420px] lg:min-h-[460px]"
     style="background: linear-gradient(135deg, #1A1A1D 0%, #0A0A0B 100%);"
   >
     <!-- Red diagonal wedge (matches index.html .hero-right::before) -->
@@ -215,9 +220,11 @@
       {/if}
     </div>
 
-    <!-- Top-right stats strip -->
+    <!-- Top-right stats strip. Hidden on mobile — the 4 KPI cards under the
+         hero already carry Vendas/Faturação/Lucro/Margem, and three cells
+         inline don't fit a 360px viewport. -->
     {#if stockCount !== undefined || salesThisMonth !== undefined || revenueYtd}
-      <div class="absolute top-6 right-6 z-10 flex">
+      <div class="absolute top-6 right-6 z-10 hidden md:flex">
         {#if stockCount !== undefined}
           <div class="text-right px-[18px] border-r border-white/15">
             <div
@@ -288,7 +295,13 @@
         >PT</span>
         <span class="pr-2.5 py-1 inline-flex items-center gap-1.5">
           <Star class="h-3 w-3 text-[#e6b800] fill-[#e6b800]" />
-          {vehicle.year} · {vehicle.brand.toUpperCase()}
+          <!-- Show the real matrícula when present; fall back to year · brand
+               so the plate chip still reads as a tag for unregistered cars. -->
+          {#if vehicle.licensePlate}
+            {vehicle.licensePlate}
+          {:else}
+            {vehicle.year} · {vehicle.brand.toUpperCase()}
+          {/if}
         </span>
       </div>
     {/if}

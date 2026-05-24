@@ -27,6 +27,9 @@ export async function createVehicle(
         fuel: data.fuel,
         mileage: data.mileage,
         vin: data.vin,
+        // Matrícula already canonicalized by `licensePlatePtSchema` to
+        // "XX-XX-XX" form; null when the user didn't enter one.
+        licensePlate: data.licensePlate ?? null,
         purchasePrice: data.purchasePrice,
         salePrice: data.salePrice ?? null,
         status: data.status ?? 'AVAILABLE',
@@ -68,6 +71,11 @@ export async function updateVehicle(
     if (data.fuel !== undefined) updateData.fuel = data.fuel;
     if (data.mileage !== undefined) updateData.mileage = data.mileage;
     if (data.vin !== undefined) updateData.vin = data.vin;
+    // Pass null through explicitly so "clear matrícula" is possible — but
+    // only when the caller submits an explicit empty string. The schema's
+    // preprocess maps "" → undefined, so this branch is reached only with
+    // an actual value (already canonicalized by Zod).
+    if (data.licensePlate !== undefined) updateData.licensePlate = data.licensePlate ?? null;
     if (data.purchasePrice !== undefined) updateData.purchasePrice = data.purchasePrice;
     if (data.salePrice !== undefined) updateData.salePrice = data.salePrice;
     if (data.status !== undefined) updateData.status = data.status;
@@ -127,12 +135,16 @@ export async function getVehicleWithProfit(id: string) {
   if (!vehicle) return null;
 
   const expensesTotal = await sumVehicleExpenses(prisma, id);
+  // If a Sale row exists, project figures using its persisted commission
+  // so the "projeção" view matches what the sale actually pays out. If
+  // there's no sale yet, commission is unknown — projection uses 0.
   const figures =
     vehicle.salePrice !== null
       ? computeSaleFigures({
           salePrice: vehicle.salePrice.toString(),
           purchasePrice: vehicle.purchasePrice.toString(),
           expensesTotal,
+          commission: vehicle.sale?.commission.toString() ?? '0',
         })
       : null;
 
@@ -146,6 +158,7 @@ export async function getVehicleWithProfit(id: string) {
           ...vehicle.sale,
           salePrice: vehicle.sale.salePrice.toString(),
           vatAmount: vehicle.sale.vatAmount.toString(),
+          commission: vehicle.sale.commission.toString(),
           realProfit: vehicle.sale.realProfit.toString(),
         }
       : null,
@@ -154,6 +167,7 @@ export async function getVehicleWithProfit(id: string) {
       ? {
           margin: figures.margin.toString(),
           vatAmount: figures.vatAmount.toString(),
+          commission: figures.commission.toString(),
           realProfit: figures.realProfit.toString(),
         }
       : null,

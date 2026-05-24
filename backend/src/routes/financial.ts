@@ -42,6 +42,7 @@ router.get('/profit-by-vehicle', requireUser, async (req: AuthedRequest, res: Re
           model: true,
           year: true,
           vin: true,
+          licensePlate: true,
           purchasePrice: true,
           expenses: { select: { amount: true } },
         },
@@ -68,12 +69,14 @@ router.get('/profit-by-vehicle', requireUser, async (req: AuthedRequest, res: Re
         model: s.vehicle.model,
         year: s.vehicle.year,
         vin: s.vehicle.vin,
+        licensePlate: s.vehicle.licensePlate,
       },
       customer: { id: s.customer.id, name: s.customer.name, nif: s.customer.nif },
       purchasePrice: s.vehicle.purchasePrice.toString(),
       salePrice: s.salePrice.toString(),
       expensesTotal: expensesTotal.toFixed(2),
       vatAmount: s.vatAmount.toString(),
+      commission: s.commission.toString(),
       realProfit: s.realProfit.toString(),
       marginPct,
     };
@@ -108,11 +111,13 @@ router.get('/profit-by-vehicle', requireUser, async (req: AuthedRequest, res: Re
   let totalProfit = new Decimal(0);
   let totalVat = new Decimal(0);
   let totalExpenses = new Decimal(0);
+  let totalCommission = new Decimal(0);
   for (const r of rows) {
     totalRevenue = totalRevenue.plus(r.salePrice);
     totalProfit = totalProfit.plus(r.realProfit);
     totalVat = totalVat.plus(r.vatAmount);
     totalExpenses = totalExpenses.plus(r.expensesTotal);
+    totalCommission = totalCommission.plus(r.commission);
   }
   const totalRevenueNum = Number(totalRevenue.toString());
   const totalProfitNum = Number(totalProfit.toString());
@@ -125,6 +130,7 @@ router.get('/profit-by-vehicle', requireUser, async (req: AuthedRequest, res: Re
       revenue: totalRevenue.toFixed(2),
       vat: totalVat.toFixed(2),
       expenses: totalExpenses.toFixed(2),
+      commission: totalCommission.toFixed(2),
       profit: totalProfit.toFixed(2),
       avgMarginPct,
     },

@@ -8,7 +8,31 @@
   let { rows = 6 }: Props = $props();
 </script>
 
-<div class="overflow-x-auto">
+<!-- Mobile card skeletons — mirrors the card layout in VehicleTable. -->
+<div class="md:hidden divide-y divide-[var(--color-border)]">
+  {#each Array(rows) as _, i (i)}
+    <div class="px-4 py-3">
+      <div class="flex items-center gap-3">
+        <Skeleton width="64px" height="48px" />
+        <div class="flex flex-col gap-1.5 min-w-0 flex-1">
+          <Skeleton width="60%" height="14px" />
+          <Skeleton width="45%" height="10px" />
+        </div>
+        <Skeleton width="70px" height="20px" />
+      </div>
+      <div class="mt-3 grid grid-cols-4 gap-2">
+        {#each Array(4) as __, j (j)}
+          <div class="flex flex-col gap-1">
+            <Skeleton width="50%" height="9px" />
+            <Skeleton width="80%" height="13px" />
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/each}
+</div>
+
+<div class="hidden md:block overflow-x-auto">
   <table class="w-full text-[13px]">
     <thead>
       <tr class="border-b border-[var(--color-border)]">

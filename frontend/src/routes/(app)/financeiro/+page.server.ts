@@ -48,7 +48,15 @@ export const load: PageServerLoad = (event) => {
 
   const profit = financialApi.profitByVehicle(event, profitParams).catch((err) => ({
     items: [] as never[],
-    totals: { count: 0, revenue: '0', vat: '0', expenses: '0', profit: '0', avgMarginPct: 0 },
+    totals: {
+      count: 0,
+      revenue: '0',
+      vat: '0',
+      expenses: '0',
+      commission: '0',
+      profit: '0',
+      avgMarginPct: 0,
+    },
     _error: (err as Error).message,
   }));
 

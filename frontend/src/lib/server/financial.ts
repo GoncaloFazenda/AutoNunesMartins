@@ -4,12 +4,20 @@ import { apiJson } from './api.js';
 export interface ProfitByVehicleRow {
   saleId: string;
   saleDate: string;
-  vehicle: { id: string; brand: string; model: string; year: number; vin: string };
+  vehicle: {
+    id: string;
+    brand: string;
+    model: string;
+    year: number;
+    vin: string;
+    licensePlate: string | null;
+  };
   customer: { id: string; name: string; nif: string };
   purchasePrice: string;
   salePrice: string;
   expensesTotal: string;
   vatAmount: string;
+  commission: string;
   realProfit: string;
   marginPct: number;
 }
@@ -21,6 +29,7 @@ export interface ProfitByVehicleResponse {
     revenue: string;
     vat: string;
     expenses: string;
+    commission: string;
     profit: string;
     avgMarginPct: number;
   };

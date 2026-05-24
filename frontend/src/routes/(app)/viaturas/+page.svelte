@@ -25,11 +25,11 @@
 
 <section class="pt-8 pb-12 space-y-6">
   <!-- Page header -->
-  <div class="flex items-end justify-between gap-6">
-    <div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+    <div class="min-w-0">
       <ItalicHero text="Viaturas" size="lg" />
       <div
-        class="mt-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--color-text-muted)]"
+        class="mt-2 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--color-text-muted)]"
       >
         <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-red)]"></span>
         {formatDateLong(today)}
@@ -39,7 +39,8 @@
         {/await}
       </div>
     </div>
-    <div class="flex items-center gap-2">
+    <!-- Desktop-only action buttons — mobile has the icon CTA in the topbar. -->
+    <div class="hidden md:flex items-center gap-2">
       <Button variant="outline" size="md" href="/viaturas/export?format=csv">
         <Download class="h-4 w-4" />
         Exportar

@@ -37,20 +37,20 @@
 
 <section class="pt-8 pb-12 space-y-6">
   <!-- Header -->
-  <div class="flex items-end justify-between gap-6">
-    <div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+    <div class="min-w-0">
       <div class="mb-2 font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--color-text-faint)]">
         NIF {c.nif}
       </div>
       <ItalicHero text={c.name} size="lg" />
       <p
-        class="mt-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--color-text-muted)]"
+        class="mt-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--color-text-muted)] flex flex-wrap items-center gap-x-2 gap-y-1"
       >
         <span class="text-[var(--color-red)]">●</span>
-        Registado em {formatDate(c.createdAt)}
+        <span>Registado em {formatDate(c.createdAt)}</span>
         {#if c.lastContactDate}
           <span class="text-[var(--color-text-faint)]">·</span>
-          Último contacto {formatDate(c.lastContactDate)}
+          <span>Último contacto {formatDate(c.lastContactDate)}</span>
         {/if}
       </p>
     </div>
@@ -144,7 +144,9 @@
                     {formatDate(s.saleDate)}
                   </div>
                 </div>
-                <StatusBadge status={s.deliveryStatus as 'PENDING' | 'SCHEDULED' | 'DELIVERED'} />
+                <div class="hidden md:block">
+                  <StatusBadge status={s.deliveryStatus as 'PENDING' | 'SCHEDULED' | 'DELIVERED'} />
+                </div>
               </a>
             {/each}
           </div>

@@ -22,7 +22,9 @@ export const GET: RequestHandler = async (event) => {
 
   const result = await financialApi.profitByVehicle(event, params);
 
-  const headers = ['Viatura', 'Cliente', 'Data', 'Compra', 'Venda', 'Despesas', 'IVA', 'Lucro', 'Margem%'];
+  const headers = [
+    'Viatura', 'Cliente', 'Data', 'Compra', 'Venda', 'Despesas', 'IVA', 'Comissão', 'Lucro', 'Margem%',
+  ];
   const rows = result.items.map((r) => [
     `${r.vehicle.brand} ${r.vehicle.model} ${r.vehicle.year}`,
     r.customer.name,
@@ -31,6 +33,7 @@ export const GET: RequestHandler = async (event) => {
     fmtEur(r.salePrice),
     fmtEur(r.expensesTotal),
     fmtEur(r.vatAmount),
+    fmtEur(r.commission),
     fmtEur(r.realProfit),
     `${r.marginPct.toFixed(1)}%`,
   ]);
@@ -49,13 +52,16 @@ export const GET: RequestHandler = async (event) => {
   }
 
   try {
-    const subtitle = `${result.items.length} venda${result.items.length === 1 ? '' : 's'}  ·  Total: ${fmtEur(result.totals.profit)}`;
+    const commissionTotal = Number(result.totals.commission);
+    const commissionPart =
+      commissionTotal > 0 ? `  ·  incl. ${fmtEur(result.totals.commission)} comissões` : '';
+    const subtitle = `${result.items.length} venda${result.items.length === 1 ? '' : 's'}  ·  Total: ${fmtEur(result.totals.profit)}${commissionPart}`;
     const pdf = await buildPdfTable({
       title: 'Lucro por Viatura',
       subtitle,
       headers,
       rows,
-      columnWidths: [150, 110, 60, 60, 60, 60, 60, 65, 50],
+      columnWidths: [140, 100, 55, 55, 55, 55, 55, 60, 65, 50],
     });
     return new Response(new Blob([pdf as BlobPart], { type: 'application/pdf' }), {
       headers: {

@@ -20,6 +20,9 @@
   const s = $derived(data.sale);
   const v = $derived(s.vehicle);
   const c = $derived(s.customer);
+  // True when this sale captured a manual extra commission (e.g. financing
+  // referral). Drives the optional Comissão column in the profit summary.
+  const hasCommission = $derived(Number(s.commission ?? '0') > 0);
 
   let updatingDelivery = $state(false);
 </script>
@@ -54,10 +57,17 @@
     </div>
   </div>
 
-  <!-- Profit summary -->
+  <!-- Profit summary. When a financing-referral commission was captured at
+       sale time, it gets its own cell between IVA and Lucro Real so the
+       breakdown clearly shows what's the vehicle margin and what's the
+       intermediation income that lifts the bottom line.
+       `{@const}` must be the immediate child of a control-flow block, so
+       we use a $derived in the script tag's scope. -->
   <Panel>
     <PanelHeader icon={Receipt} title="Margem · IVA" meta="REGIME MARGEM 23/123" />
-    <div class="p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div
+      class="p-5 grid grid-cols-2 gap-4 {hasCommission ? 'md:grid-cols-5' : 'md:grid-cols-4'}"
+    >
       <div>
         <div
           class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"
@@ -88,6 +98,18 @@
           {formatEUR(s.vatAmount)}
         </div>
       </div>
+      {#if hasCommission}
+        <div>
+          <div
+            class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"
+          >
+            Comissão
+          </div>
+          <div class="num-value text-[20px] text-[var(--color-success)]">
+            + {formatEUR(s.commission)}
+          </div>
+        </div>
+      {/if}
       <div>
         <div
           class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"

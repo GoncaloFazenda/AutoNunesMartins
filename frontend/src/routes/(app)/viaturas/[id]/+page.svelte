@@ -66,12 +66,27 @@
 
 <section class="pt-8 pb-12 space-y-6">
   <!-- Header -->
-  <div class="flex items-end justify-between gap-6">
-    <div>
-      <div class="mb-2 flex items-center gap-2">
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 lg:gap-6">
+    <div class="min-w-0">
+      <div class="mb-2 flex flex-wrap items-center gap-2">
         <StatusBadge status={v.status} />
+        {#if v.licensePlate}
+          <!-- Stylized PT-plate chip — blue prefix mirrors a real matrícula. -->
+          <span
+            class="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.18em] border border-[var(--color-border-strong)] overflow-hidden"
+            style="border-radius: 3px;"
+            title="Matrícula portuguesa"
+          >
+            <span
+              class="bg-[var(--color-info)] text-white font-bold text-[9px] tracking-[0.12em] px-1.5 py-1"
+            >PT</span>
+            <span class="px-2 py-1 tracking-[0.18em] text-[var(--color-text)]">
+              {v.licensePlate}
+            </span>
+          </span>
+        {/if}
         <span
-          class="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--color-text-faint)]"
+          class="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--color-text-faint)] truncate"
         >
           VIN {v.vin}
         </span>
@@ -98,7 +113,7 @@
         {/if}
       </p>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       {#if !v.sale && ['AVAILABLE', 'RESERVED', 'DOCS_PENDING'].includes(v.status)}
         <Button variant="primary" href={`/viaturas/${v.id}/vender`}>
           <Check class="h-4 w-4" />
@@ -239,7 +254,13 @@
     salePrice={v.salePrice}
     expensesTotal={v.expensesTotal}
     figures={v.figures}
-    sale={v.sale ? { vatAmount: v.sale.vatAmount, realProfit: v.sale.realProfit } : null}
+    sale={v.sale
+      ? {
+          vatAmount: v.sale.vatAmount,
+          commission: v.sale.commission,
+          realProfit: v.sale.realProfit,
+        }
+      : null}
   />
 
   <!-- Expenses -->
@@ -253,7 +274,7 @@
           <Button variant="outline" size="sm" href={`/sales/${saleId}`}>Ver venda</Button>
         {/snippet}
       </PanelHeader>
-      <div class="p-5 grid grid-cols-3 gap-5 text-[14px]">
+      <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-5 text-[14px]">
         <div>
           <div
             class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1"

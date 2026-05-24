@@ -21,6 +21,7 @@
     fuel: v.fuel,
     mileage: v.mileage,
     vin: v.vin,
+    licensePlate: v.licensePlate ?? '',
     purchasePrice: v.purchasePrice,
     salePrice: v.salePrice ?? '',
     status: v.status,

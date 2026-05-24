@@ -99,17 +99,18 @@
 
 <section class="pt-8 pb-12 space-y-6">
   <!-- Page header -->
-  <div class="flex items-end justify-between gap-6">
-    <div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+    <div class="min-w-0">
       <ItalicHero text="Financeiro" size="lg" />
       <div
-        class="mt-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]"
+        class="mt-2 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]"
       >
         <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-red)]"></span>
         {formatDateLong(today)}
       </div>
     </div>
-    <div class="flex items-center gap-2">
+    <!-- Export is desktop-only. -->
+    <div class="hidden md:flex items-center gap-2">
       {#if data.tab === 'despesas'}
         <Button
           variant="outline"
@@ -132,8 +133,9 @@
     </div>
   </div>
 
-  <!-- Tab bar -->
-  <div class="flex items-center gap-1 border-b border-[var(--color-border)]">
+  <!-- Tab bar — horizontally scrollable on narrow screens so both tabs
+       remain reachable without truncating their labels. -->
+  <div class="flex items-center gap-1 border-b border-[var(--color-border)] overflow-x-auto">
     <button
       type="button"
       onclick={() => setTab('despesas')}
@@ -330,7 +332,8 @@
             Sem despesas registadas
           </div>
         {:else}
-          <table class="w-full text-[13px]">
+          <div class="overflow-x-auto">
+          <table class="w-full text-[13px] min-w-[640px]">
             <thead>
               <tr class="border-b border-[var(--color-border)]">
                 <th class="text-left px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
@@ -531,6 +534,7 @@
               </tr>
             </tfoot>
           </table>
+          </div>
         {/if}
       {/await}
     </Panel>
@@ -586,7 +590,7 @@
           </div>
         {:else}
           <div class="overflow-x-auto">
-            <table class="w-full text-[13px]">
+            <table class="w-full text-[13px] min-w-[860px]">
               <thead>
                 <tr class="border-b border-[var(--color-border)]">
                   <th class="text-left px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
@@ -615,6 +619,12 @@
                   </th>
                   <th class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
                     IVA
+                  </th>
+                  <th
+                    class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
+                    title="Comissão de financiamento (banco) somada ao Lucro Real"
+                  >
+                    Comissão
                   </th>
                   <th
                     class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)] cursor-pointer hover:text-[var(--color-text)]"
@@ -677,6 +687,13 @@
                       {formatEUR(r.vatAmount)}
                     </td>
                     <td
+                      class="px-4 py-2.5 num-value text-[13px] text-right {Number(r.commission) > 0
+                        ? 'text-[var(--color-success)]'
+                        : 'text-[var(--color-text-faint)]'}"
+                    >
+                      {Number(r.commission) > 0 ? formatEUR(r.commission) : '—'}
+                    </td>
+                    <td
                       class="px-4 py-2.5 num-value text-[15px] text-right {isLoss
                         ? 'text-[var(--color-red)]'
                         : 'text-[var(--color-success)]'}"
@@ -707,6 +724,16 @@
                     class="px-4 py-3 num-value text-[13px] text-right text-[var(--color-warning)]"
                   >
                     {formatEUR(pf.totals.vat)}
+                  </td>
+                  <td
+                    class="px-4 py-3 num-value text-[13px] text-right {Number(pf.totals.commission) > 0
+                      ? 'text-[var(--color-success)]'
+                      : 'text-[var(--color-text-faint)]'}"
+                    title="Total de comissões de financiamento (isentas de IVA — art. 9.º, 27.º, a) CIVA)"
+                  >
+                    {Number(pf.totals.commission) > 0
+                      ? formatEUR(pf.totals.commission)
+                      : '—'}
                   </td>
                   <td class="px-4 py-3 num-value text-[16px] text-right text-[var(--color-success)]">
                     {formatEUR(pf.totals.profit)}

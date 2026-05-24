@@ -15,9 +15,11 @@
 <Panel>
   <PanelHeader icon={Car} title="Em Stock 60+ Dias" meta={`${items.length} VIATURAS`}>
     {#snippet actions()}
+      <!-- Desktop-only — on mobile the title + count badge already imply the
+           drill-down, and a long action eats the panel header row. -->
       <a
         href="/viaturas?status=AVAILABLE"
-        class="inline-flex items-center gap-1 px-3 h-8 border border-[var(--color-border)] hover:border-[var(--color-border-strong)] font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+        class="hidden md:inline-flex items-center gap-1 px-3 h-8 border border-[var(--color-border)] hover:border-[var(--color-border-strong)] font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
         style="border-radius: var(--radius-btn);"
       >
         Ver stock completo
@@ -83,7 +85,7 @@
                       {v.brand} {v.model}
                     </div>
                     <div class="font-mono text-[10px] text-[var(--color-text-faint)] truncate">
-                      {v.vin}
+                      {v.licensePlate ?? v.vin}
                     </div>
                   </div>
                 </a>

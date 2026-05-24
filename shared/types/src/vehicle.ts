@@ -12,6 +12,41 @@ export type PendingDocFlags = z.infer<typeof pendingDocFlagsSchema>;
 
 const CURRENT_YEAR = new Date().getFullYear();
 
+/**
+ * Portuguese license plate ("matrícula") — six alphanumeric chars in one of
+ * three historical formats:
+ *   • 00-00-AA   (1992 – 2005)
+ *   • 00-AA-00   (2005 – 2020)
+ *   • AA-00-AA   (2020 +)
+ *
+ * Accepts input with or without dashes/spaces, any casing, and normalizes
+ * to the canonical "XX-XX-XX" form on parse so the database always stores
+ * a single representation (good for uniqueness + display consistency).
+ */
+const PT_PLATE_PATTERNS: RegExp[] = [
+  /^\d{2}\d{2}[A-Z]{2}$/, // 00-00-AA
+  /^\d{2}[A-Z]{2}\d{2}$/, // 00-AA-00
+  /^[A-Z]{2}\d{2}[A-Z]{2}$/, // AA-00-AA
+];
+export const licensePlatePtSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(10)
+  .transform((raw, ctx) => {
+    const compact = raw.replace(/[\s-]/g, '').toUpperCase();
+    if (compact.length !== 6 || !PT_PLATE_PATTERNS.some((re) => re.test(compact))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Matrícula inválida (formatos: 00-00-AA, 00-AA-00, AA-00-AA)',
+      });
+      return z.NEVER;
+    }
+    // Canonical: dashes every two chars → "XX-XX-XX"
+    return `${compact.slice(0, 2)}-${compact.slice(2, 4)}-${compact.slice(4, 6)}`;
+  });
+export type LicensePlatePt = z.infer<typeof licensePlatePtSchema>;
+
 export const vehicleCreateSchema = z.object({
   brand: z.string().min(1, 'Marca obrigatória').max(60),
   model: z.string().min(1, 'Modelo obrigatório').max(80),
@@ -27,6 +62,15 @@ export const vehicleCreateSchema = z.object({
     .trim()
     .length(17, 'VIN deve ter 17 caracteres')
     .regex(/^[A-HJ-NPR-Z0-9]{17}$/, 'VIN inválido (sem I, O, Q)'),
+  /**
+   * Optional Portuguese license plate. Empty / blank input is dropped
+   * (`.preprocess` returns undefined) so the form can submit "no plate
+   * yet" without triggering a validation error.
+   */
+  licensePlate: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    licensePlatePtSchema.optional(),
+  ),
   purchasePrice: moneySchema,
   salePrice: moneySchema.optional(),
   status: VehicleStatusEnum.default('AVAILABLE'),
@@ -55,6 +99,7 @@ export const vehicleFilterSchema = z.object({
   mileageMin: z.coerce.number().int().optional(),
   mileageMax: z.coerce.number().int().optional(),
   status: VehicleStatusEnum.optional(),
+  /** Free-text — searched across brand, model, vin, licensePlate. */
   q: z.string().optional(),
 });
 export type VehicleFilter = z.infer<typeof vehicleFilterSchema>;

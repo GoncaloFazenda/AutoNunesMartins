@@ -147,9 +147,18 @@
   </button>
 
   {#if isOpen}
+    <!--
+      Mobile (< md): the dropdown becomes a `position: fixed` sheet anchored
+      below the topbar with 8px side margins — the 360px desktop popover
+      anchored to the bell's right edge would otherwise extend off-screen
+      on a narrow viewport.
+
+      Desktop (md+): original behaviour — `position: absolute` relative to
+      the bell wrapper, 360px wide, anchored to the bell's right edge.
+    -->
     <div
       bind:this={panelEl}
-      class="absolute right-0 top-[calc(100%+8px)] w-[360px] border border-[var(--color-border)] shadow-xl z-50 panel-surface"
+      class="fixed left-2 right-2 top-[64px] w-auto max-h-[calc(100vh-80px)] overflow-y-auto md:absolute md:left-auto md:right-0 md:top-[calc(100%+8px)] md:w-[360px] md:max-h-none md:overflow-y-visible border border-[var(--color-border)] shadow-xl z-50 panel-surface"
       style="border-radius: var(--radius-card);"
       role="dialog"
       aria-label="Notificações"

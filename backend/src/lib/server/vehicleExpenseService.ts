@@ -41,6 +41,10 @@ async function recomputeSaleIfExists(
     salePrice: sale.salePrice.toString(),
     purchasePrice: vehicle.purchasePrice.toString(),
     expensesTotal,
+    // Preserve the manually-entered commission across expense edits — the
+    // commission is independent of the dealer-margin scheme and shouldn't
+    // get wiped just because someone added/removed a vehicle expense.
+    commission: sale.commission.toString(),
   });
 
   await tx.sale.update({

@@ -135,7 +135,10 @@
 <Panel>
   <PanelHeader icon={CheckSquare} title="Tarefas · Hoje" meta={todayLabel}>
     {#snippet actions()}
-      <div bind:this={menuEl} class="relative">
+      <!-- Scope dropdown is desktop-only — on mobile the meta line in the
+           panel header already shows "N ATIVAS", and the panel layout
+           can't fit a 100px+ chip next to a truncated title. -->
+      <div bind:this={menuEl} class="relative hidden md:block">
         <button
           type="button"
           onclick={() => (menuOpen = !menuOpen)}
