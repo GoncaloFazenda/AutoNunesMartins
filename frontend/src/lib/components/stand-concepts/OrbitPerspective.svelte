@@ -4,6 +4,7 @@
   onMount(() => {
     const heading = section.querySelector('h2')!;
     const underline = section.querySelector('em')!;
+    const lineWindow = section.querySelector<HTMLElement>('.line-window')!;
     const fragments = [...section.querySelectorAll<HTMLElement>('.read-a, .read-b, em')];
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     let frame = 0;
@@ -15,18 +16,22 @@
       frame = 0;
       if (reduced.matches) return;
       const bounds = heading.getBoundingClientRect();
-      const line = underline.getBoundingClientRect();
-      // One broad viewport journey drives BOTH the real underline tip and its light.
-      // The smoothstep has zero slope at each end and reverses identically on scroll-up.
+      const line = lineWindow.getBoundingClientRect();
+      // Keep the line's original timing; only the text light trails by 25px of scroll.
       const journey = (innerHeight * 0.92 - bounds.top) / (innerHeight * 0.84);
       const progress = smooth(journey);
-      const light = smooth(progress / 0.3) * (1 - smooth((progress - 0.72) / 0.28));
-      // Keep the phrase accented for the entire visible trail. Its release starts
-      // only after the trailing edge has completely cleared the clipping window.
-      const accent = smooth(progress / 0.3) * (1 - smooth((journey - 1) / 0.3));
+      const lightProgress = smooth(journey - 25 / (innerHeight * 0.84));
+      const light = smooth(lightProgress / 0.3) * (1 - smooth((lightProgress - 0.72) / 0.28));
+      const segmentStart = line.left + Math.max(0, lightProgress * 2 - 1) * line.width;
+      const segmentEnd = line.left + Math.min(1, lightProgress * 2) * line.width;
+      const accent = smooth((segmentEnd - segmentStart) / 20);
+      const textLeft = underline.getBoundingClientRect().left;
+      underline.style.setProperty('--segment-start', `${segmentStart - textLeft}px`);
+      underline.style.setProperty('--segment-end', `${segmentEnd - textLeft}px`);
+      underline.style.setProperty('--light-inset', `${Math.min(24, (segmentEnd - segmentStart) / 2)}px`);
       // The tip crosses the text at halfway, then keeps travelling beyond its
       // right edge. A fixed window clips the trailing segment; opacity stays 1.
-      const x = line.left + line.width * progress * 2;
+      const x = line.left + line.width * lightProgress * 2;
       const y = line.bottom + line.height * 0.08;
       const rects = fragments.map((fragment) => fragment.getBoundingClientRect());
       section.style.setProperty('--line-progress', String(progress));
@@ -131,6 +136,11 @@
     right: 0;
     overflow: hidden;
     pointer-events: none;
+    /* Apply the hero's aura after clipping the travelling segment. */
+    opacity: 0.95;
+    filter: drop-shadow(0 0 2.5px rgb(255 51 76 / 90%)) drop-shadow(0 0 5px #e3061366)
+      drop-shadow(0 0 12px #e3061399)
+      drop-shadow(0 0 26px #e3061359);
   }
   .travelling-line {
     display: block;
@@ -156,10 +166,16 @@
     }
     :global(.motion-on) em {
       background-image:
-        radial-gradient(
-          ellipse 310px 180px at var(--tip-x, 0px) var(--tip-y, 0px),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent),
-          transparent 100%
+        linear-gradient(
+          90deg,
+          transparent calc(var(--segment-start, 0px) - 1.8em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent) calc(var(--segment-start, 0px) - 1.2em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent) calc(var(--segment-start, 0px) - 0.6em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent) calc(var(--segment-start, 0px) + var(--light-inset, 0px)),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent) calc(var(--segment-end, 0px) - var(--light-inset, 0px) + 35px),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent) calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 0.525em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent) calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 1.05em),
+          transparent calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 1.575em)
         ),
         linear-gradient(var(--perspective-base), var(--perspective-base));
     }
@@ -197,15 +213,6 @@
         radial-gradient(
           ellipse 230px 150px at var(--tip-x, 0px) var(--tip-y, 0px),
           color-mix(in srgb, var(--text) calc(var(--line-light) * 100%), transparent),
-          transparent 100%
-        ),
-        linear-gradient(var(--perspective-base), var(--perspective-base));
-    }
-    :global(.motion-on) em {
-      background-image:
-        radial-gradient(
-          ellipse 230px 150px at var(--tip-x, 0px) var(--tip-y, 0px),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent),
           transparent 100%
         ),
         linear-gradient(var(--perspective-base), var(--perspective-base));

@@ -105,7 +105,7 @@
   .confirm-dialog {
     padding: 0;
     border: 1px solid var(--color-border);
-    background: var(--color-bg-1);
+    background: var(--color-bg-elevated);
     color: var(--color-text);
     border-radius: var(--radius-card);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);

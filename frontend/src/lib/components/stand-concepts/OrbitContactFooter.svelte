@@ -100,11 +100,12 @@
     <div class="footer-heading">
       <div class="footer-brand">
         <a class="wordmark" href="/stand-orbit" aria-label="Auto Nunes Martins — início"
-          >{standContact.name}</a
+          ><img src="/logo-transparent-white-v3.png" alt={standContact.name} width="180" height="80" /></a
         >
         <p class="brand-caption">{standContact.description}</p>
       </div>
-      <p class="brand-note">O caminho é seu.</p>
+      <p class="brand-note">O caminho<br />é seu<span>.</span></p>
+      <a class="footer-discover" href="/stand-orbit/viaturas">Encontre o seu próximo carro <ArrowUpRight size={22} aria-hidden="true" /></a>
     </div>
     <div class="footer-columns">
       <nav aria-label="Navegação do rodapé">
@@ -151,7 +152,7 @@
       {standContact.name}{#if standContact.isDemo}<span>Site de demonstração · Dados fictícios</span
         >{/if}
     </p>
-    <a href="#inicio">Voltar ao início <ArrowUp size={15} aria-hidden="true" /></a>
+    <a href="/stand-orbit#inicio">Voltar ao início <ArrowUp size={15} aria-hidden="true" /></a>
   </div>
 </footer>
 
@@ -654,5 +655,47 @@
       font-size: 11px;
       gap: 10px;
     }
+  }
+  /* A quieter, asymmetric closing chapter. Contact section above remains independent. */
+  .orbit-footer { background: #101012; border-top: 0; }
+  .footer-inner { display: grid; grid-template-columns: .9fr 1.3fr; gap: clamp(48px,8vw,128px); padding-block: clamp(56px,6vw,92px); }
+  .footer-heading { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 0; border: 0; padding: 0; }
+  .wordmark { width: 168px; line-height: 0; }
+  .wordmark img { display: block; width: 100%; height: auto; }
+  .brand-caption { margin-top: 10px; font-size: 9px; }
+  .brand-note { margin-top: 38px; font-size: clamp(48px,5.2vw,78px); line-height: .98; font-weight: 500; letter-spacing: -.065em; color: var(--text); }
+  .brand-note span { color: var(--red); }
+  .footer-discover { display: flex; align-items: center; gap: 30px; min-height: 48px; margin-top: 30px; padding-bottom: 8px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .footer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 38px 44px; padding: 8px 0 0; }
+  .footer-columns nav { grid-column: 1 / -1; }
+  .footer-columns nav ul { display: grid; grid-template-columns: 1fr 1fr; gap: 0 30px; }
+  .footer-columns nav li { border-bottom: 1px solid var(--line); }
+  .footer-columns nav a { width: 100%; min-height: 56px; font-size: 18px; letter-spacing: -.03em; justify-content: space-between; }
+  .footer-columns nav a::after { content: '↗'; font-size: 18px; color: var(--muted); }
+  .orbit-footer h3 { font-size: 10px; text-transform: uppercase; letter-spacing: .14em; margin-bottom: 18px; }
+  .footer-contact li { font-size: 13px; }
+  .footer-hours dl { font-size: 12px; }
+  .footer-hours dl > div { display: grid; gap: 2px; padding-block: 8px; border: 0; }
+  .footer-bottom { padding-block: 22px; }
+  .footer-bottom p > span { display: inline; margin-left: 18px; }
+  .orbit-footer a:focus-visible { outline: 2px solid var(--text); outline-offset: 5px; }
+  @media (hover: hover) { .footer-discover:hover, .footer-columns nav a:hover { color: var(--text); border-color: var(--text); } }
+  @media (max-width: 1000px) {
+    .footer-inner { grid-template-columns: .8fr 1.2fr; gap: 38px; }
+    .footer-columns { gap: 32px 24px; }
+    .footer-columns nav a { font-size: 16px; }
+  }
+  @media (max-width: 700px) {
+    .footer-inner { grid-template-columns: 1fr; gap: 48px; padding-block: 48px; }
+    .footer-heading { align-items: start; }
+    .brand-note { margin-top: 28px; font-size: 58px; }
+    .footer-discover { margin-top: 22px; width: 100%; justify-content: space-between; }
+    .footer-columns { grid-template-columns: 1fr; gap: 32px; padding: 0; }
+    .footer-columns nav ul { gap: 0 20px; }
+    .footer-contact, .footer-hours { grid-column: 1; }
+    .footer-hours dl > div { display: flex; justify-content: space-between; }
+    .footer-bottom { flex-wrap: wrap; gap: 16px; }
+    .footer-bottom p { max-width: none; }
+    .footer-bottom p > span { display: block; margin: 5px 0 0; }
   }
 </style>

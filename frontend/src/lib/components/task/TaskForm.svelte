@@ -94,7 +94,7 @@
     return 'font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5';
   }
   function input() {
-    return 'h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-red)_12%,transparent)] transition-colors';
+    return 'h-11 px-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-red)_12%,transparent)] transition-colors';
   }
 </script>
 
@@ -142,7 +142,7 @@
       rows="4"
       maxlength="4000"
       placeholder="Detalhes, links, contactos…"
-      class="px-3 py-2 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-red)_12%,transparent)] transition-colors"
+      class="px-3 py-2 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-red)_12%,transparent)] transition-colors"
       style="border-radius: var(--radius-btn);"
       value={initial.description ?? ''}
     ></textarea>

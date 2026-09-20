@@ -2,7 +2,37 @@
  * The contact/footer frame is the common alignment; each chapter owns its trailing
  * space so adjacent component margins cannot silently add another pause.
  */
+.design .nav-reserve { display: none; }
+.design.orbit-home.nav-pinned .nav-reserve { display: block; height: 94px; }
+.design.orbit.orbit-home.nav-pinned > header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: 80px;
+  padding-block: 0;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom-color: color-mix(in srgb, var(--line) 55%, transparent);
+}
+.design.orbit-home.nav-pinned header .edition-label { display: none; }
+.design.orbit-home.nav-pinned .catalog-controls { top: 104px; }
+.design.orbit-home :is(section[id], [id='selecao']) { scroll-margin-top: 104px; }
+.design.orbit-home :is(a, button, input, select) { scroll-margin-top: 104px; }
+@media (prefers-reduced-motion: no-preference) {
+  .design.orbit.orbit-home.nav-pinned > header {
+    transition: transform 300ms cubic-bezier(.2,.65,.3,1), opacity 240ms ease;
+  }
+}
+@media (max-width: 700px) {
+  .design.orbit-home.nav-pinned .nav-reserve { height: 82px; }
+  .design.orbit.orbit-home.nav-pinned > header { height: 72px; }
+  .design.orbit.orbit-home header nav { top: 100%; max-height: calc(100svh - 82px); overflow-y: auto; }
+  .design.orbit.orbit-home.nav-pinned header nav { max-height: calc(100svh - 72px); }
+  .design.orbit.orbit-home.nav-hidden > header { transform: translateY(-110%); opacity: 0; }
+}
+
 .design.orbit-home {
+  --orbit-panel-bg: color-mix(in srgb, var(--text) 2%, transparent);
   --orbit-frame: min(96%, calc(100% - 48px));
   --orbit-frame-max: 1720px;
   --orbit-space-section: clamp(64px, 6vw, 96px);
@@ -62,7 +92,6 @@
 
 .design.orbit-home .showroom-heading .kicker,
 .design.orbit-home .about-head .kicker,
-.design.orbit-home .cabin-heading .eyebrow,
 .design.orbit-home .invitation-copy .eyebrow {
   margin-bottom: 20px;
   font-size: var(--orbit-type-label);
@@ -79,12 +108,26 @@
 }
 
 .design.orbit-home .about {
+  background: var(--orbit-panel-bg);
+  box-shadow: 0 0 0 100vmax var(--orbit-panel-bg);
+  clip-path: inset(0 -100vmax);
   /* Close the dense catalogue before the quieter editorial reading begins. */
   margin-top: var(--orbit-space-half);
   border-top: 1px solid var(--line);
   padding-block: var(--orbit-space-arrival) var(--orbit-space-section);
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--orbit-space-grid);
+}
+
+/* Extend the same panel surface through the full band, retaining its content frame. */
+.design.orbit-home .orbit-faq {
+  background: var(--orbit-panel-bg);
+  box-shadow: 0 0 0 100vmax var(--orbit-panel-bg);
+  clip-path: inset(0 -100vmax);
+}
+
+.design.orbit-home .orbit-faq + .contact {
+  margin-top: 0;
 }
 
 .design.orbit-home .about-content {
@@ -119,7 +162,7 @@
 
 .design.orbit-home .cabin-reveal {
   margin-block: 0;
-  padding-block: 0 var(--orbit-space-section);
+  padding-block: var(--orbit-space-section);
 }
 
 .design.orbit-home .cabin-caption {
@@ -153,7 +196,16 @@
 }
 
 .design.orbit-home .services article {
+  background: var(--orbit-panel-bg);
   padding-top: var(--orbit-space-heading);
+  padding-inline: 35px;
+}
+
+@media (max-width: 700px) {
+  .design.orbit-home .services article,
+  .design.orbit-home .services article + article {
+    padding-inline: 24px;
+  }
 }
 
 .design.orbit-home > .questions {
@@ -167,6 +219,9 @@
 }
 
 @media (min-width: 701px) {
+  .design.orbit header .logo img {
+    transform: scale(1.06);
+  }
   .design.orbit.orbit-home header {
     padding-inline: max(24px, 2%, calc((100% - var(--orbit-frame-max)) / 2));
   }
@@ -331,16 +386,34 @@
 .design.orbit.orbit-home .orbit-copy {
   position: absolute;
   z-index: 2;
-  top: 17%;
+  top: calc(17% - 5px);
   left: 0;
   width: 40%;
+  isolation: isolate;
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+.design.orbit.orbit-home .orbit-copy::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -26px -42px -30px -34px;
+  border-left: 2px solid color-mix(in srgb, var(--red) 72%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--bg) 88%, transparent), transparent 92%);
+  opacity: 0.92;
+  pointer-events: none;
+  transform: translateZ(-8px);
 }
 .design.orbit.orbit-home .orbit-hero-signature {
   display: block;
-  width: clamp(210px, 22vw, 320px);
+  width: clamp(251px, 25.8vw, 381px);
   max-width: 100%;
   height: auto;
   margin: 0 0 24px;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 17%))
+    drop-shadow(0 2px 1px rgb(0 0 0 / 11%))
+    drop-shadow(0 8px 10px rgb(0 0 0 / 11%));
+  transform: translateZ(18px) rotateY(-1.5deg);
 }
 .design.orbit.orbit-home .orbit-title {
   position: relative;
@@ -351,6 +424,10 @@
   font-weight: 600;
   line-height: 0.98;
   letter-spacing: -0.065em;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 24%))
+    drop-shadow(0 2.4px 0 rgb(0 0 0 / 12%))
+    drop-shadow(0 8px 9px rgb(0 0 0 / 14%));
+  transform: translateZ(24px);
 }
 .design.orbit.orbit-home .orbit-title > span {
   margin-top: 0.035em;
@@ -376,7 +453,12 @@
   font-size: clamp(14px, 1.18vw, 18px);
   line-height: 1.75;
   letter-spacing: -0.015em;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--text) 70%, var(--muted));
+  filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--bg) 38%, transparent));
+  transform: translateZ(14px);
+}
+.design.orbit.orbit-home .orbit-copy .orbit-title {
+  transform: translateZ(24px) rotateY(-1.5deg);
 }
 @media (min-width: 701px) and (max-width: 1050px) {
   .design.orbit.orbit-home .orbit-copy {
@@ -396,7 +478,7 @@
     --intro-height: max(820px, calc(100svh - 40px));
   }
   .design.orbit.orbit-home .orbit-hero-signature {
-    width: 200px;
+    width: 224px;
     margin-bottom: 18px;
   }
   .design.orbit.orbit-home .orbit-copy {

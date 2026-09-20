@@ -8,6 +8,9 @@
     type PublicCard,
   } from '$lib/publicVehicles';
   import OrbitPublicDetail from './OrbitPublicDetail.svelte';
+  import DiscoverVehicles from './DiscoverVehicles.svelte';
+  import { hybridNav } from './hybridNav';
+  import ThemeToggle from './ThemeToggle.svelte';
   import {
     ArrowUpRight,
     ArrowDown,
@@ -213,7 +216,8 @@
   use:designMotion
 >
   <div class="read-line" aria-hidden="true"></div>
-  <header>
+  <div class="nav-reserve" aria-hidden="true"></div>
+  <header use:hybridNav={{ enabled: edition === 'orbit' && !id && !catalog && !privacy && !publicVehicle, open: navOpen, close: () => (navOpen = false) }}>
     <a class="logo" href={base}
       ><img
         src={edition === 'orbit'
@@ -226,25 +230,26 @@
         height="80"
       /></a
     >
-    <nav class:open={navOpen} aria-label="Navegação">
+    <nav id="stand-navigation" class:open={navOpen} aria-label="Navegação">
       <a
         href={edition === 'orbit' ? `${base}/viaturas` : `${base}#selecao`}
         aria-current={catalog ? 'page' : undefined}
         onclick={() => (navOpen = false)}
         >Viaturas {#if edition !== 'orbit'}<small>05</small>{/if}</a
       ><a href={`${base}#sobre`} onclick={() => (navOpen = false)}>A nossa perspetiva</a><button
-        onclick={() => contact()}>Vamos conversar <ArrowUpRight size={15} /></button
+        onclick={() => { navOpen = false; contact(); }}>Vamos conversar <ArrowUpRight size={15} /></button
       >
     </nav>
     <div class="header-actions">
-      <button
+      {#if edition === 'orbit'}<ThemeToggle dark={isDark} onchange={toggleTheme} />{:else}<button
         class="icon-button"
         onclick={toggleTheme}
         aria-label={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
         >{#if isDark}<Sun size={18} />{:else}<Moon size={18} />{/if}</button
-      ><button
+      >{/if}<button
         class="mobile-menu icon-button"
-        aria-label="Abrir menu"
+        aria-label={navOpen ? 'Fechar menu' : 'Abrir menu'}
+        aria-controls="stand-navigation"
         aria-expanded={navOpen}
         onclick={() => (navOpen = !navOpen)}
         >{#if navOpen}<X size={21} />{:else}<Menu size={21} />{/if}</button
@@ -541,7 +546,7 @@
           <div>
             <p class="kicker">02 / A NOSSA SELEÇÃO</p>
             <h2>
-              {edition === 'orbit' ? 'O próximo pode estar aqui.' : 'Boa forma. Bom sentido.'}
+              {#if edition === 'orbit'}O próximo pode estar aqui<span class="heading-period">.</span>{:else}Boa forma. Bom sentido.{/if}
             </h2>
           </div>
           <span class="stock-count" role="status" aria-live="polite" aria-atomic="true"
@@ -636,10 +641,7 @@
                   }}>Limpar filtros <ArrowUpRight size={17} /></button
                 >
               </div>{/if}
-            {#if edition === 'orbit'}<a class="all-vehicles-card" href="/stand-orbit/viaturas"
-                ><span>CONTINUE A DESCOBRIR</span><strong>Ver todas<br />as viaturas</strong
-                ><ArrowUpRight size={30} aria-hidden="true" /></a
-              >{/if}
+            {#if edition === 'orbit'}<DiscoverVehicles />{/if}
           </div>
         </div>
       </section>
@@ -918,75 +920,8 @@
   .home-clear:disabled {
     opacity: 0.4;
   }
-  .all-vehicles-card {
-    display: flex;
-    position: relative;
-    flex-direction: column;
-    justify-content: center;
-    align-self: stretch;
-    min-height: 280px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: clamp(24px, 3vw, 44px);
-    cursor: pointer;
-  }
-  .all-vehicles-card > span {
-    color: var(--muted);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-  }
-  .all-vehicles-card > strong {
-    margin-block: 20px 48px;
-    font-size: clamp(26px, 2.5vw, 40px);
-    line-height: 1.12;
-    font-weight: 500;
-    letter-spacing: -0.04em;
-  }
-  .all-vehicles-card :global(svg) {
-    position: absolute;
-    right: 24px;
-    bottom: 24px;
-    color: var(--red);
-    transition: rotate 0.3s;
-  }
-  .all-vehicles-card:focus-visible {
-    outline: 1px solid var(--text);
-    outline-offset: 5px;
-  }
-  .all-vehicles-card:focus-visible > strong {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.16em;
-    text-decoration-color: var(--red);
-  }
-  .all-vehicles-card:focus-visible :global(svg) {
-    rotate: 45deg;
-  }
-  @media (hover: hover) {
-    .all-vehicles-card:hover > strong {
-      text-decoration: underline;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 0.16em;
-      text-decoration-color: var(--red);
-    }
-    .all-vehicles-card:hover :global(svg) {
-      rotate: 45deg;
-    }
-  }
   @media (max-width: 700px) {
-    .home-basic-filters {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-    .all-vehicles-card {
-      min-height: 250px;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .all-vehicles-card,
-    .all-vehicles-card :global(svg) {
-      transition: none;
-    }
+    .home-basic-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   }
   .design.orbit-catalog,
   .design.orbit-privacy {
@@ -1026,6 +961,9 @@
       sans-serif;
     overflow: clip;
     color-scheme: light;
+  }
+  .design.orbit:not(.dark) {
+    --bg: #f5f5f1;
   }
   .design.dark {
     --bg: #0c0c0e;
@@ -1660,6 +1598,9 @@
   }
   .showroom-heading h2 {
     font-size: clamp(40px, 4.7vw, 72px);
+  }
+  .showroom-heading h2 > .heading-period {
+    color: var(--red);
   }
   .stock-count {
     font-size: 65px;
@@ -5075,7 +5016,7 @@
     width: 53%;
     height: 64%;
     left: 43%;
-    top: 17%;
+    top: calc(17% + 5px);
   }
   .orbit .orbit-title {
     z-index: 2;

@@ -29,6 +29,7 @@
   --color-bg-1: #131316;
   --color-bg-2: #1b1c20;
   --color-bg-3: #25262b;
+  --color-bg-elevated: var(--color-bg-1);
   --color-border: rgba(255, 255, 255, 0.12);
   --color-border-strong: rgba(255, 255, 255, 0.22);
   --color-text: #f4f4f2;
@@ -56,11 +57,12 @@
 
 /* ───────── Light theme override ───────── */
 [data-theme='light'] {
-  --color-bg-0: #f4f2ee;
-  --color-bg-1: #ffffff;
-  --color-bg-2: #faf8f2;
-  --color-bg-3: #eeebe3;
-  --color-border: rgba(15, 15, 17, 0.08);
+  --color-bg-0: #eeece6;
+  --color-bg-1: #faf8f4;
+  --color-bg-2: #f3f0e9;
+  --color-bg-3: #e5e1d8;
+  --color-bg-elevated: #ffffff;
+  --color-border: rgba(15, 15, 17, 0.1);
   --color-border-strong: rgba(15, 15, 17, 0.18);
   --color-text: #0f0f11;
   --color-text-muted: #5a5c61;

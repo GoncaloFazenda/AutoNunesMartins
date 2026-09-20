@@ -144,8 +144,9 @@
     stroke: var(--red);
     stroke-width: 2.5;
     stroke-linecap: round;
-    opacity: 0.9;
-    filter: drop-shadow(0 0 3px #ff334ccc) drop-shadow(0 0 12px #e3061399)
+    opacity: 0.95;
+    filter: drop-shadow(0 0 2.5px rgb(255 51 76 / 90%)) drop-shadow(0 0 5px #e3061366)
+      drop-shadow(0 0 12px #e3061399)
       drop-shadow(0 0 26px #e3061359);
     stroke-dasharray: 0.16 1;
     stroke-dashoffset: -0.365;
@@ -176,7 +177,7 @@
     :global(.motion-on) .direction-accent {
       /* The photo occludes the right end; scrolling draws the whole segment out to the left. */
       stroke-dashoffset: calc(-0.365px + var(--accent-reveal) * 0.135px);
-      opacity: clamp(0, calc((2.7 - var(--accent-reveal)) * 0.6923077), 0.9);
+      opacity: clamp(0, calc((2.7 - var(--accent-reveal)) * 0.73076924), 0.95);
     }
     :global(.motion-on) .photo-ground {
       transform: translateX(calc(var(--p, 0) * -16px)) rotate(-4deg)

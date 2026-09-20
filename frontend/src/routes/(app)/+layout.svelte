@@ -82,6 +82,7 @@
         return;
       }
       const t = e.touches[0];
+      if (!t) return;
       startX = lastX = t.clientX;
       startY = t.clientY;
       lastT = performance.now();
@@ -99,6 +100,10 @@
     function onTouchMove(e: TouchEvent) {
       if (mode === 'idle') return;
       const t = e.touches[0];
+      if (!t) {
+        reset();
+        return;
+      }
       const dx = t.clientX - startX;
       const dy = t.clientY - startY;
 

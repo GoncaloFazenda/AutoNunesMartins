@@ -130,6 +130,17 @@
     transform: rotate(180deg);
     color: var(--text);
   }
+  :global(.orbit-faq) .expanded .chevron {
+    color: var(--red);
+    opacity: 0.95;
+    overflow: visible;
+    filter: drop-shadow(0 0 2.5px rgb(255 51 76 / 90%)) drop-shadow(0 0 5px #e3061366)
+      drop-shadow(0 0 12px #e3061399)
+      drop-shadow(0 0 26px #e3061359);
+  }
+  :global(.orbit-faq) .expanded .chevron path {
+    stroke-width: 1.75;
+  }
   .answer {
     padding: 0 56px 34px 2px;
   }

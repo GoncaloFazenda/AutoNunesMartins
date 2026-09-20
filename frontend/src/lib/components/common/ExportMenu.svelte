@@ -147,6 +147,6 @@
     background: linear-gradient(180deg, #131316 0%, #101012 100%);
   }
   :global([data-theme='light']) .panel-surface {
-    background: var(--color-bg-1);
+    background: var(--color-bg-elevated);
   }
 </style>

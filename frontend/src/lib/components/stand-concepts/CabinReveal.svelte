@@ -26,7 +26,6 @@
 <section class="cabin-reveal" data-scene data-approach aria-labelledby="cabin-heading">
   <div class="cabin-heading">
     <div>
-      <p class="eyebrow">POR DENTRO DA ESCOLHA</p>
       <h2 id="cabin-heading">O melhor lugar.<br /><span>O seu.</span></h2>
     </div>
     <p class="cabin-intro">Não é só sobre chegar.<br />É sobre como se sente pelo caminho.</p>
@@ -119,12 +118,6 @@
     align-items: end;
     gap: 30px;
     margin-bottom: 30px;
-  }
-  .eyebrow {
-    margin: 0 0 18px;
-    font-size: 11px;
-    letter-spacing: 0.13em;
-    color: var(--muted);
   }
   h2 {
     margin: 0;

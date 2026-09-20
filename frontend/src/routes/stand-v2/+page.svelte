@@ -395,13 +395,13 @@
            translates at a slightly different rate as the user scrolls,
            creating depth without going full-on parallax circus. -->
       <div class="hero-photo p1" style="transform: translateY({scrollY * 0.18}px)">
-        <img src={vehicles[2].image} alt="" />
+        <img src={vehicles[2]?.image ?? ''} alt="" />
       </div>
       <div class="hero-photo p2" style="transform: translateY({scrollY * 0.32}px)">
-        <img src={vehicles[6].image} alt="" />
+        <img src={vehicles[6]?.image ?? ''} alt="" />
       </div>
       <div class="hero-photo p3" style="transform: translateY({scrollY * 0.12}px)">
-        <img src={vehicles[8].image} alt="" />
+        <img src={vehicles[8]?.image ?? ''} alt="" />
       </div>
       <div class="hero-grid"></div>
     </div>

@@ -38,7 +38,7 @@
     padding: clamp(28px, 3vw, 48px);
     border: 1px solid var(--line);
     border-radius: 2px;
-    background: color-mix(in srgb, var(--text) 2%, transparent);
+    background: var(--orbit-panel-bg, color-mix(in srgb, var(--text) 2%, transparent));
   }
   article::before {
     content: '';

@@ -75,7 +75,7 @@
        readable width. -->
   <div class="flex flex-wrap items-center gap-3">
     <div
-      class="flex-1 relative flex items-center h-11 px-3 border border-[var(--color-border)] bg-[var(--color-bg-1)] focus-within:border-[var(--color-red)] transition-colors"
+      class="flex-1 relative flex items-center h-11 px-3 border border-[var(--color-border)] bg-[var(--color-bg-elevated)] focus-within:border-[var(--color-red)] transition-colors"
       style="border-radius: var(--radius-btn);"
     >
       <Search class="h-4 w-4 text-[var(--color-text-faint)]" />
@@ -149,7 +149,7 @@
         placeholder="2000"
         value={filters.yearMin ?? ''}
         oninput={(e) => setFilter('yearMin', e.currentTarget.value || undefined)}
-        class="h-10 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
+        class="h-10 px-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
         style="border-radius: var(--radius-btn);"
       />
     </label>
@@ -163,7 +163,7 @@
         placeholder="2026"
         value={filters.yearMax ?? ''}
         oninput={(e) => setFilter('yearMax', e.currentTarget.value || undefined)}
-        class="h-10 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
+        class="h-10 px-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
         style="border-radius: var(--radius-btn);"
       />
     </label>
@@ -177,7 +177,7 @@
         placeholder="0"
         value={filters.mileageMin ?? ''}
         oninput={(e) => setFilter('mileageMin', e.currentTarget.value || undefined)}
-        class="h-10 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
+        class="h-10 px-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
         style="border-radius: var(--radius-btn);"
       />
     </label>
@@ -191,7 +191,7 @@
         placeholder="200000"
         value={filters.mileageMax ?? ''}
         oninput={(e) => setFilter('mileageMax', e.currentTarget.value || undefined)}
-        class="h-10 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
+        class="h-10 px-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[13px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
         style="border-radius: var(--radius-btn);"
       />
     </label>

@@ -449,7 +449,7 @@
   :global([data-theme='light']) .gs-dropdown {
     background:
       linear-gradient(180deg, rgba(0, 0, 0, 0.015) 0%, rgba(0, 0, 0, 0.02) 100%),
-      var(--color-bg-1);
+      var(--color-bg-elevated);
   }
 
   .gs-scroll {
