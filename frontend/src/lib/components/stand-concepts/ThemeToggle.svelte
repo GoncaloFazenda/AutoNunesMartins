@@ -15,4 +15,5 @@
   button:hover { background: color-mix(in srgb,var(--text) 5%,transparent); }
   button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
   @media (prefers-reduced-motion: no-preference) { button { transition: background 180ms ease; } }
+  @media (max-width: 700px) { button { min-width: 32px; padding-inline: 6px; } span { display: none; } }
 </style>

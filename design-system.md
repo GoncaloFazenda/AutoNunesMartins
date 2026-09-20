@@ -1,5 +1,9 @@
 # Design Handoff — Auto Dealer Admin Panel
 
+For the public Orbit storefront (distinct from this admin system), see
+[Orbit visual identity](docs/orbit-visual-identity.md), including the reusable
+signature red-line glow.
+
 ## Overview
 
 A custom-built admin panel for a Portuguese used-car dealership ("comércio

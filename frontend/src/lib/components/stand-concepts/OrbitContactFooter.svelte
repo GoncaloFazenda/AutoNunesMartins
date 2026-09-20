@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { ArrowUpRight, ArrowUp, Phone, Mail } from 'lucide-svelte';
+  import { ArrowUpRight, Phone, Mail } from 'lucide-svelte';
   import { standContact } from './standContact';
+  import OrbitCompactFooter from './OrbitCompactFooter.svelte';
+  let { includeFooter = true }: { includeFooter?: boolean } = $props();
   import { photo } from './data';
   const demoDescription = standContact.isDemo ? 'contact-demo-note' : undefined;
+  let formTested = $state(false);
 </script>
 
 <section class="contact" id="contactos" aria-labelledby="stand-contact-heading">
@@ -13,6 +16,7 @@
     loading="lazy"
   />
   <div class="contact-inner">
+    <div class="visit-info">
     <div class="contact-heading">
       <p class="eyebrow"><span aria-hidden="true"></span> VISITAR O STAND</p>
       <h2 id="stand-contact-heading">Venha <span>conhecer-nos.</span></h2>
@@ -92,75 +96,52 @@
         <span>DEMONSTRAÇÃO</span> Morada, contactos e horário fictícios. Substituir antes da publicação.
       </p>
     {/if}
+    </div>
+    <form class="inline-contact" aria-labelledby="inline-contact-heading" aria-describedby="inline-contact-note" onsubmit={(event) => { event.preventDefault(); formTested = true; }}>
+      <p class="eyebrow">COMECE A CONVERSA</p>
+      <h3 id="inline-contact-heading">O que tem em mente?</h3>
+      <p class="form-intro">Uma dúvida, uma viatura ou uma visita. Conte-nos.</p>
+      <div class="form-row">
+        <label>Nome<input name="name" autocomplete="name" placeholder="O seu nome" required /></label>
+        <label>Email<input name="email" type="email" autocomplete="email" placeholder="nome@exemplo.pt" required /></label>
+      </div>
+      <label>Assunto<select name="subject"><option>Informações gerais</option><option>Conhecer uma viatura</option><option>Marcar uma visita</option><option>Falar sobre uma retoma</option></select></label>
+      <label>Mensagem<textarea name="message" rows="3" placeholder="Como podemos ajudar?" required></textarea></label>
+      <div class="form-bottom">
+        <p id="inline-contact-note">Demonstração. Não envia mensagens nem guarda dados.</p>
+        <button type="submit" class="button primary">Experimentar pedido <ArrowUpRight size={17} aria-hidden="true" /></button>
+      </div>
+      <p class="form-status" role="status">{formTested ? 'Pedido experimentado. Nenhuma mensagem foi enviada.' : ''}</p>
+    </form>
   </div>
 </section>
 
-<footer class="orbit-footer">
-  <div class="footer-inner">
-    <div class="footer-heading">
-      <div class="footer-brand">
-        <a class="wordmark" href="/stand-orbit" aria-label="Auto Nunes Martins — início"
-          ><img src="/logo-transparent-white-v3.png" alt={standContact.name} width="180" height="80" /></a
-        >
-        <p class="brand-caption">{standContact.description}</p>
-      </div>
-      <p class="brand-note">O caminho<br />é seu<span>.</span></p>
-      <a class="footer-discover" href="/stand-orbit/viaturas">Encontre o seu próximo carro <ArrowUpRight size={22} aria-hidden="true" /></a>
-    </div>
-    <div class="footer-columns">
-      <nav aria-label="Navegação do rodapé">
-        <h3>Explore</h3>
-        <ul>
-          <li><a href="/stand-orbit/viaturas">Viaturas</a></li>
-          <li><a href="/stand-orbit#sobre">A nossa perspetiva</a></li>
-          <li><a href="#contactos">Visitar e contactar</a></li>
-          <li><a href="/stand-orbit/politica-de-privacidade">Política de privacidade</a></li>
-        </ul>
-      </nav>
-      <div class="footer-contact">
-        <h3>Fale connosco</h3>
-        <ul>
-          {#if standContact.phone}<li>
-              <a href={`tel:${standContact.phone.international}`} aria-describedby={demoDescription}
-                >{standContact.phone.display}</a
-              >
-            </li>{/if}
-          {#if standContact.email}<li>
-              <a href={`mailto:${standContact.email}`} aria-describedby={demoDescription}
-                >{standContact.email}</a
-              >
-            </li>{/if}
-          {#if standContact.address}<li><address>{standContact.address}</address></li>{/if}
-        </ul>
-      </div>
-      <div class="footer-hours">
-        <h3>Horário</h3>
-        {#if standContact.hours.length}
-          <dl>
-            {#each standContact.hours as row}<div>
-                <dt>{row.days}</dt>
-                <dd>{row.time}</dd>
-              </div>{/each}
-          </dl>
-        {:else}<p>Por confirmar.</p>{/if}
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>
-      © {new Date().getFullYear()}
-      {standContact.name}{#if standContact.isDemo}<span>Site de demonstração · Dados fictícios</span
-        >{/if}
-    </p>
-    <a href="/stand-orbit#inicio">Voltar ao início <ArrowUp size={15} aria-hidden="true" /></a>
-  </div>
-</footer>
+{#if includeFooter}<OrbitCompactFooter showContacts={false} />{/if}
 
 <style>
+  .contact-inner { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; gap: clamp(36px, 5vw, 80px); }
+  .visit-info { min-width: 0; }
+  .visit-info .contact-grid { grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; padding-block: 24px; }
+  .visit-info h2 { font-size: clamp(36px, 3.6vw, 58px); }
+  .inline-contact { min-width: 0; padding: clamp(24px, 2.6vw, 40px); border: 1px solid #ffffff30; border-radius: 8px; background: #101913c9; backdrop-filter: blur(12px); }
+  .inline-contact h3 { margin-top: 12px; font-size: clamp(26px, 2.3vw, 36px); font-weight: 500; line-height: 1.15; letter-spacing: -.04em; }
+  .form-intro { margin-top: 10px; color: #d0d6d1; font-size: 13px; line-height: 1.65; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .inline-contact label { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; font-size: 12px; color: #ececef; }
+  .inline-contact input, .inline-contact select, .inline-contact textarea { width: 100%; min-width: 0; border: 1px solid #ffffff38; border-radius: 4px; background: #ffffff09; color: #f5f5f1; padding: 12px 14px; font: inherit; font-size: 14px; line-height: 1.5; }
+  .inline-contact input::placeholder, .inline-contact textarea::placeholder { color: #b7c1b9; opacity: 1; }
+  .inline-contact option { background: #17221b; color: #f5f5f1; }
+  .inline-contact textarea { resize: vertical; min-height: 96px; }
+  .inline-contact :is(input, select, textarea, button):focus-visible { outline: 2px solid #f5f5f1; outline-offset: 3px; }
+  .form-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 24px; }
+  .form-bottom p { flex: 1 1 140px; color: #b7c1b9; font-size: 11px; line-height: 1.6; }
+  .form-bottom button { cursor: pointer; font-family: inherit; }
+  .form-status { margin-top: 12px; color: #f5f5f1; font-size: 12px; line-height: 1.6; }
+  .form-status:empty { display: none; }
+  @media (max-width: 1050px) { .contact-inner { grid-template-columns: 1fr; } }
+  @media (max-width: 700px) { .visit-info .contact-grid, .form-row { grid-template-columns: 1fr; } .inline-contact { padding: 24px 20px; } .inline-contact input, .inline-contact select, .inline-contact textarea { font-size: 16px; } }
   .contact,
-  .orbit-footer,
-  .contact *,
-  .orbit-footer * {
+  .contact * {
     box-sizing: border-box;
   }
   h2,
@@ -225,8 +206,7 @@
     padding: clamp(64px, 7vw, 110px) 0;
   }
   .eyebrow,
-  .info h3,
-  .orbit-footer h3 {
+  .info h3 {
     font-size: 10px;
     font-weight: 500;
     line-height: 1.5;
@@ -352,148 +332,6 @@
     font-weight: 500;
     letter-spacing: 0.1em;
   }
-  .orbit-footer {
-    --text: #f5f5f1;
-    --muted: #a6a6ae;
-    --line: #ffffff24;
-    border-top: 1px solid var(--line);
-    background: #0c0c0e;
-    color: var(--text);
-  }
-  .footer-inner,
-  .footer-bottom {
-    width: var(--orbit-frame, 95%);
-    max-width: var(--orbit-frame-max, 1640px);
-    margin-inline: auto;
-  }
-  .footer-inner {
-    padding-top: clamp(64px, 7vw, 108px);
-  }
-  .footer-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 40px;
-    padding-bottom: 56px;
-    border-bottom: 1px solid var(--line);
-  }
-  .wordmark {
-    display: inline-block;
-    font-size: clamp(26px, 2.4vw, 36px);
-    font-weight: 500;
-    letter-spacing: -0.055em;
-    line-height: 1.2;
-  }
-  .brand-caption {
-    margin-top: 14px;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .brand-note {
-    font-size: clamp(25px, 2.8vw, 42px);
-    font-weight: 400;
-    letter-spacing: -0.05em;
-    line-height: 1.2;
-    color: #c0c0c6;
-  }
-  .footer-columns {
-    display: grid;
-    grid-template-columns: 1fr 1.15fr 1fr;
-    gap: clamp(40px, 6vw, 100px);
-    padding-block: 60px 76px;
-  }
-  .footer-columns > * {
-    min-width: 0;
-  }
-  .orbit-footer h3 {
-    margin-bottom: 25px;
-    color: var(--muted);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-  }
-  .footer-columns ul {
-    display: grid;
-    gap: 12px;
-  }
-  .footer-columns nav a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-size: clamp(19px, 1.65vw, 24px);
-    font-weight: 400;
-    letter-spacing: -0.025em;
-    line-height: 1.35;
-  }
-  .footer-contact li {
-    font-size: 15px;
-    line-height: 1.75;
-    overflow-wrap: anywhere;
-  }
-  .footer-contact a {
-    display: inline-block;
-    padding-block: 8px;
-    margin-block: -8px;
-  }
-  .footer-contact address {
-    margin-top: 18px;
-    color: var(--muted);
-  }
-  .footer-hours dl {
-    display: grid;
-    gap: 0;
-    font-size: 14px;
-    line-height: 1.65;
-  }
-  .footer-hours dl > div {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .footer-hours dl > div:first-child {
-    padding-top: 2px;
-  }
-  .footer-hours dt {
-    color: var(--muted);
-  }
-  .footer-hours dd {
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  .footer-hours > p {
-    color: var(--muted);
-    font-size: 14px;
-  }
-  .footer-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 32px;
-    padding-block: 28px;
-    border-top: 1px solid var(--line);
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.7;
-  }
-  .footer-bottom p > span {
-    display: block;
-    margin-top: 5px;
-    font-size: 10px;
-  }
-  .footer-bottom a {
-    display: inline-flex;
-    align-items: center;
-    gap: 18px;
-    min-height: 44px;
-    color: var(--text);
-    font-size: 12px;
-  }
   .sr-only {
     position: absolute;
     width: 1px;
@@ -585,117 +423,5 @@
     .button {
       width: 100%;
     }
-  }
-  @media (max-width: 1000px) {
-    .footer-columns {
-      grid-template-columns: 1fr 1fr;
-      gap: 48px;
-    }
-    .footer-columns nav {
-      grid-column: 1 / -1;
-    }
-    .footer-columns nav ul {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px 40px;
-    }
-  }
-  @media (max-width: 700px) {
-    .footer-inner,
-    .footer-bottom {
-      width: 90%;
-    }
-    .footer-inner {
-      padding-top: 56px;
-    }
-    .footer-heading {
-      align-items: start;
-      flex-direction: column;
-      gap: 28px;
-      padding-bottom: 36px;
-    }
-    .wordmark {
-      font-size: clamp(25px, 7vw, 32px);
-    }
-    .brand-note {
-      font-size: 28px;
-    }
-    .footer-columns {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 38px;
-      padding-block: 38px 48px;
-    }
-    .footer-columns nav {
-      grid-column: auto;
-    }
-    .footer-columns nav ul {
-      display: grid;
-      gap: 6px;
-    }
-    .orbit-footer h3 {
-      margin-bottom: 18px;
-    }
-    .footer-contact li {
-      font-size: 14px;
-    }
-    .footer-hours dl {
-      font-size: 13px;
-    }
-    .footer-bottom {
-      align-items: start;
-      gap: 24px;
-      padding-block: 24px;
-    }
-    .footer-bottom p {
-      max-width: 23ch;
-    }
-    .footer-bottom a {
-      white-space: nowrap;
-      font-size: 11px;
-      gap: 10px;
-    }
-  }
-  /* A quieter, asymmetric closing chapter. Contact section above remains independent. */
-  .orbit-footer { background: #101012; border-top: 0; }
-  .footer-inner { display: grid; grid-template-columns: .9fr 1.3fr; gap: clamp(48px,8vw,128px); padding-block: clamp(56px,6vw,92px); }
-  .footer-heading { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 0; border: 0; padding: 0; }
-  .wordmark { width: 168px; line-height: 0; }
-  .wordmark img { display: block; width: 100%; height: auto; }
-  .brand-caption { margin-top: 10px; font-size: 9px; }
-  .brand-note { margin-top: 38px; font-size: clamp(48px,5.2vw,78px); line-height: .98; font-weight: 500; letter-spacing: -.065em; color: var(--text); }
-  .brand-note span { color: var(--red); }
-  .footer-discover { display: flex; align-items: center; gap: 30px; min-height: 48px; margin-top: 30px; padding-bottom: 8px; border-bottom: 1px solid var(--line); font-size: 13px; }
-  .footer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 38px 44px; padding: 8px 0 0; }
-  .footer-columns nav { grid-column: 1 / -1; }
-  .footer-columns nav ul { display: grid; grid-template-columns: 1fr 1fr; gap: 0 30px; }
-  .footer-columns nav li { border-bottom: 1px solid var(--line); }
-  .footer-columns nav a { width: 100%; min-height: 56px; font-size: 18px; letter-spacing: -.03em; justify-content: space-between; }
-  .footer-columns nav a::after { content: '↗'; font-size: 18px; color: var(--muted); }
-  .orbit-footer h3 { font-size: 10px; text-transform: uppercase; letter-spacing: .14em; margin-bottom: 18px; }
-  .footer-contact li { font-size: 13px; }
-  .footer-hours dl { font-size: 12px; }
-  .footer-hours dl > div { display: grid; gap: 2px; padding-block: 8px; border: 0; }
-  .footer-bottom { padding-block: 22px; }
-  .footer-bottom p > span { display: inline; margin-left: 18px; }
-  .orbit-footer a:focus-visible { outline: 2px solid var(--text); outline-offset: 5px; }
-  @media (hover: hover) { .footer-discover:hover, .footer-columns nav a:hover { color: var(--text); border-color: var(--text); } }
-  @media (max-width: 1000px) {
-    .footer-inner { grid-template-columns: .8fr 1.2fr; gap: 38px; }
-    .footer-columns { gap: 32px 24px; }
-    .footer-columns nav a { font-size: 16px; }
-  }
-  @media (max-width: 700px) {
-    .footer-inner { grid-template-columns: 1fr; gap: 48px; padding-block: 48px; }
-    .footer-heading { align-items: start; }
-    .brand-note { margin-top: 28px; font-size: 58px; }
-    .footer-discover { margin-top: 22px; width: 100%; justify-content: space-between; }
-    .footer-columns { grid-template-columns: 1fr; gap: 32px; padding: 0; }
-    .footer-columns nav ul { gap: 0 20px; }
-    .footer-contact, .footer-hours { grid-column: 1; }
-    .footer-hours dl > div { display: flex; justify-content: space-between; }
-    .footer-bottom { flex-wrap: wrap; gap: 16px; }
-    .footer-bottom p { max-width: none; }
-    .footer-bottom p > span { display: block; margin: 5px 0 0; }
   }
 </style>

@@ -154,7 +154,7 @@
     cursor: pointer;
   }
   .thumbnails button[aria-pressed='true'] {
-    border-color: #d9212b;
+    border-color: var(--red);
   }
   .thumbnails img {
     display: block;
@@ -180,7 +180,7 @@
     margin: 0;
   }
   h1 span {
-    color: #d9212b;
+    color: var(--red);
   }
   .price {
     font-size: 32px;
@@ -213,9 +213,9 @@
     display: inline-flex;
     gap: 25px;
     align-items: center;
-    background: #d9212b;
+    background: var(--red);
     color: white;
-    border-radius: 30px;
+    border-radius: 4px;
     padding: 16px 22px;
     text-decoration: none;
     font-size: 13px;
@@ -244,7 +244,7 @@
   }
   a:focus-visible,
   button:focus-visible {
-    outline: 2px solid #d9212b;
+    outline: 2px solid var(--red);
     outline-offset: 4px;
   }
   @media (max-width: 760px) {

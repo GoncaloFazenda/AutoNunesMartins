@@ -3,6 +3,30 @@
  * space so adjacent component margins cannot silently add another pause.
  */
 .design .nav-reserve { display: none; }
+.design.orbit .orbit-ambient { position: fixed; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(circle 740px at 104% 106%, rgb(227 6 19 / 27%), transparent 72%); }
+.design.orbit.dark .orbit-ambient { background: radial-gradient(circle 540px at 104% 106%, rgb(227 6 19 / 35%), transparent 78%); }
+.design.orbit .orbit-edition-label { display: none; }
+.design.orbit .nav-phone { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 18px; border-radius: 4px; background: var(--red); color: #fff; font-size: 13px; white-space: nowrap; text-decoration: none; }
+.design.orbit .nav-phone:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+@media (max-width: 700px) {
+  .design.orbit header { gap: 12px; }
+  .design.orbit header .logo { width: 104px; min-width: 0; flex: 0 0 104px; }
+  .design.orbit header .logo img { width: 104px; }
+  .design.orbit header .header-actions { gap: 8px; }
+  .design.orbit .nav-phone { min-height: 40px; padding: 10px; font-size: 11px; }
+  .design.orbit .orbit-ambient { background-size: 100% 100%; }
+}
+@media (max-width: 380px) {
+  .design.orbit header { padding-inline: 12px; gap: 8px; }
+  .design.orbit header .logo { width: 80px; flex-basis: 80px; }
+  .design.orbit header .logo img { width: 80px; }
+  .design.orbit header .header-actions { gap: 4px; }
+  .design.orbit .nav-phone { padding-inline: 8px; font-size: 10px; }
+  .design.orbit header .mobile-menu { width: 34px; height: 38px; }
+}
+.design.orbit .not-found { width: var(--orbit-frame); max-width: var(--orbit-frame-max); margin: auto; padding: var(--orbit-space-section) 0; min-height: 60svh; }
+.design.orbit .not-found h1 { font-size: clamp(36px, 4.5vw, 64px); max-width: 22ch; line-height: 1.06; letter-spacing: -.05em; }
+.design.orbit .not-found > p:not(.kicker) { color: var(--muted); line-height: 1.75; margin-block: 24px; }
 .design.orbit-home.nav-pinned .nav-reserve { display: block; height: 94px; }
 .design.orbit.orbit-home.nav-pinned > header {
   position: fixed;
@@ -31,7 +55,9 @@
   .design.orbit.orbit-home.nav-hidden > header { transform: translateY(-110%); opacity: 0; }
 }
 
-.design.orbit-home {
+.design.orbit {
+  /* Signature line glow: see docs/orbit-visual-identity.md. */
+  --orbit-line-glow: drop-shadow(0 0 2.5px rgb(255 51 76 / 90%)) drop-shadow(0 0 5px #e3061366) drop-shadow(0 0 12px #e3061399) drop-shadow(0 0 26px #e3061359);
   --orbit-panel-bg: color-mix(in srgb, var(--text) 2%, transparent);
   --orbit-frame: min(96%, calc(100% - 48px));
   --orbit-frame-max: 1720px;
@@ -120,13 +146,13 @@
 }
 
 /* Extend the same panel surface through the full band, retaining its content frame. */
-.design.orbit-home .orbit-faq {
+.design.orbit .orbit-faq {
   background: var(--orbit-panel-bg);
   box-shadow: 0 0 0 100vmax var(--orbit-panel-bg);
   clip-path: inset(0 -100vmax);
 }
 
-.design.orbit-home .orbit-faq + .contact {
+.design.orbit .orbit-faq + .contact {
   margin-top: 0;
 }
 
@@ -195,15 +221,15 @@
   padding-bottom: var(--orbit-space-heading);
 }
 
-.design.orbit-home .services article {
+.design.orbit .services article {
   background: var(--orbit-panel-bg);
   padding-top: var(--orbit-space-heading);
   padding-inline: 35px;
 }
 
 @media (max-width: 700px) {
-  .design.orbit-home .services article,
-  .design.orbit-home .services article + article {
+  .design.orbit .services article,
+  .design.orbit .services article + article {
     padding-inline: 24px;
   }
 }
@@ -248,7 +274,7 @@
 }
 
 @media (max-width: 700px) {
-  .design.orbit-home {
+  .design.orbit {
     --orbit-frame: 90%;
     --orbit-space-section: 52px;
     --orbit-space-arrival: 72px;

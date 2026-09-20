@@ -1,281 +1,131 @@
-<a class="discover" href="/stand-orbit/viaturas">
+<script lang="ts">
+  import { onMount } from 'svelte';
+  const CAR_ENTER_MS = 850;
+  const LINE_ENTER_MS = 300;
+  const EXIT_MS = 300;
+  let phase = $state<'idle' | 'entering' | 'parked' | 'exiting'>('idle');
+  let reduced = $state(true);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let element: HTMLAnchorElement;
+  let sweep = $state(0);
+  let sweepFrame = 0;
+  function illuminate(target: number) {
+    cancelAnimationFrame(sweepFrame);
+    if (reduced) { sweep = target; return; }
+    if (target === 1 && sweep > 1) sweep = 0;
+    const from = sweep;
+    const started = performance.now();
+    const duration = target === 1 ? LINE_ENTER_MS : EXIT_MS;
+    const draw = (now: number) => {
+      const p = Math.min(1, (now - started) / duration);
+      sweep = from + (target - from) * (p * p * (3 - 2 * p));
+      if (p < 1) sweepFrame = requestAnimationFrame(draw);
+    };
+    sweepFrame = requestAnimationFrame(draw);
+  }
+  function enter() {
+    clearTimeout(timer);
+    illuminate(1);
+    phase = reduced ? 'parked' : 'entering';
+    if (!reduced) timer = setTimeout(() => phase = 'parked', CAR_ENTER_MS);
+  }
+  function leave() {
+    clearTimeout(timer);
+    illuminate(2);
+    phase = reduced ? 'idle' : 'exiting';
+    if (!reduced) timer = setTimeout(() => phase = 'idle', EXIT_MS);
+  }
+  onMount(() => {
+    const grid = element.parentElement!;
+    let peer: Element | undefined;
+    const sync = () => {
+      const cards = grid.querySelectorAll('.vehicle-card');
+      const next = cards[cards.length - 1];
+      if (next !== peer) { sizes.disconnect(); peer = next; if (peer) sizes.observe(peer); }
+      if (peer) element.style.setProperty('--peer-height', peer.getBoundingClientRect().height + 'px');
+    };
+    const sizes = new ResizeObserver(sync);
+    const children = new MutationObserver(sync);
+    children.observe(grid, { childList: true });
+    sync();
+    const media = matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => { reduced = media.matches; if (reduced && phase === 'entering') { clearTimeout(timer); phase = 'parked'; } };
+    update(); media.addEventListener('change', update);
+    return () => { clearTimeout(timer); cancelAnimationFrame(sweepFrame); sizes.disconnect(); children.disconnect(); media.removeEventListener('change', update); };
+  });
+</script>
+
+<a bind:this={element} class="discover" class:active={phase === 'entering' || phase === 'parked'} data-phase={phase} href="/stand-orbit/viaturas"
+  style={`--enter-duration:${CAR_ENTER_MS}ms;--line-enter-duration:${LINE_ENTER_MS}ms;--exit-duration:${EXIT_MS}ms;--wheel-enter-duration:${CAR_ENTER_MS / 2}ms`}
+  onpointerenter={(event) => { if (event.pointerType === 'mouse') enter(); }}
+  onpointerleave={(event) => { if (event.pointerType === 'mouse') leave(); }}
+  onfocus={enter} onblur={leave}>
   <span class="eyebrow">Continue a descobrir</span>
-  <strong>Ver todas<br />as viaturas</strong>
+  <strong><span>Ver todas</span><span class="title-accent" style={`--sweep:${sweep};--start:${Math.max(0,sweep-1)*120-10}%;--end:${Math.min(1,sweep)*120-10}%;--light:${Math.min(1,Math.max(0,Math.min(sweep,2-sweep)*8))}`}>as viaturas<span class="title-line" aria-hidden="true"><i></i></span></span></strong>
   <div class="road" aria-hidden="true">
-    <span class="trail"></span>
     <div class="car">
-      <svg viewBox="0 0 240 92" fill="none" focusable="false">
-        <defs>
-          <linearGradient
-            id="discover-coachwork"
-            x1="120"
-            y1="15"
-            x2="120"
-            y2="74"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stop-color="#f3f4f4" /><stop offset=".42" stop-color="#b7bec4" /><stop
-              offset=".48"
-              stop-color="#e4e7e9"
-            /><stop offset="1" stop-color="#68747f" />
-          </linearGradient>
-          <linearGradient
-            id="discover-glass"
-            x1="102"
-            y1="25"
-            x2="144"
-            y2="49"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stop-color="#74858e" /><stop offset="1" stop-color="#17232d" />
-          </linearGradient>
-        </defs>
-        <ellipse cx="123" cy="82" rx="100" ry="5" fill="#000" opacity=".2" />
-        <g class="body">
-          <path
-            d="M19 56 27 46 58 40C78 18 105 13 129 20 148 24 158 36 174 42L207 48Q221 51 224 62L225 70 217 75H24L16 68Z"
-            fill="url(#discover-coachwork)"
-            stroke="#56616b"
-            stroke-width="1.2"
-          />
-          <path
-            d="M68 40Q91 20 114 23L126 24 149 41Z"
-            fill="url(#discover-glass)"
-            stroke="#dce2e6"
-            stroke-width="1.5"
-          />
-          <path d="m118 24 9 17M72 43l-5 22h87l3-21" stroke="#52606b" stroke-width="1" />
-          <path d="M30 49q69-9 174 4M83 68h72" stroke="#f5f7f8" stroke-opacity=".8" />
-          <path d="M25 72h191" stroke="#27323b" stroke-width="3" />
-          <path d="m198 52 19 4-1 5-15-2Z" fill="#eff6f9" /><path
-            d="m23 49 13-2-2 6-14 3"
-            fill="#9e3437"
-          />
-          <path
-            d="m210 66 13-2M132 47h9"
-            stroke="#34424c"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-          <path d="M37 74a19 19 0 0 1 38 0M170 74a19 19 0 0 1 38 0" fill="#192129" />
-          <path d="m149 40 8-3 5 3-3 4h-8" fill="#a5afb7" stroke="#53606a" />
+      <svg viewBox="0 0 240 100" fill="none" focusable="false">
+        <g class="smoke" stroke="currentColor" stroke-width="2"><circle class="puff one" cx="42" cy="81" r="7"/><circle class="puff two" cx="42" cy="81" r="6"/><circle class="puff three" cx="42" cy="81" r="8"/></g>
+        <g class="body" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M27 55 55 48 78 26Q83 21 96 21H134Q144 21 154 34L170 49 207 55Q218 57 220 67L222 78H23L20 65Z" fill="var(--bg)"/>
+          <path d="m65 48 22-20h43l25 22Z" fill="var(--surface)"/>
+          <path d="m112 28 3 21M82 55v18h70M124 57h9M25 62h13M207 62h12M22 80h199"/>
         </g>
-        {#each [56, 189] as x}
-          <g transform={`translate(${x} 72)`}>
-            <circle r="15" fill="#172027" stroke="#414b54" stroke-width="2" />
-            <circle r="10.5" fill="#687580" stroke="#d9e0e5" stroke-width="1.4" />
-            <g class="wheel">
-              <path d="M0-9V9M-8-4.5 8 4.5M-8 4.5 8-4.5" stroke="#dce3e8" stroke-width="2" />
-              <circle r="3" fill="#28343e" stroke="#c4cdd4" />
+        {#each [{x:57,rear:true},{x:182,rear:false}] as wheel}
+          <g transform={`translate(${wheel.x} 78)`}>
+            <circle r="17" fill="var(--bg)" stroke="currentColor" stroke-width="3"/>
+            <g class="wheel" class:rear={wheel.rear} class:front={!wheel.rear} stroke="currentColor" stroke-width="2.5">
+              <circle r="10"/><path d="M0-10V10M-9-5 9 5M-9 5 9-5"/><circle r="2" fill="currentColor"/>
             </g>
           </g>
         {/each}
       </svg>
     </div>
   </div>
-  <span class="arrow" aria-hidden="true"
-    ><svg viewBox="0 0 32 32" fill="none"><path d="M7 25 25 7M8 7h17v17" /></svg></span
-  >
+  <span class="arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 25 25 7M8 7h17v17" /></svg></span>
 </a>
 
 <style>
-  .discover {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 280px;
-    padding: clamp(24px, 3vw, 44px);
-    padding-bottom: 104px;
-    overflow: hidden;
-    isolation: isolate;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    color: var(--text);
-    text-decoration: none;
-    background: linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--text) 2%, transparent),
-      transparent 65%
-    );
-    transition:
-      border-color 350ms,
-      box-shadow 350ms,
-      transform 350ms;
-  }
-  .eyebrow {
-    color: var(--muted);
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  strong {
-    margin-top: 19px;
-    font-size: clamp(28px, 2.4vw, 39px);
-    font-weight: 500;
-    line-height: 1.12;
-    letter-spacing: -0.045em;
-  }
-  .arrow {
-    position: absolute;
-    right: 27px;
-    bottom: 30px;
-    width: 31px;
-    height: 31px;
-    color: var(--text);
-    transition: transform 350ms;
-  }
-  .arrow svg {
-    width: 100%;
-    height: 100%;
-    stroke: currentColor;
-    stroke-width: 1.4;
-  }
-  .road {
-    position: absolute;
-    bottom: 17px;
-    right: 73px;
-    width: min(170px, 55%);
-    height: 78px;
-    pointer-events: none;
-  }
-  .car {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transform: translateX(65px) scale(0.98);
-    transition:
-      opacity 160ms,
-      transform 240ms ease-in;
-  }
-  .car svg {
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-  .trail {
-    position: absolute;
-    left: -10px;
-    right: 25px;
-    bottom: 12px;
-    height: 8px;
-    border-block: 1px solid var(--muted);
-    opacity: 0;
-    transform-origin: right;
-  }
-  .discover:focus-visible {
-    outline: 2px solid var(--text);
-    outline-offset: 5px;
-  }
-  .discover:focus-visible {
-    border-color: color-mix(in srgb, var(--line) 55%, var(--text));
-    box-shadow: 0 0 22px color-mix(in srgb, var(--line) 30%, transparent);
-  }
-  .discover:focus-visible .car {
-    opacity: 1;
-    transform: none;
-  }
-  @media (hover: hover) {
-    .discover:hover {
-      border-color: color-mix(in srgb, var(--line) 55%, var(--text));
-      box-shadow:
-        0 0 22px color-mix(in srgb, var(--line) 30%, transparent),
-        0 14px 30px #00000012;
-    }
-    .discover:hover .car {
-      opacity: 1;
-      transform: none;
-    }
-  }
+  .discover { position: relative; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; align-self: stretch; width: 100%; height: var(--peer-height, 360px); min-height: 0; padding: clamp(20px, 2.1vw, 32px); padding-bottom: 90px; overflow: hidden; isolation: isolate; border: 1px solid var(--line); border-radius: 4px; color: var(--text); text-decoration: none; background: linear-gradient(145deg, color-mix(in srgb,var(--text) 2%,transparent),transparent 65%); }
+  .eyebrow { display: block; color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }
+  strong { display: block; margin-top: 12px; font-size: clamp(24px,2.2vw,34px); font-weight: 500; line-height: 1.08; letter-spacing: -.045em; }
+  strong > span { display: table; position: relative; }
+  .title-accent { color: transparent; background: linear-gradient(90deg, transparent var(--start), color-mix(in srgb,var(--red) calc(var(--light) * 70%),transparent) calc(var(--start) + 10%), color-mix(in srgb,var(--red) calc(var(--light) * 70%),transparent) calc(var(--end) - 10%), transparent var(--end)), linear-gradient(var(--text),var(--text)); background-clip: text; -webkit-background-clip: text; }
+  .title-line { position: absolute; left: 0; right: 0; bottom: -.18em; height: 2px; overflow: hidden; filter: var(--orbit-line-glow); opacity: .95; }
+  .title-line i { display: block; width: 100%; height: 100%; background: var(--red); transform: translateX(calc((var(--sweep) - 1) * 100%)); }
   @media (prefers-reduced-motion: no-preference) {
-    .discover:focus-visible .car {
-      animation: arrive 850ms both;
-    }
-    .discover:focus-visible .body {
-      animation: idle 210ms 850ms infinite alternate;
-    }
-    .discover:focus-visible .wheel {
-      animation: roll 600ms linear infinite;
-    }
-    @media (hover: hover) {
-      .discover:hover {
-        transform: translateY(-3px);
-      }
-      .discover:hover .arrow {
-        transform: translate(2px, -2px);
-      }
-      .discover:hover .car {
-        animation: arrive 850ms both;
-      }
-      .discover:hover .body {
-        animation: idle 210ms 850ms infinite alternate;
-      }
-      .discover:hover .wheel {
-        animation: roll 600ms linear infinite;
-      }
-      .discover:hover .trail {
-        animation: skid 850ms both;
-      }
-    }
+    strong > span { transition: transform var(--exit-duration) cubic-bezier(.16,1,.3,1); }
+    .active strong > span { transition-duration: var(--line-enter-duration); }
+    .active strong > span { transform: translateX(3px); }
   }
-  @keyframes arrive {
-    0% {
-      opacity: 0;
-      transform: translate(-190px, 4px) rotate(-4deg);
-    }
-    14% {
-      opacity: 1;
-    }
-    60% {
-      transform: translate(9px, -1px) skewX(-7deg) rotate(2deg);
-    }
-    80% {
-      transform: translate(-3px, 1px) skewX(2deg) rotate(-1deg);
-    }
-    100% {
-      opacity: 1;
-      transform: none;
-    }
+  .arrow { position: absolute; right: 24px; bottom: 24px; width: 28px; height: 28px; color: var(--red); }
+  .arrow svg { width: 100%; height: 100%; stroke: currentColor; stroke-width: 1.4; }
+  .road { position: absolute; bottom: 10px; right: 68px; width: min(180px,58%); height: 65px; pointer-events: none; }
+  .car { opacity: 0; transform: translateX(-200px); }
+  .car svg { width: 100%; height: 65px; overflow: visible; }
+  .puff { opacity: 0; transform-box: fill-box; transform-origin: center; fill: var(--bg); }
+  .active .car { opacity: 1; transform: none; }
+  .active .arrow { color: var(--red); transform: rotate(45deg); filter: var(--orbit-line-glow); opacity: .95; }
+  .discover:focus-visible { outline: 2px solid var(--text); outline-offset: 5px; }
+  .active { --edge-light: color-mix(in srgb,var(--line) 55%,var(--text)); border-color: var(--edge-light); box-shadow: 0 0 12px 1px color-mix(in srgb,var(--edge-light) 24%,transparent), 0 0 36px 3px color-mix(in srgb,var(--edge-light) 12%,transparent); }
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .discover { transition: border-color 300ms, box-shadow 300ms; }
+    .arrow { transition: transform 300ms, filter 300ms, opacity 300ms; }
+    [data-phase='entering'] .car { animation: arrive var(--enter-duration) both; }
+    [data-phase='entering'] .wheel { animation: roll var(--wheel-enter-duration) linear 2; }
+    [data-phase='parked'] .rear { animation: roll 360ms linear infinite; }
+    [data-phase='parked'] .body { animation: eager 140ms infinite alternate; }
+    [data-phase='parked'] .puff { animation: smoke 1050ms linear infinite; }
+    [data-phase='parked'] .two { animation-delay: 350ms; }
+    [data-phase='parked'] .three { animation-delay: 700ms; }
+    [data-phase='exiting'] .car { animation: depart var(--exit-duration) ease-in both; }
+    [data-phase='exiting'] .wheel { animation: roll var(--exit-duration) linear infinite; }
   }
-  @keyframes idle {
-    from {
-      transform: translateY(0);
-    }
-    to {
-      transform: translateY(-0.55px);
-    }
-  }
-  @keyframes roll {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  @keyframes skid {
-    0%,
-    25% {
-      opacity: 0;
-      transform: scaleX(0.2);
-    }
-    58% {
-      opacity: 0.24;
-      transform: scaleX(1);
-    }
-    100% {
-      opacity: 0;
-      transform: scaleX(1.08);
-    }
-  }
-  @media (max-width: 700px) {
-    .discover {
-      min-height: 250px;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .discover,
-    .arrow,
-    .car {
-      transition: none;
-    }
-  }
+  @keyframes arrive { 0% { opacity: 0; transform: translateX(-200px); } 12% { opacity: 1; } 75% { transform: translateX(6px) rotate(-2deg); } 100% { opacity: 1; transform: none; } }
+  @keyframes depart { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(160px); } }
+  @keyframes roll { to { transform: rotate(360deg); } }
+  @keyframes eager { from { transform: translateY(0); } to { transform: translate(0.5px,-0.7px) rotate(-.2deg); } }
+  @keyframes smoke { 0% { opacity: 0; transform: translate(0,0) scale(.4); } 15% { opacity: .4; } 100% { opacity: 0; transform: translate(-65px,-8px) scale(2); } }
+  @media (hover: none) { .car { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .car { opacity: 1; transform: none; } }
 </style>

@@ -130,7 +130,7 @@
     transform: rotate(180deg);
     color: var(--text);
   }
-  :global(.orbit-faq) .expanded .chevron {
+  :global(.design.orbit) .expanded .chevron {
     color: var(--red);
     opacity: 0.95;
     overflow: visible;
@@ -138,7 +138,7 @@
       drop-shadow(0 0 12px #e3061399)
       drop-shadow(0 0 26px #e3061359);
   }
-  :global(.orbit-faq) .expanded .chevron path {
+  :global(.design.orbit) .expanded .chevron path {
     stroke-width: 1.75;
   }
   .answer {

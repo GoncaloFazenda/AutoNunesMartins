@@ -399,7 +399,7 @@
     border-bottom: 1px solid var(--line);
   }
   h1 {
-    font-family: 'Barlow', sans-serif;
+    font-family: inherit;
     font-size: clamp(42px, 4.5vw, 68px);
     font-weight: 600;
     line-height: 1.02;

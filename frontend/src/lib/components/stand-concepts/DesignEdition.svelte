@@ -37,6 +37,10 @@
   import OrbitEditorialPause from './OrbitEditorialPause.svelte';
   import VisitInvitation from './VisitInvitation.svelte';
   import OrbitContactFooter from './OrbitContactFooter.svelte';
+  import OrbitCompactFooter from './OrbitCompactFooter.svelte';
+  import OrbitCatalogFooter from './OrbitCatalogFooter.svelte';
+  import OrbitReviews from './OrbitReviews.svelte';
+  import { standContact } from './standContact';
   import OrbitCatalog from './OrbitCatalog.svelte';
   import OrbitSelect from './OrbitSelect.svelte';
   import OrbitPrivacy from './OrbitPrivacy.svelte';
@@ -52,6 +56,7 @@
     privacy = false,
     stock = emptyStock('unavailable'),
     publicVehicle,
+    errorStatus,
   }: {
     edition: 'orbit' | 'flux';
     id?: string;
@@ -59,6 +64,7 @@
     privacy?: boolean;
     stock?: PublicStock;
     publicVehicle?: PublicVehicle;
+    errorStatus?: number;
   } = $props();
   const base = $derived(`/stand-${edition}`);
   const car = $derived((edition === 'orbit' ? catalogCars : cars).find((item) => item.id === id));
@@ -171,6 +177,17 @@
     contactDialog.showModal();
     contactName?.focus({ preventScroll: true });
   }
+  let contactPointerStartedOutside = false;
+  function outsideContact(event: MouseEvent | PointerEvent) {
+    const bounds = contactDialog.getBoundingClientRect();
+    return event.target === contactDialog &&
+      (event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom);
+  }
+  function contactBackdropClick(event: MouseEvent) {
+    if (contactPointerStartedOutside && outsideContact(event)) contactDialog.close();
+    contactPointerStartedOutside = false;
+  }
   function contactKeydown(event: KeyboardEvent) {
     if (event.key !== 'Tab') return;
     const controls = contactDialog.querySelectorAll<HTMLElement>(
@@ -189,7 +206,7 @@
 </script>
 
 <svelte:head
-  >{#if !catalog && !privacy && !publicVehicle}<title
+  >{#if !catalog && !privacy && !publicVehicle && !errorStatus}<title
       >{car
         ? `${car.brand} ${car.model}`
         : edition === 'orbit'
@@ -216,6 +233,7 @@
   use:designMotion
 >
   <div class="read-line" aria-hidden="true"></div>
+  {#if edition === 'orbit'}<div class="orbit-ambient" aria-hidden="true"></div>{/if}
   <div class="nav-reserve" aria-hidden="true"></div>
   <header use:hybridNav={{ enabled: edition === 'orbit' && !id && !catalog && !privacy && !publicVehicle, open: navOpen, close: () => (navOpen = false) }}>
     <a class="logo" href={base}
@@ -237,10 +255,11 @@
         onclick={() => (navOpen = false)}
         >Viaturas {#if edition !== 'orbit'}<small>05</small>{/if}</a
       ><a href={`${base}#sobre`} onclick={() => (navOpen = false)}>A nossa perspetiva</a><button
-        onclick={() => { navOpen = false; contact(); }}>Vamos conversar <ArrowUpRight size={15} /></button
+        onclick={() => { navOpen = false; contact(); }}>{edition === 'orbit' ? 'Contactar' : 'Vamos conversar'} <ArrowUpRight size={15} /></button
       >
     </nav>
     <div class="header-actions">
+      {#if edition === 'orbit' && standContact.phone}<a class="nav-phone" href={`tel:${standContact.phone.international}`} onclick={() => (navOpen = false)}>Telefonar agora</a>{/if}
       {#if edition === 'orbit'}<ThemeToggle dark={isDark} onchange={toggleTheme} />{:else}<button
         class="icon-button"
         onclick={toggleTheme}
@@ -254,12 +273,20 @@
         onclick={() => (navOpen = !navOpen)}
         >{#if navOpen}<X size={21} />{:else}<Menu size={21} />{/if}</button
       ><span class="edition-label"
+        class:orbit-edition-label={edition === 'orbit'}
         >{edition === 'orbit' ? 'seleção' : edition} / 0{edition === 'orbit' ? '1' : '2'}</span
       >
     </div>
   </header>
 
-  {#if publicVehicle}
+  {#if errorStatus}
+    <main class="not-found">
+      <p class="kicker">UM DESVIO DE PERCURSO · {errorStatus}</p>
+      <h1>{errorStatus === 404 ? 'Esta viatura não está publicada.' : 'Não foi possível abrir esta página.'}</h1>
+      <p>{errorStatus === 404 ? 'Consulte a seleção atual de viaturas aprovadas para o website.' : 'Tente novamente mais tarde.'}</p>
+      <a class="pill" href="/stand-orbit/viaturas">Voltar às viaturas <ArrowUpRight size={18} /></a>
+    </main>
+  {:else if publicVehicle}
     <OrbitPublicDetail vehicle={publicVehicle} />
   {:else if catalog}
     <OrbitCatalog card={vehicleCard} {stock} />
@@ -709,12 +736,13 @@
         <CabinReveal />
         <OrbitPerspective />
         <OrbitTrust />
+        <OrbitReviews />
         <OrbitEditorialPause onContact={contact} />
       {/if}
     </main>
   {/if}
 
-  {#if !catalog && !privacy}<section class="services">
+  {#if !catalog && !privacy && !errorStatus}<section class="services">
       <p class="kicker">O CARRO É SÓ O INÍCIO.</p>
       <div>
         {#each [['01', 'Dar o próximo passo.', 'Conheça a viatura ao seu ritmo. Combine uma visita e esclareça as suas dúvidas.', 'Quero combinar uma visita.'], ['02', 'Mudar de companhia.', 'Tem uma viatura para retoma? Conte-nos um pouco sobre ela e sobre os seus planos.', 'Gostava de falar sobre uma retoma.'], ['03', 'Saber os detalhes.', 'Equipamento, documentação e condições: reúna a informação antes de decidir.', 'Gostava de esclarecer algumas dúvidas.']] as service, index}<article
@@ -727,7 +755,7 @@
           </article>{/each}
       </div>
     </section>{/if}
-  {#if catalog || privacy || publicVehicle}
+  {#if catalog || privacy || publicVehicle || errorStatus}
     <!-- The shared contact/footer follows the content without duplicating the homepage FAQ. -->
   {:else if edition === 'orbit' && !id}
     <VisitInvitation
@@ -769,8 +797,15 @@
       </div>
     </section>
   {/if}
-  {#if edition === 'orbit' && !id}
-    <OrbitContactFooter />
+  {#if edition === 'orbit'}
+    <OrbitContactFooter includeFooter={false} />
+  {/if}
+  {#if edition === 'orbit' && catalog}
+    <OrbitCatalogFooter onContact={() => contact()} />
+  {:else if edition === 'orbit' && !id && !privacy && !publicVehicle && !errorStatus}
+    <OrbitCompactFooter showContacts={false} onContact={() => contact()} />
+  {:else if edition === 'orbit'}
+    <OrbitCompactFooter />
   {:else}
     <footer data-scene>
       <div class="footer-top">
@@ -786,8 +821,8 @@
         >
         <div>
           <a href="/stand-atelier-signature">Atelier ↗</a><a
-            href={edition === 'orbit' ? '/stand-flux' : '/stand-orbit'}
-            >Comparar com {edition === 'orbit' ? 'Flux' : 'Orbit'} ↗</a
+            href="/stand-orbit"
+            >Comparar com Orbit ↗</a
           >
         </div>
       </div>
@@ -800,6 +835,9 @@
     aria-labelledby="contact-heading"
     aria-describedby="contact-description"
     onkeydown={contactKeydown}
+    onpointerdown={(event) => { contactPointerStartedOutside = outsideContact(event); }}
+    onpointercancel={() => { contactPointerStartedOutside = false; }}
+    onclick={contactBackdropClick}
   >
     <button
       class="dialog-close icon-button"
@@ -2663,8 +2701,24 @@
   .contact-dialog .dialog-close {
     width: 44px;
     height: 44px;
+    border-radius: 50%;
+  }
+  .contact-dialog .dialog-close:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 3px;
+  }
+  @media (hover: hover) {
+    .contact-dialog .dialog-close:hover {
+      color: var(--red);
+      background: color-mix(in srgb, var(--red) 9%, transparent);
+      box-shadow: 0 0 16px color-mix(in srgb, var(--red) 12%, transparent);
+    }
   }
   @media (prefers-reduced-motion: no-preference) {
+    .contact-dialog .dialog-close {
+      transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+    .contact-dialog .dialog-close:hover { transform: rotate(90deg); }
     .contact-dialog[open] {
       animation: contact-arrive 220ms ease-out;
     }
