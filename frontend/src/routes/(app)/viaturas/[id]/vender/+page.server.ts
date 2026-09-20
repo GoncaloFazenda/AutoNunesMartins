@@ -28,6 +28,25 @@ export const load: PageServerLoad = async (event) => {
 
 function parseForm(fd: FormData) {
   const get = (k: string) => (fd.get(k) ?? '').toString().trim();
+  // Trade-in is only assembled when the user explicitly toggled it on. Each
+  // `tradeIn.*` field is read raw and let the Zod schema coerce/validate.
+  // Omitting the field entirely (rather than sending an empty object) keeps
+  // the API contract clean — saleCreateSchema treats `tradeIn` as optional.
+  const tradeInEnabled = get('hasTradeIn') === 'true';
+  const tradeIn = tradeInEnabled
+    ? {
+        brand: get('tradeIn.brand'),
+        model: get('tradeIn.model'),
+        year: get('tradeIn.year'),
+        fuel: get('tradeIn.fuel'),
+        mileage: get('tradeIn.mileage'),
+        licensePlate: get('tradeIn.licensePlate') || undefined,
+        vin: get('tradeIn.vin') || undefined,
+        allowanceValue: get('tradeIn.allowanceValue') || '0',
+        disposition: get('tradeIn.disposition'),
+        notes: get('tradeIn.notes') || undefined,
+      }
+    : undefined;
   return {
     vehicleId: get('vehicleId'),
     customerId: get('customerId'),
@@ -38,6 +57,8 @@ function parseForm(fd: FormData) {
     // Empty field → "0" so the schema's default kicks in cleanly and the
     // resulting sale row stores 0 rather than NULL or a stray string.
     commission: get('commission') || '0',
+    buyerType: get('buyerType') || 'PARTICULAR',
+    ...(tradeIn ? { tradeIn } : {}),
   };
 }
 
@@ -59,8 +80,13 @@ export const actions: Actions = {
       return { id };
     } catch (err) {
       if (err instanceof ApiError) {
+        // Propaga o `field` quando o backend identifica uma colisão num
+        // input específico da retoma (VIN ou matrícula). A UI usa isto
+        // para pintar o input vermelho sem limpar o resto do formulário.
+        const body = err.body as { error?: string; field?: string } | null;
         return fail(err.status, {
-          error: (err.body as { error?: string } | null)?.error ?? 'Falha ao registar venda.',
+          error: body?.error ?? 'Falha ao registar venda.',
+          field: body?.field ?? null,
         });
       }
       throw err;

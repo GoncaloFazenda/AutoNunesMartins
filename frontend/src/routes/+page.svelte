@@ -1,270 +1,428 @@
 <script lang="ts">
-  import { SignIn } from 'svelte-clerk';
+  import { SignIn, ClerkLoading } from 'svelte-clerk';
   import { dark } from '@clerk/themes';
   import { theme } from '$lib/stores/theme';
   import Wordmark from '$lib/components/brand/Wordmark.svelte';
+  import CrmBrandHead from '$lib/components/brand/CrmBrandHead.svelte';
   import ThemeToggle from '$lib/components/brand/ThemeToggle.svelte';
-  import CarSilhouette from '$lib/components/brand/CarSilhouette.svelte';
+  import { cars, photo } from '$lib/components/stand-concepts/data';
 
-  // baseTheme: dark uses Clerk's official dark palette for all internal
-  // surfaces (input bgs, hover states, dividers, secondary text, etc.) so
-  // the widget reads cleanly on our dark canvas. We then layer brand
-  // overrides on top via `variables` + `elements`.
+  // Keep Clerk's authentication, validation, loading and recovery flows unchanged.
   const clerkAppearance = $derived({
     baseTheme: $theme === 'dark' ? dark : undefined,
     variables: {
       colorPrimary: '#E30613',
       colorBackground: 'transparent',
       colorText: $theme === 'dark' ? '#F4F4F2' : '#16161A',
-      colorInputBackground: $theme === 'dark' ? '#1B1C20' : '#FFFFFF',
+      colorInputBackground: $theme === 'dark' ? '#171719' : '#FFFFFF',
       colorInputText: $theme === 'dark' ? '#F4F4F2' : '#16161A',
       colorTextSecondary: $theme === 'dark' ? '#A8A8A4' : '#5A5C61',
       colorTextOnPrimaryBackground: '#FFFFFF',
       colorNeutral: $theme === 'dark' ? '#FFFFFF' : '#16161A',
       colorDanger: '#E30613',
-      colorSuccess: '#34C480',
-      colorWarning: '#E0A040',
-      borderRadius: '4.4px',
+      borderRadius: '6px',
       fontFamily: 'Inter, system-ui, sans-serif',
-      fontFamilyButtons: 'Barlow, system-ui, sans-serif',
+      fontFamilyButtons: 'Inter, system-ui, sans-serif',
       fontSize: '14px',
     },
     elements: {
-      rootBox: 'w-full',
-      card: 'bg-transparent shadow-none border-0 p-0',
+      rootBox: 'login-auth-root',
+      card: 'login-auth-card',
       headerTitle: 'hidden',
       headerSubtitle: 'hidden',
-      socialButtonsBlockButton:
-        'border border-[var(--color-border)] hover:bg-[color-mix(in_oklab,var(--color-red)_6%,transparent)] transition-colors',
-      socialButtonsBlockButtonText: 'font-mono uppercase tracking-[0.15em] text-[11px]',
-      dividerLine: 'bg-[var(--color-border)]',
-      dividerText:
-        'font-mono uppercase tracking-[0.2em] text-[10px] text-[var(--color-text-faint)]',
-      formFieldLabel:
-        'font-mono uppercase tracking-[0.2em] text-[10px] text-[var(--color-text-muted)] mb-1.5',
-      formFieldInput:
-        'border border-[var(--color-border)] text-[var(--color-text)] focus:border-[var(--color-red)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-red)_12%,transparent)] transition-colors',
-      formButtonPrimary:
-        '!bg-[var(--color-red)] hover:!bg-[var(--color-red-soft)] !font-display !font-black !italic !uppercase !tracking-tight !text-white !text-[14px] !py-3 !w-full transition-colors',
-      footerActionLink: 'text-[var(--color-red)] hover:text-[var(--color-red-soft)]',
-      identityPreviewText: 'text-[var(--color-text)]',
-      formFieldAction:
-        'text-[var(--color-red)] hover:text-[var(--color-red-soft)] font-mono text-[10px] uppercase tracking-[0.2em]',
+      socialButtonsBlockButton: 'login-social-button',
+      socialButtonsBlockButtonText: 'login-social-text',
+      dividerLine: 'login-divider',
+      dividerText: 'login-secondary',
+      formFieldLabel: 'login-field-label',
+      formFieldInput: 'login-field-input',
+      formButtonPrimary: 'login-primary-button',
+      footerActionLink: 'login-auth-link',
+      identityPreviewText: 'login-identity',
+      formFieldAction: 'login-auth-link',
     },
   });
 </script>
 
-<svelte:head>
-  <title>Acesso · Painel · Auto Nunes Martins</title>
-</svelte:head>
+<CrmBrandHead />
+<svelte:head
+  ><title>Acesso ao CRM — Auto Nunes Martins</title><meta
+    name="robots"
+    content="noindex, nofollow"
+  /><meta name="description" content="Acesso ao painel interno Auto Nunes Martins." /></svelte:head
+>
 
-<main class="login-grid relative min-h-screen">
-  <!-- LEFT: Brand art panel -->
-  <aside class="login-art relative overflow-hidden">
-    <!-- grid pattern overlay -->
-    <div class="login-grid-overlay absolute inset-0" aria-hidden="true"></div>
-
-    <!-- red diagonal wedge as panel divider -->
-    <div class="login-wedge absolute inset-0" aria-hidden="true"></div>
-
-    <!-- red radial glow -->
-    <div class="login-glow absolute inset-0" aria-hidden="true"></div>
-
-    <div class="relative z-10 flex h-full flex-col justify-between p-10 lg:p-14">
-      <!-- top row: wordmark + PT plate -->
-      <div class="flex items-start justify-between gap-6">
-        <Wordmark size="md" />
-
-        <div
-          class="inline-flex items-center overflow-hidden border border-white/15"
-          style="border-radius: var(--radius-btn);"
-        >
-          <span
-            class="bg-[#003399] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white"
-            >PT</span
-          >
-          <span
-            class="bg-white/5 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-white/90"
-            >00-AN-00</span
-          >
-        </div>
+<main class="login-page">
+  <header class="login-header">
+    <Wordmark size="md" />
+    <div class="header-tools"><span>PAINEL INTERNO</span><ThemeToggle size={42} /></div>
+  </header>
+  <div class="login-grid">
+    <aside class="login-art" aria-label="Auto Nunes Martins">
+      <img
+        src={photo(cars[0]!.image, 1600)}
+        alt="Porsche — fotografia ilustrativa usada no Stand Orbit"
+        width="1600"
+        height="1100"
+        fetchpriority="high"
+      />
+      <div class="art-shade" aria-hidden="true"></div>
+      <div class="art-copy">
+        <p>AUTO NUNES MARTINS</p>
+        <h2>Cada viatura tem<br />a sua história<span>.</span></h2>
+        <span class="art-note">Comércio de automóveis</span>
       </div>
-
-      <!-- eyebrow -->
-      <div class="mt-6 flex items-center gap-2">
-        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-red)]"></span>
-        <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-white/80">
-          Painel Interno
-        </span>
-      </div>
-
-      <!-- car silhouette absolute behind quote -->
-      <div class="login-car absolute pointer-events-none">
-        <CarSilhouette />
-      </div>
-
-      <!-- bottom: quote + stats -->
-      <div class="mt-auto flex flex-col gap-8 relative z-10">
-        <div class="max-w-[460px]">
-          <div
-            class="mb-2 font-mono text-[9.5px] uppercase tracking-[0.3em] text-[var(--color-red)]"
-          >
-            ─── O Stand
-          </div>
-          <p
-            class="font-display text-[36px] font-black italic uppercase leading-[0.95] tracking-[-0.025em] text-white"
-          >
-            Cada viatura tem<br />
-            <span class="text-[var(--color-red)]">a sua história.</span>
-          </p>
-        </div>
-
-        <div class="grid grid-cols-3 gap-0 max-w-[420px]">
-          <div class="pr-4">
-            <div class="font-display text-[26px] font-black italic text-white">+200</div>
-            <div
-              class="mt-1 font-mono text-[9.5px] uppercase tracking-[0.2em] text-white/60"
-            >
-              Viaturas
-            </div>
-          </div>
-          <div class="border-x border-white/15 px-4">
-            <div class="font-display text-[26px] font-black italic text-white">15</div>
-            <div
-              class="mt-1 font-mono text-[9.5px] uppercase tracking-[0.2em] text-white/60"
-            >
-              Anos
-            </div>
-          </div>
-          <div class="pl-4">
-            <div class="font-display text-[26px] font-black italic text-white">A++</div>
-            <div
-              class="mt-1 font-mono text-[9.5px] uppercase tracking-[0.2em] text-white/60"
-            >
-              Confiança
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- RIGHT: Form panel -->
-  <section class="login-form-side relative">
-    <!-- red glow top-right -->
-    <div class="login-form-glow absolute inset-0" aria-hidden="true"></div>
-
-    <!-- theme toggle top-right -->
-    <div class="absolute top-6 right-6 z-20">
-      <ThemeToggle size={38} />
-    </div>
-
-    <div class="relative z-10 flex min-h-screen items-center justify-center p-8">
-      <div class="w-full max-w-[400px]">
-        <!-- eyebrow -->
-        <div class="mb-4 flex items-center gap-2">
-          <span class="h-[1.5px] w-6 bg-[var(--color-red)]"></span>
-          <span
-            class="font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--color-red)]"
-          >
-            Acesso · Painel Interno
-          </span>
-        </div>
-
-        <!-- headline -->
-        <h1
-          class="mb-3 font-display text-[44px] font-black italic uppercase leading-[0.92] tracking-[-0.025em]"
-        >
-          Bom dia,<br />
-          <span class="text-[var(--color-red)]">de volta ao stand.</span>
-        </h1>
-
-        <!-- subtitle -->
-        <p class="mb-8 text-[15px] text-[var(--color-text-muted)]">
-          Inicia sessão para gerir o inventário, clientes e tarefas do dia.
+    </aside>
+    <section class="login-form-side" aria-labelledby="login-heading">
+      <div class="form-content">
+        <p class="eyebrow"><span></span> DE VOLTA AO STAND</p>
+        <h1 id="login-heading">O seu dia<br />começa aqui<span>.</span></h1>
+        <p class="intro">
+          Inicie sessão para gerir as viaturas,<br class="desktop-break" /> os clientes e as tarefas do
+          dia.
         </p>
-
-        <!-- Clerk SignIn (styled via appearance API) -->
-        <SignIn
-          forceRedirectUrl="/dashboard"
-          signUpForceRedirectUrl="/dashboard"
-          appearance={clerkAppearance}
-        />
-
-        <!-- footer -->
-        <div
-          class="mt-10 flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.25em] text-[var(--color-text-faint)]"
-        >
-          <span>© 2026 Auto Nunes Martins</span>
-          <span class="flex items-center gap-1.5">
-            <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]"></span>
-            2FA · Ativo
-          </span>
+        <div class="auth-container">
+          <ClerkLoading><p class="intro" role="status">A carregar o acesso seguro…</p></ClerkLoading
+          ><SignIn
+            forceRedirectUrl="/dashboard"
+            signUpForceRedirectUrl="/dashboard"
+            appearance={clerkAppearance}
+          />
         </div>
+        <footer>
+          <span>© {new Date().getFullYear()} Auto Nunes Martins</span><span>Acesso interno</span>
+        </footer>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </main>
 
 <style>
+  .login-page :global(.cl-footer) {
+    background: transparent !important;
+    border-top: 1px solid var(--color-border);
+  }
+  .login-page :global(.cl-footerActionText),
+  .login-page :global(.cl-footerItem),
+  .login-page :global(.cl-footerItem p) {
+    color: var(--color-text-muted) !important;
+  }
+  .login-page {
+    min-height: 100svh;
+    background: var(--color-bg-0);
+    color: var(--color-text);
+    font-family: Inter, system-ui, sans-serif;
+    padding: 0 clamp(20px, 3vw, 48px) 24px;
+  }
+  .login-header {
+    height: 112px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: 1600px;
+    margin: auto;
+  }
+  .header-tools {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .header-tools > span {
+    font-size: 9px;
+    letter-spacing: 0.17em;
+    color: var(--color-text-muted);
+  }
   .login-grid {
     display: grid;
-    grid-template-columns: 1.08fr 1fr;
+    grid-template-columns: 1.06fr 1fr;
+    max-width: 1600px;
+    margin: auto;
+    min-height: calc(100svh - 136px);
   }
-
-  @media (max-width: 920px) {
-    .login-grid {
-      grid-template-columns: 1fr;
+  .login-art {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #171719;
+    min-height: 600px;
+  }
+  .login-art > img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 52% center;
+  }
+  .art-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 38%, #09090b33 57%, #09090bea 100%);
+  }
+  .art-copy {
+    position: absolute;
+    bottom: clamp(30px, 4vw, 60px);
+    left: clamp(28px, 4vw, 60px);
+    right: 24px;
+    color: #f5f5f1;
+  }
+  .art-copy > p {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    margin: 0 0 20px;
+    color: #ffffffc4;
+  }
+  .art-copy h2 {
+    font-size: clamp(31px, 3.2vw, 51px);
+    letter-spacing: -0.05em;
+    line-height: 1.1;
+    font-weight: 450;
+    margin: 0 0 20px;
+  }
+  .art-copy h2 > span {
+    color: #e30613;
+  }
+  .art-note {
+    font-size: 12px;
+    color: #ffffffb8;
+  }
+  .login-form-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px clamp(28px, 5vw, 80px);
+  }
+  .form-content {
+    width: 100%;
+    max-width: 390px;
+  }
+  .eyebrow {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--color-text-muted);
+    margin: 0 0 24px;
+  }
+  .eyebrow > span {
+    width: 22px;
+    height: 1px;
+    background: #e30613;
+  }
+  h1 {
+    font-size: clamp(38px, 3.4vw, 52px);
+    font-weight: 450;
+    letter-spacing: -0.055em;
+    line-height: 1.07;
+    margin: 0 0 18px;
+  }
+  h1 > span {
+    color: #e30613;
+  }
+  .intro {
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--color-text-muted);
+    margin: 0 0 32px;
+  }
+  .auth-container {
+    min-height: 315px;
+    width: 100%;
+  }
+  footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--color-border);
+    padding-top: 20px;
+    margin-top: 32px;
+    font-size: 9px;
+    color: var(--color-text-muted);
+  }
+  .login-page :global(.login-auth-root) {
+    width: 100%;
+  }
+  .login-page :global(.login-auth-card) {
+    width: 100%;
+    max-width: 100%;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+  .login-page :global(.cl-cardBox) {
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+    border: 0;
+    background: transparent;
+  }
+  .login-page :global(.login-social-button) {
+    min-height: 46px;
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+    transition: background-color 0.15s;
+  }
+  .login-page :global(.login-social-text) {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  .login-page :global(.login-divider) {
+    background: var(--color-border);
+  }
+  .login-page :global(.login-secondary) {
+    color: var(--color-text-muted);
+    font-size: 11px;
+  }
+  .login-page :global(.login-field-label) {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    margin-bottom: 7px;
+    color: var(--color-text);
+  }
+  .login-page :global(.login-field-input) {
+    min-height: 46px;
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+    transition: border-color 0.15s;
+  }
+  .login-page :global(.login-field-input:focus) {
+    border-color: var(--color-text-muted);
+    outline: 2px solid var(--color-red);
+    outline-offset: 2px;
+  }
+  .login-page :global(.login-primary-button) {
+    min-height: 46px;
+    background: #e30613;
+    color: white;
+    box-shadow: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: opacity 0.15s;
+  }
+  .login-page :global(.login-primary-button:hover) {
+    opacity: 0.88;
+  }
+  .login-page :global(.login-auth-link) {
+    color: var(--color-red);
+    font-size: 12px;
+  }
+  .login-page :global(.login-identity) {
+    color: var(--color-text);
+  }
+  .login-page :global(button:focus-visible),
+  .login-page :global(a:focus-visible) {
+    outline: 2px solid var(--color-red);
+    outline-offset: 3px;
+  }
+  .login-page :global(.cl-formFieldErrorText) {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .login-page :global(.cl-alert) {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+  }
+  @media (max-width: 1000px) {
+    .login-form-side {
+      padding-inline: 32px;
     }
     .login-art {
-      display: none;
+      min-height: 580px;
+    }
+    .art-copy h2 {
+      font-size: 34px;
     }
   }
-
-  .login-art {
-    background: linear-gradient(135deg, #1a1a1d 0%, #0a0a0b 100%);
+  @media (max-width: 760px) {
+    .login-page {
+      padding: 0 22px 24px;
+    }
+    .login-header {
+      height: 98px;
+    }
+    .login-header :global(.wordmark) {
+      width: 160px;
+    }
+    .header-tools {
+      gap: 0;
+    }
+    .header-tools > span {
+      display: none;
+    }
+    .login-grid {
+      grid-template-columns: 1fr;
+      min-height: 0;
+      gap: 32px;
+      max-width: 460px;
+    }
+    .login-art {
+      height: 170px;
+      min-height: 0;
+    }
+    .login-art > img {
+      object-position: 50% 56%;
+    }
+    .art-copy {
+      display: none;
+    }
+    .art-shade {
+      background: linear-gradient(180deg, transparent, #09090b33);
+    }
+    .login-form-side {
+      padding: 0 5px 12px;
+    }
+    .form-content {
+      max-width: none;
+    }
+    .eyebrow {
+      margin-bottom: 17px;
+    }
+    h1 {
+      font-size: 38px;
+    }
+    .intro {
+      margin-bottom: 25px;
+    }
+    .desktop-break {
+      display: none;
+    }
+    .auth-container {
+      min-height: 300px;
+    }
+    footer {
+      margin-top: 24px;
+      line-height: 1.6;
+    }
   }
-
-  .login-grid-overlay {
-    background-image:
-      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 60px),
-      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 60px);
+  @media (max-width: 360px) {
+    .login-page {
+      padding-inline: 18px;
+    }
+    .login-art {
+      height: 140px;
+    }
+    .login-form-side {
+      padding-inline: 0;
+    }
+    h1 {
+      font-size: 35px;
+    }
+    .login-header :global(.wordmark) {
+      width: 145px;
+    }
+    footer {
+      font-size: 8px;
+    }
   }
-
-  .login-wedge {
-    background: linear-gradient(135deg, transparent 50%, #e30613 50%);
-    clip-path: polygon(40% 0%, 100% 0%, 100% 100%, 55% 100%);
-    opacity: 0.92;
-  }
-
-  .login-glow {
-    background:
-      radial-gradient(
-        700px 500px at 30% 70%,
-        color-mix(in oklab, #e30613 22%, transparent),
-        transparent 65%
-      );
-    mix-blend-mode: screen;
-  }
-
-  .login-car {
-    left: -4%;
-    top: 34%;
-    width: 88%;
-    z-index: 1;
-  }
-
-  .login-form-side {
-    background: var(--color-bg-0);
-  }
-
-  .login-form-glow {
-    background:
-      radial-gradient(
-        500px 400px at 100% 0%,
-        color-mix(in oklab, #e30613 10%, transparent),
-        transparent 70%
-      );
-    pointer-events: none;
+  @media (prefers-reduced-motion: reduce) {
+    .login-page :global(*) {
+      transition: none !important;
+    }
   }
 </style>

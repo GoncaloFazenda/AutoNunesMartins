@@ -24,10 +24,10 @@ export type VehicleListStream =
   | (VehicleListResponse & { _error?: undefined })
   | {
       items: [];
-      total: 0;
-      page: 1;
-      pageSize: 25;
-      totalPages: 0;
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
       _error: string;
     };
 
@@ -47,6 +47,10 @@ export const load: PageServerLoad = (event) => {
     pageSize: 25,
     sortBy: (sp.get('sortBy') as VehicleListParams['sortBy']) ?? 'createdAt',
     sortDir: sp.get('sortDir') === 'asc' ? 'asc' : 'desc',
+    // DRAFTs (rascunhos) têm uma secção dedicada em destaque acima da
+    // tabela principal — escondemo-los aqui para não duplicar. `pickStatus`
+    // já não devolve DRAFT, por isso este `notStatus` está sempre activo.
+    notStatus: 'DRAFT',
   };
 
   // Streamed: returning a promise (not awaiting) lets SvelteKit render the page
@@ -62,8 +66,32 @@ export const load: PageServerLoad = (event) => {
     }),
   );
 
+  // Fetch DRAFTs em paralelo, no-pagination (cap a 100 — para um stand
+  // pequeno é mais do que suficiente). Mostrados em secção destacada
+  // entre os filtros e a tabela principal para o vendedor não esquecer
+  // que tem viaturas por publicar.
+  const draftsPromise: Promise<VehicleListStream> = vehiclesApi
+    .list(event, {
+      status: 'DRAFT',
+      page: 1,
+      pageSize: 100,
+      sortBy: 'createdAt',
+      sortDir: 'desc',
+    })
+    .catch(
+      (err): VehicleListStream => ({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 100,
+        totalPages: 0,
+        _error: (err as Error).message,
+      }),
+    );
+
   return {
     filters: params,
     list: listPromise,
+    drafts: draftsPromise,
   };
 };

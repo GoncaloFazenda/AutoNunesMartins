@@ -9,6 +9,16 @@ describe('shiftRecurrence', () => {
     expect(r).not.toBe(d);
   });
 
+  it('WEEKLY shifts by seven days', () => {
+    const r = shiftRecurrence(new Date('2026-05-20T10:00:00Z'), 'WEEKLY');
+    expect(r.toISOString().slice(0, 10)).toBe('2026-05-27');
+  });
+
+  it('WEEKLY crosses month boundary correctly', () => {
+    const r = shiftRecurrence(new Date('2026-05-28T10:00:00Z'), 'WEEKLY');
+    expect(r.toISOString().slice(0, 10)).toBe('2026-06-04');
+  });
+
   it('MONTHLY shifts by one month', () => {
     const r = shiftRecurrence(new Date('2026-05-20T10:00:00Z'), 'MONTHLY');
     expect(r.toISOString().slice(0, 10)).toBe('2026-06-20');

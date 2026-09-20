@@ -43,6 +43,12 @@ export interface VehicleExpenseDto {
 }
 
 export interface VehicleDetailResponse {
+  webPublished: boolean;
+  publicSlug: string | null;
+  publicPrice: string | null;
+  publicDescription: string | null;
+  publicPhotoPaths: string[];
+  publicTransmission: 'MANUAL' | 'AUTOMATIC' | null;
   id: string;
   brand: string;
   model: string;
@@ -79,6 +85,21 @@ export interface VehicleDetailResponse {
     deliveryStatus: string;
     customer: { id: string; name: string; nif: string };
   } | null;
+  /**
+   * Set when this vehicle entered stock as a customer trade-in. Lets the
+   * detail page surface "Adquirido como retoma da venda X" with a link back
+   * to the originating sale. Null for vehicles purchased the regular way.
+   */
+  sourceTradeIn: {
+    id: string;
+    allowanceValue: string;
+    sale: {
+      id: string;
+      saleDate: string;
+      customer: { id: string; name: string };
+      vehicle: { id: string; brand: string; model: string; year: number };
+    };
+  } | null;
 }
 
 export type VehicleListParams = VehicleFilter & {
@@ -86,6 +107,11 @@ export type VehicleListParams = VehicleFilter & {
   pageSize?: number;
   sortBy?: 'createdAt' | 'acquisitionDate' | 'salePrice' | 'purchasePrice' | 'mileage' | 'year';
   sortDir?: 'asc' | 'desc';
+  /**
+   * Negative status filter. Used by /viaturas to exclude DRAFTs from the
+   * main table (DRAFTs have their own highlighted section above).
+   */
+  notStatus?: VehicleStatus;
 };
 
 function toQuery(params: Record<string, unknown>): string {
@@ -101,6 +127,24 @@ function toQuery(params: Record<string, unknown>): string {
 type Ev = Pick<RequestEvent, 'locals' | 'fetch'>;
 
 export const vehiclesApi = {
+  webPublication(
+    event: Ev,
+    id: string,
+    body:
+      | { published: false }
+      | {
+          published: true;
+          price: string | null;
+          description: string;
+          photoPaths: string[];
+          transmission: 'MANUAL' | 'AUTOMATIC' | null;
+        },
+  ): Promise<{ published: boolean; slug: string | null }> {
+    return apiJson(event, `/api/vehicles/${id}/web-publication`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
   list(event: Ev, params: VehicleListParams = {}): Promise<VehicleListResponse> {
     return apiJson<VehicleListResponse>(event, `/api/vehicles${toQuery(params)}`);
   },
@@ -121,6 +165,21 @@ export const vehiclesApi = {
   },
   delete(event: Ev, id: string): Promise<{ ok: true }> {
     return apiJson(event, `/api/vehicles/${id}`, { method: 'DELETE' });
+  },
+  /**
+   * Promove uma viatura DRAFT a AVAILABLE. Usado pelo fluxo de "publicar"
+   * que carros entrados por retoma seguem antes de aparecerem como
+   * comercializáveis. Backend exige preço + descrição.
+   */
+  publish(
+    event: Ev,
+    id: string,
+    body: { salePrice: string; description: string },
+  ): Promise<{ ok: true }> {
+    return apiJson(event, `/api/vehicles/${id}/publish`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   },
   signedPhotos(event: Ev, id: string): Promise<{ photos: { path: string; url: string }[] }> {
     return apiJson(event, `/api/vehicles/${id}/photos/signed`);

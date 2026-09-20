@@ -19,11 +19,29 @@ export interface ActivityListResult {
   pageCount: number;
 }
 
+export type EntityType = 'vehicle' | 'sale' | 'task' | 'customer' | 'expense';
+
+export interface EntityScopePair {
+  type: EntityType;
+  id: string;
+}
+
 export interface ActivityListParams {
   actorId?: string;
   /** Comma-separated ActivityType keys (e.g. "VEHICLE_ADDED,SALE_CREATED") */
   type?: string;
-  entityType?: 'vehicle' | 'sale' | 'task' | 'customer' | 'expense';
+  /**
+   * Single entity type, or a comma-separated list. Used together with
+   * `entityId` to scope to one instance, or with `scope` for multi-entity
+   * timelines (e.g. a sale + its associated vehicle).
+   */
+  entityType?: EntityType | string;
+  entityId?: string;
+  /**
+   * Multi-entity scope. When set, takes precedence over entityType+entityId
+   * — the backend ORs the listed (type, id) pairs.
+   */
+  scope?: EntityScopePair[];
   from?: string;
   to?: string;
   q?: string;
@@ -37,6 +55,11 @@ function toQuery(params: ActivityListParams): string {
   const usp = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     if (v === undefined || v === null || v === '') continue;
+    // `scope` is JSON-encoded so the backend can rehydrate the array of pairs.
+    if (k === 'scope' && Array.isArray(v)) {
+      usp.set(k, JSON.stringify(v));
+      continue;
+    }
     usp.set(k, String(v));
   }
   const s = usp.toString();

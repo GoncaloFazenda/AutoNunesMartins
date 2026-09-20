@@ -108,6 +108,52 @@ export async function updateVehicle(
   });
 }
 
+/**
+ * Promove uma viatura DRAFT a AVAILABLE. Define o preço de venda e a
+ * descrição (ambos obrigatórios) numa única transação que também emite
+ * o evento VEHICLE_STATUS_CHANGED para a timeline. Falha cedo se a
+ * viatura não estiver em DRAFT — não há outro caminho para AVAILABLE
+ * que precise deste endpoint (o /editar genérico cobre o resto).
+ */
+export class VehicleNotDraft extends Error {
+  constructor(public readonly id: string, public readonly currentStatus: string) {
+    super(`Vehicle ${id} cannot be published from status ${currentStatus}`);
+    this.name = 'VehicleNotDraft';
+  }
+}
+
+export async function publishVehicle(
+  id: string,
+  payload: { salePrice: string; description: string },
+  actor: ActorContext,
+): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const existing = await tx.vehicle.findUnique({ where: { id } });
+    if (!existing) throw new VehicleNotFound(id);
+    if (existing.status !== 'DRAFT') {
+      throw new VehicleNotDraft(id, existing.status);
+    }
+
+    const updated = await tx.vehicle.update({
+      where: { id },
+      data: {
+        salePrice: payload.salePrice,
+        description: payload.description,
+        status: 'AVAILABLE',
+      },
+    });
+
+    await emitActivity(tx, {
+      actorId: actor.actorId,
+      type: 'VEHICLE_STATUS_CHANGED',
+      entityType: 'vehicle',
+      entityId: id,
+      message: `Viatura publicada: ${vehicleLabel(updated.brand, updated.model, updated.year)} (DRAFT → AVAILABLE)`,
+      metadata: { from: 'DRAFT', to: 'AVAILABLE', salePrice: payload.salePrice },
+    });
+  });
+}
+
 export async function deleteVehicle(id: string, actor: ActorContext): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const existing = await tx.vehicle.findUnique({
@@ -152,6 +198,7 @@ export async function getVehicleWithProfit(id: string) {
     ...vehicle,
     purchasePrice: vehicle.purchasePrice.toString(),
     salePrice: vehicle.salePrice?.toString() ?? null,
+    publicPrice: vehicle.publicPrice?.toFixed(2) ?? null,
     expenses: vehicle.expenses.map((e) => ({ ...e, amount: e.amount.toString() })),
     sale: vehicle.sale
       ? {
@@ -160,6 +207,21 @@ export async function getVehicleWithProfit(id: string) {
           vatAmount: vehicle.sale.vatAmount.toString(),
           commission: vehicle.sale.commission.toString(),
           realProfit: vehicle.sale.realProfit.toString(),
+        }
+      : null,
+    // Provenance for vehicles that entered stock as a customer trade-in.
+    // Surfaces a banner on the detail page linking back to the originating
+    // sale; null for vehicles purchased the regular way.
+    sourceTradeIn: vehicle.sourceTradeIn
+      ? {
+          id: vehicle.sourceTradeIn.id,
+          allowanceValue: vehicle.sourceTradeIn.allowanceValue.toString(),
+          sale: {
+            id: vehicle.sourceTradeIn.sale.id,
+            saleDate: vehicle.sourceTradeIn.sale.saleDate,
+            customer: vehicle.sourceTradeIn.sale.customer,
+            vehicle: vehicle.sourceTradeIn.sale.vehicle,
+          },
         }
       : null,
     expensesTotal,

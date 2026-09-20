@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Download, Plus, Search, Users, X } from 'lucide-svelte';
+  import { Plus, Search, Users, X } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import ItalicHero from '$lib/components/brand/ItalicHero.svelte';
@@ -7,6 +7,7 @@
   import Pagination from '$lib/components/common/Pagination.svelte';
   import EmptyState from '$lib/components/common/EmptyState.svelte';
   import Button from '$lib/components/common/Button.svelte';
+  import ExportMenu from '$lib/components/common/ExportMenu.svelte';
   import CustomerTable from '$lib/components/customer/CustomerTable.svelte';
   import CustomerTableSkeleton from '$lib/components/customer/CustomerTableSkeleton.svelte';
   import { formatDateLong } from '$lib/utils/format';
@@ -52,11 +53,11 @@
       </div>
     </div>
     <div class="flex items-center gap-2 md:flex-shrink-0">
-      <!-- Export is desktop-only — rarely the primary action on a phone. -->
-      <Button variant="outline" size="md" href="/clientes/export?format=csv" class="hidden md:inline-flex">
-        <Download class="h-4 w-4" />
-        Exportar
-      </Button>
+      <!-- Export is desktop-only — rarely the primary action on a phone.
+           Menu (sem default) — o utilizador escolhe CSV ou PDF. -->
+      <div class="hidden md:inline-flex">
+        <ExportMenu baseHref="/clientes/export" extraQuery={$page.url.search} />
+      </div>
       <!-- Mobile: icon-only red square (no in-topbar equivalent for "novo
            cliente"). Desktop: full italic CTA. -->
       <a

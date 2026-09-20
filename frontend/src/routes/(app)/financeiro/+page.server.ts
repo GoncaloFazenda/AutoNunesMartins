@@ -8,16 +8,11 @@ import {
   opExpensesApi,
   type OperationalExpenseListParams,
 } from '$lib/server/operationalExpenses';
-import {
-  financialApi,
-  type ProfitByVehicleParams,
-} from '$lib/server/financial';
 import { ApiError } from '$lib/server/api';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = (event) => {
   const sp = event.url.searchParams;
-  const tab = sp.get('tab') === 'lucro' ? 'lucro' : 'despesas';
 
   const expensesParams: OperationalExpenseListParams = {
     category: (sp.get('category') as OperationalExpenseListParams['category']) ?? undefined,
@@ -28,14 +23,6 @@ export const load: PageServerLoad = (event) => {
     sortDir: sp.get('sortDir') === 'asc' ? 'asc' : 'desc',
   };
 
-  const profitParams: ProfitByVehicleParams = {
-    dateFrom: sp.get('pfFrom') ?? undefined,
-    dateTo: sp.get('pfTo') ?? undefined,
-    sortBy: (sp.get('pfSortBy') as ProfitByVehicleParams['sortBy']) ?? 'saleDate',
-    sortDir: sp.get('pfSortDir') === 'asc' ? 'asc' : 'desc',
-  };
-
-  // Streamed: each tab loads independently
   const expenses = opExpensesApi.list(event, expensesParams).catch((err) => ({
     items: [] as never[],
     total: 0,
@@ -46,26 +33,9 @@ export const load: PageServerLoad = (event) => {
     _error: (err as Error).message,
   }));
 
-  const profit = financialApi.profitByVehicle(event, profitParams).catch((err) => ({
-    items: [] as never[],
-    totals: {
-      count: 0,
-      revenue: '0',
-      vat: '0',
-      expenses: '0',
-      commission: '0',
-      profit: '0',
-      avgMarginPct: 0,
-    },
-    _error: (err as Error).message,
-  }));
-
   return {
-    tab,
     expensesFilters: expensesParams,
-    profitFilters: profitParams,
     expenses,
-    profit,
   };
 };
 

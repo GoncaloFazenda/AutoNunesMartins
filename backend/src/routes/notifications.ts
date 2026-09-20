@@ -21,7 +21,13 @@ function endOfToday(): Date {
 }
 
 interface Payload {
-  alerts: { stockAged: number; tasksDueOrOverdue: number; remindersToday: number };
+  alerts: {
+    stockAged: number;
+    tasksDueOrOverdue: number;
+    remindersToday: number;
+    /** Viaturas em DRAFT — preço por definir (ver dashboardService.SmartAlerts). */
+    draftVehicles: number;
+  };
   total: number;
   recent: Array<{
     id: string;
@@ -41,7 +47,7 @@ async function buildNotifications(actorId: string): Promise<Payload> {
   const thresholdDays = await appSettings.stockAgingDays();
   const cutoff = new Date(now.getTime() - thresholdDays * MS_PER_DAY);
 
-  const [stockAged, tasksDueOrOverdue, remindersToday, recent] = await Promise.all([
+  const [stockAged, tasksDueOrOverdue, remindersToday, draftVehicles, recent] = await Promise.all([
     prisma.vehicle.count({
       where: { status: 'AVAILABLE', acquisitionDate: { lt: cutoff } },
     }),
@@ -66,6 +72,7 @@ async function buildNotifications(actorId: string): Promise<Payload> {
         reminderDate: { gte: todayStart, lte: todayEnd },
       },
     }),
+    prisma.vehicle.count({ where: { status: 'DRAFT' } }),
     prisma.activityLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 5,
@@ -73,8 +80,8 @@ async function buildNotifications(actorId: string): Promise<Payload> {
     }),
   ]);
 
-  const alerts = { stockAged, tasksDueOrOverdue, remindersToday };
-  const total = stockAged + tasksDueOrOverdue + remindersToday;
+  const alerts = { stockAged, tasksDueOrOverdue, remindersToday, draftVehicles };
+  const total = stockAged + tasksDueOrOverdue + remindersToday + draftVehicles;
 
   return {
     alerts,

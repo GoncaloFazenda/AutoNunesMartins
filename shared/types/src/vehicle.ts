@@ -99,6 +99,12 @@ export const vehicleFilterSchema = z.object({
   mileageMin: z.coerce.number().int().optional(),
   mileageMax: z.coerce.number().int().optional(),
   status: VehicleStatusEnum.optional(),
+  /**
+   * Negative status filter — exclude rows of this status. Used by the main
+   * /viaturas list to hide DRAFTs (they have a dedicated highlighted
+   * section above the table). Ignored when `status` is also set.
+   */
+  notStatus: VehicleStatusEnum.optional(),
   /** Free-text — searched across brand, model, vin, licensePlate. */
   q: z.string().optional(),
 });

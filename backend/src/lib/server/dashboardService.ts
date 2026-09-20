@@ -85,6 +85,13 @@ export interface SmartAlerts {
   stockAged: number;
   tasksDueOrOverdue: number;
   remindersToday: number;
+  /**
+   * Viaturas em estado DRAFT — entraram no inventário (tipicamente via
+   * retoma) mas ainda não têm preço definido, pelo que não aparecem
+   * disponíveis. Surface no banner do dashboard + sino de notificações
+   * para o dono não esquecer que tem carros parados à espera de preço.
+   */
+  draftVehicles: number;
 }
 
 export interface DashboardPayload {
@@ -396,7 +403,7 @@ async function loadAlerts(actorId: string, now: Date): Promise<SmartAlerts> {
   const cutoff = new Date(now.getTime() - thresholdDays * MS_PER_DAY);
   const todayStart = startOfToday();
   const todayEnd = endOfToday();
-  const [stockAged, tasksDueOrOverdue, remindersToday] = await Promise.all([
+  const [stockAged, tasksDueOrOverdue, remindersToday, draftVehicles] = await Promise.all([
     prisma.vehicle.count({
       where: { status: 'AVAILABLE', acquisitionDate: { lt: cutoff } },
     }),
@@ -421,8 +428,9 @@ async function loadAlerts(actorId: string, now: Date): Promise<SmartAlerts> {
         reminderDate: { gte: todayStart, lte: todayEnd },
       },
     }),
+    prisma.vehicle.count({ where: { status: 'DRAFT' } }),
   ]);
-  return { stockAged, tasksDueOrOverdue, remindersToday };
+  return { stockAged, tasksDueOrOverdue, remindersToday, draftVehicles };
 }
 
 export async function loadDashboard(actorId: string): Promise<DashboardPayload> {

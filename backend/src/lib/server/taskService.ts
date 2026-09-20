@@ -8,19 +8,21 @@ import { logger } from '../../logger.js';
 import type { ActorContext } from './vehicleService.js';
 
 /**
- * Weekly purge: every Sunday, wipe all DONE tasks regardless of how long
- * they've been there. `lastPurgeAt` is a module-level guard so the delete
- * only fires once per Sunday across all requests in this process. On
- * backend restart the guard resets — that's safe because the delete is
- * idempotent (only DONE tasks get deleted, and after the first run there
- * won't be any until the next status change).
+ * Weekly purge: every Sunday, wipe all DONE tasks regardless of recurrence.
+ * When a recurring task is completed, its next occurrence is already spawned
+ * as a separate TODO task (see `changeTaskStatus`), so the completed parent
+ * is just history — safe to delete on the next Sunday.
+ *
+ * `lastPurgeAt` is a module-level guard so the delete only fires once per
+ * Sunday across all requests in this process. On backend restart the guard
+ * resets — that's safe because the delete is idempotent.
  */
 let lastPurgeAt = 0;
 
 /**
- * Opportunistic cleanup: wipes every task in DONE if we haven't already
- * wiped since the most recent Sunday 00:00. Called from the list endpoint
- * with fire-and-forget semantics. Failures are logged and swallowed.
+ * Opportunistic cleanup: wipes every DONE task if we haven't already wiped
+ * since the most recent Sunday 00:00. Called from the list endpoint with
+ * fire-and-forget semantics. Failures are logged and swallowed.
  */
 export async function purgeStaleCompletedTasks(): Promise<number> {
   const sunday = mostRecentSundayMidnight();
@@ -46,6 +48,13 @@ export class TaskNotFound extends Error {
   constructor(public readonly id: string) {
     super(`Task ${id} not found`);
     this.name = 'TaskNotFound';
+  }
+}
+
+export class TaskValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TaskValidationError';
   }
 }
 
@@ -88,6 +97,17 @@ export async function updateTask(
     const existing = await tx.task.findUnique({ where: { id } });
     if (!existing) throw new TaskNotFound(id);
 
+    // Recurring tasks need a dueDate so we know which day-of-month to
+    // resurrect on. Validate the post-update state, not just the patch.
+    const resultingRecurrence = data.recurrence ?? existing.recurrence;
+    const resultingDueDate =
+      data.dueDate !== undefined ? data.dueDate : existing.dueDate;
+    if (resultingRecurrence !== 'NONE' && !resultingDueDate) {
+      throw new TaskValidationError(
+        'Tarefas recorrentes precisam de uma data de prazo.',
+      );
+    }
+
     const update: Prisma.TaskUpdateInput = {};
     if (data.title !== undefined) update.title = data.title;
     if (data.description !== undefined) update.description = data.description ?? null;
@@ -114,20 +134,27 @@ export async function updateTask(
 }
 
 /**
- * Status change handler — when a recurring task flips to DONE, transactionally
- * spawn the next occurrence with shifted dates and recurrenceParentId set.
+ * Status change handler. When a recurring task flips to DONE we spawn the
+ * next occurrence as a separate TODO task with `dueDate` shifted forward by
+ * one cycle. The original stays in DONE (and gets purged the next Sunday).
+ *
+ * The spawned task starts immediately in TODO but with a future `dueDate`,
+ * which makes it "scheduled standby" — hidden from the board by default
+ * (see `buildTaskWhere`'s standby filter) until the user toggles "show
+ * scheduled" on. When `dueDate <= now`, the same task naturally becomes
+ * visible — no separate resurrection job needed.
  */
 export async function changeTaskStatus(
   id: string,
   nextStatus: TaskStatus,
   actor: ActorContext,
-): Promise<{ spawnedTaskId: string | null }> {
+): Promise<{ spawnedTaskId: string | null; nextOccurrenceDate: string | null }> {
   return prisma.$transaction(async (tx) => {
     const existing = await tx.task.findUnique({ where: { id } });
     if (!existing) throw new TaskNotFound(id);
 
     if (existing.status === nextStatus) {
-      return { spawnedTaskId: null };
+      return { spawnedTaskId: null, nextOccurrenceDate: null };
     }
 
     // Track when a task became DONE so the auto-purge can find it.
@@ -146,17 +173,18 @@ export async function changeTaskStatus(
     });
 
     let spawnedTaskId: string | null = null;
+    let nextOccurrenceDate: string | null = null;
 
     const flippedToDone = nextStatus === 'DONE' && existing.status !== 'DONE';
     if (flippedToDone && existing.recurrence !== 'NONE') {
       const newDueDate = existing.dueDate
         ? shiftRecurrence(existing.dueDate, existing.recurrence)
         : null;
-      const newReminderDate = existing.reminderDate
-        ? shiftRecurrence(existing.reminderDate, existing.recurrence)
-        : null;
       const newStartDate = existing.startDate
         ? shiftRecurrence(existing.startDate, existing.recurrence)
+        : null;
+      const newReminderDate = existing.reminderDate
+        ? shiftRecurrence(existing.reminderDate, existing.recurrence)
         : null;
 
       const spawned = await tx.task.create({
@@ -174,13 +202,16 @@ export async function changeTaskStatus(
         },
       });
       spawnedTaskId = spawned.id;
+      nextOccurrenceDate = newDueDate ? newDueDate.toISOString() : null;
 
       await emitActivity(tx, {
         actorId: actor.actorId,
         type: 'TASK_CREATED',
         entityType: 'task',
         entityId: spawned.id,
-        message: `Recorrência criada: ${spawned.title}`,
+        message: nextOccurrenceDate
+          ? `Próxima ocorrência agendada: ${spawned.title} (${nextOccurrenceDate.slice(0, 10)})`
+          : `Próxima ocorrência agendada: ${spawned.title}`,
         metadata: { parentId: existing.id },
       });
     }
@@ -196,7 +227,7 @@ export async function changeTaskStatus(
       metadata: { from: existing.status, to: nextStatus },
     });
 
-    return { spawnedTaskId };
+    return { spawnedTaskId, nextOccurrenceDate };
   });
 }
 

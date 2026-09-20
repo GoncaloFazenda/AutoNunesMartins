@@ -11,12 +11,15 @@ import { createSignedReadUrls } from '../lib/data/storage.js';
 import { logger } from '../logger.js';
 import {
   VehicleHasSale,
+  VehicleNotDraft,
   VehicleNotFound,
   createVehicle,
   deleteVehicle,
   getVehicleWithProfit,
+  publishVehicle,
   updateVehicle,
 } from '../lib/server/vehicleService.js';
+import { moneySchema } from '@anm/types';
 import { requireUser, type AuthedRequest } from '../middleware/clerk.js';
 import { param } from '../lib/http.js';
 
@@ -124,6 +127,45 @@ router.patch('/:id', requireUser, async (req: AuthedRequest, res: Response) => {
   } catch (err) {
     if (err instanceof VehicleNotFound) {
       res.status(404).json({ error: 'Vehicle not found' });
+      return;
+    }
+    throw err;
+  }
+});
+
+const publishSchema = z.object({
+  salePrice: moneySchema,
+  // Descrição obrigatória na publicação (decisão do utilizador). O input
+  // tem max 2000 chars como no /editar para manter o contrato consistente.
+  description: z.string().trim().min(1, 'Descrição obrigatória').max(2000),
+});
+
+router.post('/:id/publish', requireUser, async (req: AuthedRequest, res: Response) => {
+  const parsed = publishSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid body', issues: parsed.error.issues });
+    return;
+  }
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  try {
+    await publishVehicle(
+      param(req, 'id'),
+      { salePrice: parsed.data.salePrice, description: parsed.data.description },
+      { actorId: req.user.id, actorName: req.user.name },
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    if (err instanceof VehicleNotFound) {
+      res.status(404).json({ error: 'Vehicle not found' });
+      return;
+    }
+    if (err instanceof VehicleNotDraft) {
+      res.status(409).json({
+        error: `Viatura em estado "${err.currentStatus}" não pode ser publicada (só DRAFT).`,
+      });
       return;
     }
     throw err;

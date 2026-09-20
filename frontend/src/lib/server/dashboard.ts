@@ -74,6 +74,8 @@ export interface SmartAlerts {
   stockAged: number;
   tasksDueOrOverdue: number;
   remindersToday: number;
+  /** Viaturas em DRAFT — preço por definir. Vir do backend já contado. */
+  draftVehicles: number;
 }
 
 export interface DashboardPayload {

@@ -14,6 +14,7 @@ import {
 } from '../lib/data/task.js';
 import {
   TaskNotFound,
+  TaskValidationError,
   changeTaskStatus,
   createTask,
   deleteTask,
@@ -35,6 +36,14 @@ const listQuerySchema = z.object({
   dueAfter: z.coerce.date().optional(),
   q: z.string().optional(),
   scope: ScopeEnum.optional(),
+  /**
+   * When true, include recurring tasks currently in DONE-standby
+   * (waiting for their next occurrence date). Default false hides them.
+   */
+  showScheduled: z
+    .union([z.literal('true'), z.literal('false'), z.boolean()])
+    .transform((v) => v === true || v === 'true')
+    .optional(),
 });
 
 const statusChangeSchema = z.object({
@@ -61,8 +70,9 @@ router.get('/', requireUser, async (req: AuthedRequest, res: Response) => {
     return;
   }
 
-  // Opportunistic cleanup of DONE tasks older than the configured retention.
-  // Throttled to once per 5 minutes per process; never blocks the response.
+  // Weekly Sunday purge of DONE tasks. Fire-and-forget — never blocks the
+  // response. Recurring tasks have already spawned their next occurrence in
+  // TODO before being completed, so deleting the DONE parent is safe.
   void purgeStaleCompletedTasks();
 
   const items = await listAllTasks(prisma, {
@@ -127,6 +137,10 @@ router.patch('/:id', requireUser, async (req: AuthedRequest, res: Response) => {
   } catch (err) {
     if (err instanceof TaskNotFound) {
       res.status(404).json({ error: 'Task not found' });
+      return;
+    }
+    if (err instanceof TaskValidationError) {
+      res.status(400).json({ error: err.message });
       return;
     }
     throw err;

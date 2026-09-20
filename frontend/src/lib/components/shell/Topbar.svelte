@@ -1,7 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { Menu, X } from 'lucide-svelte';
-  import BrandDl from '$lib/components/brand/icons/BrandDl.svelte';
   import BrandPlus from '$lib/components/brand/icons/BrandPlus.svelte';
   import BrandSearch from '$lib/components/brand/icons/BrandSearch.svelte';
   import ThemeToggle from '$lib/components/brand/ThemeToggle.svelte';
@@ -24,8 +23,8 @@
     if (path.startsWith('/viaturas')) return ['Painel', 'Viaturas'];
     if (path.startsWith('/clientes')) return ['Painel', 'Clientes'];
     if (path.startsWith('/tarefas')) return ['Painel', 'Tarefas'];
+    if (path.startsWith('/vendas')) return ['Painel', 'Vendas'];
     if (path.startsWith('/financeiro')) return ['Painel', 'Financeiro'];
-    if (path.startsWith('/sales')) return ['Painel', 'Vendas'];
     if (path.startsWith('/atividade')) return ['Painel', 'Atividade'];
     if (path.startsWith('/guia')) return ['Painel', 'Guia de Fluxo'];
     if (path.startsWith('/definicoes')) return ['Painel', 'Definições'];
@@ -123,21 +122,13 @@
         <BrandSearch class="h-4 w-4" />
       </button>
 
-      <!-- Theme toggle and Export: desktop only. Theme lives inside the
-           sidebar drawer on mobile via the user-footer (future), Export is
-           rarely the primary action on a phone. -->
+      <!-- Theme toggle: desktop only. Theme lives inside the sidebar drawer
+           on mobile via the user-footer (future). O export ficava aqui mas
+           foi removido — cada secção tem o seu próprio ExportMenu, o do
+           topbar nunca chegou a estar ligado a nenhum endpoint. -->
       <div class="hidden md:inline-flex">
         <ThemeToggle size={38} />
       </div>
-
-      <button
-        type="button"
-        class="hidden md:inline-flex items-center justify-center h-[38px] w-[38px] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border-strong)] transition-colors"
-        style="border-radius: var(--radius-btn);"
-        aria-label="Exportar"
-      >
-        <BrandDl class="h-4 w-4" />
-      </button>
 
       <NotificationBell />
 

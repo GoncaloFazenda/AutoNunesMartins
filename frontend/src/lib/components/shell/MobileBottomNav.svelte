@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { Plus } from 'lucide-svelte';
   import { page } from '$app/stores';
   import BrandDash from '$lib/components/brand/icons/BrandDash.svelte';
   import BrandCar from '$lib/components/brand/icons/BrandCar.svelte';
   import BrandUsers from '$lib/components/brand/icons/BrandUsers.svelte';
   import BrandDeal from '$lib/components/brand/icons/BrandDeal.svelte';
   import BrandChart from '$lib/components/brand/icons/BrandChart.svelte';
+  import { quickTask } from '$lib/stores/quickTask';
   import type { IconComponent } from '$lib/types/ui';
 
   interface Props {
@@ -56,21 +58,49 @@
     {@const active = isActive(item.href, $page.url.pathname)}
     {@const badge = item.badge?.() ?? null}
     {@const tone = item.badgeTone ?? 'dim'}
-    <a href={item.href} class="bn-item" class:bn-item-active={active}>
-      <span class="bn-icon-wrap">
-        <item.icon class="bn-icon" />
-        {#if badge !== null && badge > 0}
-          <span
-            class="bn-badge"
-            class:bn-badge-alert={tone === 'alert'}
-            aria-label={`${badge} ${item.label.toLowerCase()}`}
-          >
-            {badge > 99 ? '99+' : badge}
-          </span>
-        {/if}
-      </span>
-      <span class="bn-label">{item.label}</span>
-    </a>
+    {@const isTasks = item.href === '/tarefas'}
+    <!--
+      Tasks cell carries a small "+" affordance in addition to the link:
+      tap on the cell navigates as usual; tap on the "+" opens the
+      Quick Task panel inline without leaving the current page. The "+"
+      is a sibling button (not nested in the <a>) so the two tap targets
+      don't conflict.
+    -->
+    <div class="bn-cell" class:bn-cell-tasks={isTasks}>
+      <a href={item.href} class="bn-item" class:bn-item-active={active}>
+        <span class="bn-icon-wrap">
+          <item.icon class="bn-icon" />
+          {#if badge !== null && badge > 0 && !isTasks}
+            <!-- Tasks cell drops the count badge in favour of the "+" affordance
+                 (rendered as a sibling button below) — the count is still
+                 visible on the sidebar and the /tarefas page. -->
+            <span
+              class="bn-badge"
+              class:bn-badge-alert={tone === 'alert'}
+              aria-label={`${badge} ${item.label.toLowerCase()}`}
+            >
+              {badge > 99 ? '99+' : badge}
+            </span>
+          {/if}
+        </span>
+        <span class="bn-label">{item.label}</span>
+      </a>
+      {#if isTasks}
+        <button
+          type="button"
+          class="bn-quick-add"
+          aria-label="Nova tarefa rápida"
+          onpointerdown={(e) => e.stopPropagation()}
+          onclick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            quickTask.open();
+          }}
+        >
+          <Plus class="h-3.5 w-3.5" strokeWidth={2.4} />
+        </button>
+      {/if}
+    </div>
   {/each}
 </nav>
 
@@ -106,6 +136,77 @@
   :global([data-theme='light']) .bottom-nav {
     background: linear-gradient(180deg, #fafaf6 0%, #f4f2ee 100%);
     box-shadow: 0 -8px 24px -16px rgba(0, 0, 0, 0.15);
+  }
+
+  /*
+    Each grid cell wraps the link plus (for Tasks) the "+" affordance.
+    Position relative so the absolutely-positioned "+" anchors to the cell.
+  */
+  .bn-cell {
+    position: relative;
+    /* Promote to its own stacking context so .bn-quick-add reliably sits
+       above .bn-item even if some browsers paint relative-positioned
+       siblings differently. */
+    z-index: 0;
+  }
+  .bn-cell > .bn-item {
+    width: 100%;
+    /* Explicit lower stacking so the "+" button (z-index: 2) is unambiguously
+       on top and receives clicks. */
+    z-index: 1;
+  }
+
+  /*
+    "+" affordance on the Tasks cell — opens the Quick Task panel without
+    navigating. Sits in the upper-right of the cell, roughly where the
+    count badge lives on the other items. Red brand fill so it reads as
+    a primary action, not a status indicator.
+
+    Tap target is enlarged via a transparent ::before so the visible 22px
+    pill is easy to hit (touch guidelines want ~40px).
+  */
+  .bn-quick-add {
+    position: absolute;
+    top: 4px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-red);
+    color: #fff;
+    border: 0;
+    border-radius: 999px;
+    padding: 0;
+    box-shadow: 0 2px 8px color-mix(in oklab, var(--color-red) 45%, transparent);
+    z-index: 3;
+    cursor: pointer;
+    /* Claim the tap so the OS doesn't try to scroll or activate the
+       underlying link in the same gesture. */
+    touch-action: manipulation;
+    transition:
+      transform 0.16s var(--ease-brand),
+      background-color 0.18s var(--ease-brand),
+      box-shadow 0.18s var(--ease-brand);
+  }
+  .bn-quick-add::before {
+    /* Invisible hit-area extension — adds ~10px in every direction so the
+       button is reliably tappable without inflating its visible footprint. */
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border-radius: 999px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .bn-quick-add:hover {
+      background: var(--color-red-soft);
+      box-shadow: 0 3px 12px color-mix(in oklab, var(--color-red) 60%, transparent);
+    }
+  }
+  .bn-quick-add:active {
+    transform: scale(0.88);
+    transition-duration: 0.08s;
   }
   @media (max-width: 767px) {
     .bottom-nav {

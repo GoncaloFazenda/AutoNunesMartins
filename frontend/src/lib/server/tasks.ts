@@ -12,6 +12,9 @@ export interface TaskAssignee {
   id: string;
   name: string;
   email: string;
+  /** Profile picture mirrored from Clerk. Null when the user uses Clerk's
+   *  auto-generated avatar — the UI falls back to a red-gradient monogram. */
+  imageUrl: string | null;
 }
 
 export interface TaskDto {
@@ -41,6 +44,11 @@ export interface TaskListParams {
   dueAfter?: string;
   q?: string;
   scope?: TaskScope;
+  /**
+   * When true, include recurring tasks currently in DONE-standby (their
+   * next dueDate is still in the future). Defaults to false.
+   */
+  showScheduled?: boolean;
 }
 
 function toQuery(params: Record<string, unknown>): string {
@@ -75,7 +83,7 @@ export const tasksApi = {
     event: Ev,
     id: string,
     status: TaskStatus,
-  ): Promise<{ spawnedTaskId: string | null }> {
+  ): Promise<{ spawnedTaskId: string | null; nextOccurrenceDate: string | null }> {
     return apiJson(event, `/api/tasks/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),

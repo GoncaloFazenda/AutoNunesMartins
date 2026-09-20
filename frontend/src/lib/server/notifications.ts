@@ -6,6 +6,8 @@ export interface NotificationsPayload {
     stockAged: number;
     tasksDueOrOverdue: number;
     remindersToday: number;
+    /** Viaturas em DRAFT — preço por definir. */
+    draftVehicles: number;
   };
   total: number;
   recent: Array<{

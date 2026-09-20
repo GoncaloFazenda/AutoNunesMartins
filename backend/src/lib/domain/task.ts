@@ -1,4 +1,4 @@
-import { addMonths, addYears } from 'date-fns';
+import { addMonths, addWeeks, addYears } from 'date-fns';
 import type { Recurrence } from '@anm/types';
 
 /**
@@ -8,6 +8,8 @@ import type { Recurrence } from '@anm/types';
  */
 export function shiftRecurrence(date: Date, recurrence: Recurrence): Date {
   switch (recurrence) {
+    case 'WEEKLY':
+      return addWeeks(date, 1);
     case 'MONTHLY':
       return addMonths(date, 1);
     case 'ANNUAL':

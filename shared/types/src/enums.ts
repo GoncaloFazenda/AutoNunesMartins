@@ -9,6 +9,9 @@ export const VehicleStatusEnum = z.enum([
   'SOLD',
   'DELIVERED',
   'DOCS_PENDING',
+  // "Rascunho" — em inventário mas ainda não comercializável (preço por
+  // definir). Tipicamente criado quando entra uma retoma STOCK.
+  'DRAFT',
 ]);
 export type VehicleStatus = z.infer<typeof VehicleStatusEnum>;
 
@@ -39,13 +42,19 @@ export type OpExpenseCategory = z.infer<typeof OpExpenseCategoryEnum>;
 export const DeliveryStatusEnum = z.enum(['PENDING', 'SCHEDULED', 'DELIVERED']);
 export type DeliveryStatus = z.infer<typeof DeliveryStatusEnum>;
 
+export const BuyerTypeEnum = z.enum(['PARTICULAR', 'COMERCIANTE']);
+export type BuyerType = z.infer<typeof BuyerTypeEnum>;
+
+export const TradeInDispositionEnum = z.enum(['STOCK', 'SCRAP']);
+export type TradeInDisposition = z.infer<typeof TradeInDispositionEnum>;
+
 export const TaskStatusEnum = z.enum(['TODO', 'IN_PROGRESS', 'DONE']);
 export type TaskStatus = z.infer<typeof TaskStatusEnum>;
 
 export const PriorityEnum = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
 export type Priority = z.infer<typeof PriorityEnum>;
 
-export const RecurrenceEnum = z.enum(['NONE', 'MONTHLY', 'ANNUAL']);
+export const RecurrenceEnum = z.enum(['NONE', 'WEEKLY', 'MONTHLY', 'ANNUAL']);
 export type Recurrence = z.infer<typeof RecurrenceEnum>;
 
 export const ActivityTypeEnum = z.enum([
@@ -55,6 +64,7 @@ export const ActivityTypeEnum = z.enum([
   'VEHICLE_DELETED',
   'SALE_CREATED',
   'SALE_UPDATED',
+  'TRADE_IN_RECEIVED',
   'CUSTOMER_ADDED',
   'CUSTOMER_UPDATED',
   'TASK_CREATED',

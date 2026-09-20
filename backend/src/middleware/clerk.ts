@@ -31,6 +31,8 @@ interface ClerkUserShape {
   fullName?: string | null;
   primaryEmailAddressId?: string | null;
   emailAddresses?: { id: string; emailAddress: string }[];
+  imageUrl?: string | null;
+  hasImage?: boolean;
 }
 
 function pickEmail(u: ClerkUserShape): string | null {
@@ -71,12 +73,13 @@ export async function requireUser(req: AuthedRequest, res: Response, next: NextF
         return;
       }
       const name = pickName(clerkUser, email);
+      const imageUrl = clerkUser.hasImage ? (clerkUser.imageUrl ?? null) : null;
 
       // Upsert in case a concurrent request raced us, or the webhook already fired.
       user = await prisma.user.upsert({
         where: { clerkId: auth.userId },
         update: {},
-        create: { clerkId: auth.userId, email, name, role: 'ADMIN' },
+        create: { clerkId: auth.userId, email, name, imageUrl, role: 'ADMIN' },
       });
       logger.info({ clerkId: auth.userId, userId: user.id }, 'User auto-provisioned from Clerk');
     } catch (err) {
@@ -84,6 +87,24 @@ export async function requireUser(req: AuthedRequest, res: Response, next: NextF
       res.status(500).json({ error: 'Failed to provision user.' });
       return;
     }
+  } else if (user.imageUrl === null) {
+    // Backfill imageUrl for users provisioned before this column existed,
+    // or who hadn't uploaded a picture at provisioning time. Fire-and-forget
+    // so it never blocks the request. The webhook will keep it fresh once
+    // populated.
+    void (async () => {
+      try {
+        const clerkUser = (await clerkClient.users.getUser(auth.userId!)) as ClerkUserShape;
+        if (clerkUser.hasImage && clerkUser.imageUrl) {
+          await prisma.user.update({
+            where: { clerkId: auth.userId! },
+            data: { imageUrl: clerkUser.imageUrl },
+          });
+        }
+      } catch (err) {
+        logger.debug({ err, clerkId: auth.userId }, 'imageUrl backfill skipped');
+      }
+    })();
   }
 
   req.user = {

@@ -2,6 +2,8 @@ import Decimal from 'decimal.js';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_UP });
 
+export type BuyerType = 'PARTICULAR' | 'COMERCIANTE';
+
 export interface SaleFiguresInput {
   salePrice: Decimal.Value;
   purchasePrice: Decimal.Value;
@@ -14,7 +16,26 @@ export interface SaleFiguresInput {
    * amount they actually pocket. Optional; defaults to 0.
    */
   commission?: Decimal.Value;
+  /**
+   * Who is buying the car. Drives the VAT treatment:
+   *   PARTICULAR  → margin VAT scheme 23/123 (default, historical behaviour)
+   *   COMERCIANTE → B2B sale to a reseller; no VAT is withheld by the
+   *                 dealer, so the full margin lands in `realProfit`.
+   */
+  buyerType?: BuyerType;
 }
+
+// NOTE on trade-ins: the trade-in allowance is intentionally NOT part of
+// this calculation. A trade-in is a *separate* transaction — the dealer
+// "buys" the customer's car at the allowance value (creating a new stock
+// row at that cost) and "sells" their own car at the full price. The PT
+// margin scheme (art. 308.º CIVA) taxes the dealer's sale margin
+// (salePrice − purchasePrice), regardless of how the customer paid. Abating
+// the allowance here would under-report IVA owed AND understate per-deal
+// profit (the dealer didn't lose value — they swapped cash for inventory).
+// The consolidated profit of the two-deal cycle is shown on the resale
+// page of the trade-in car, which links back to this original sale via
+// `Vehicle.sourceTradeIn`.
 
 export interface SaleFigures {
   margin: Decimal;
@@ -25,13 +46,21 @@ export interface SaleFigures {
 }
 
 /**
- * Portuguese used-car dealer margin scheme + per-sale commission:
- *   margin     = salePrice − purchasePrice − expensesTotal      (VAT-inclusive)
- *   vatAmount  = margin × 23 / 123     (extracted from positive margin)
- *   realProfit = (margin − vatAmount) + commission
+ * Two VAT regimes, picked per sale via `buyerType`:
  *
- * When margin <= 0 there is no VAT to collect; commission can still
- * offset (or compound) the loss.
+ *   margin     = salePrice − purchasePrice − expensesTotal   (VAT-inclusive)
+ *
+ *   PARTICULAR (default — Portuguese used-car dealer margin scheme):
+ *     vatAmount  = margin × 23 / 123     (extracted from positive margin)
+ *     realProfit = (margin − vatAmount) + commission
+ *
+ *   COMERCIANTE (B2B sale to another dealer — no VAT discriminated by the
+ *   seller, the full margin is kept):
+ *     vatAmount  = 0
+ *     realProfit = margin + commission
+ *
+ * When margin <= 0 there is no VAT to collect regardless of regime;
+ * commission can still offset (or compound) the loss.
  */
 export function computeSaleFigures(input: SaleFiguresInput): SaleFigures {
   const salePrice = new Decimal(input.salePrice);
@@ -41,10 +70,11 @@ export function computeSaleFigures(input: SaleFiguresInput): SaleFigures {
     2,
     Decimal.ROUND_HALF_UP,
   );
+  const buyerType: BuyerType = input.buyerType ?? 'PARTICULAR';
 
   const margin = salePrice.minus(purchasePrice).minus(expensesTotal);
 
-  if (margin.lte(0)) {
+  if (margin.lte(0) || buyerType === 'COMERCIANTE') {
     const realProfit = margin
       .plus(commission)
       .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);

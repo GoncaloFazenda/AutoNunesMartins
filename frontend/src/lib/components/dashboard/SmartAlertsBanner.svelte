@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AlertTriangle, Car, Clock, ListChecks } from 'lucide-svelte';
+  import { AlertTriangle, Car, Clock, ListChecks, Tag } from 'lucide-svelte';
   import type { SmartAlerts } from '$lib/server/dashboard';
 
   interface Props {
@@ -24,6 +24,14 @@
         icon: Clock,
         label: `${alerts.remindersToday} lembrete${alerts.remindersToday === 1 ? '' : 's'} para hoje`,
         href: '/tarefas',
+      },
+      // Rascunhos — viaturas que entraram no stock (tipicamente via retoma)
+      // mas ainda sem preço definido. Aparecem aqui como warning porque
+      // estão paradas à espera de uma decisão do dono para serem publicadas.
+      alerts.draftVehicles > 0 && {
+        icon: Tag,
+        label: `${alerts.draftVehicles} viatura${alerts.draftVehicles === 1 ? '' : 's'} em rascunho — preço por definir`,
+        href: '/viaturas',
       },
     ].filter((x): x is { icon: typeof Car; label: string; href: string } => Boolean(x)),
   );

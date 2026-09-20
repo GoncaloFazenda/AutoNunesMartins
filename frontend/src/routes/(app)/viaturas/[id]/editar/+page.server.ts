@@ -2,12 +2,17 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { vehicleCreateSchema } from '@anm/types';
 import { vehiclesApi } from '$lib/server/vehicles';
 import { ApiError } from '$lib/server/api';
+import { webPublicationAction } from '$lib/server/webPublication';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
   try {
     const vehicle = await vehiclesApi.get(event, event.params.id);
-    return { vehicle };
+    const signedPhotos = await vehiclesApi
+      .signedPhotos(event, vehicle.id)
+      .then((result) => result.photos)
+      .catch(() => []);
+    return { vehicle, signedPhotos };
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       throw error(404, 'Viatura não encontrada');
@@ -45,6 +50,7 @@ function parseForm(formData: FormData) {
 }
 
 export const actions: Actions = {
+  webPublication: (event) => webPublicationAction(event, event.params.id),
   submit: async (event) => {
     const formData = await event.request.formData();
     const parsed = vehicleCreateSchema.safeParse(parseForm(formData));

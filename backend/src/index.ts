@@ -8,6 +8,8 @@ import { logger } from './logger.js';
 import { clerkMiddleware, requireUser, type AuthedRequest } from './middleware/clerk.js';
 import clerkWebhookRouter from './routes/webhooks/clerk.js';
 import vehiclesRouter from './routes/vehicles.js';
+import publicVehiclesRouter from './routes/publicVehicles.js';
+import vehicleWebPublicationRouter from './routes/vehicleWebPublication.js';
 import vehicleStatsRouter from './routes/vehicleStats.js';
 import vehicleExpensesRouter from './routes/vehicleExpenses.js';
 import vehiclePhotosRouter from './routes/vehiclePhotos.js';
@@ -20,7 +22,6 @@ import dashboardRouter from './routes/dashboard.js';
 import dashboardTasksRouter from './routes/dashboardTasks.js';
 import featuredVehicleRouter from './routes/featuredVehicle.js';
 import operationalExpensesRouter from './routes/operationalExpenses.js';
-import financialRouter from './routes/financial.js';
 import settingsRouter from './routes/settings.js';
 import notificationsRouter from './routes/notifications.js';
 import activityRouter from './routes/activity.js';
@@ -44,6 +45,8 @@ app.use(
 );
 
 app.use(express.json({ limit: '1mb' }));
+// Public read-only projection bypasses authenticated CRM auto-provisioning.
+app.use('/api/public/vehicles', publicVehiclesRouter);
 app.use(clerkMiddleware);
 
 app.get('/health', (_req: Request, res: Response) => {
@@ -58,6 +61,7 @@ app.get('/api/me', requireUser, (req: AuthedRequest, res: Response) => {
 // vehiclesRouter would treat "stats" as an :id path param.
 app.use('/api/vehicles', vehicleStatsRouter);
 app.use('/api/vehicles', vehiclesRouter);
+app.use('/api/vehicles', vehicleWebPublicationRouter);
 app.use('/api/vehicles/:vehicleId/photos', vehiclePhotosRouter);
 app.use('/api/vehicle-expenses', vehicleExpensesRouter);
 app.use('/api/customers', customersRouter);
@@ -70,7 +74,6 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/dashboard', dashboardTasksRouter);
 app.use('/api/dashboard', featuredVehicleRouter);
 app.use('/api/operational-expenses', operationalExpensesRouter);
-app.use('/api/financial', financialRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/activity', activityRouter);

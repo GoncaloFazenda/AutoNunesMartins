@@ -45,6 +45,31 @@
 
   let submitting = $state(false);
 
+  // Track recurrence + dueDate locally so the hint below the recurrence
+  // select can show the resulting day-of-month in real time.
+  let recurrence = $state<Recurrence>(initial.recurrence ?? 'NONE');
+  let dueDate = $state<string>(initial.dueDate?.slice(0, 10) ?? '');
+
+  const recurrenceHint = $derived.by(() => {
+    if (recurrence === 'NONE') return null;
+    if (!dueDate) {
+      return 'Define um prazo — a próxima ocorrência será agendada para esse dia, somado ao período da recorrência.';
+    }
+    const d = new Date(dueDate);
+    if (recurrence === 'WEEKLY') {
+      const weekday = d.toLocaleDateString('pt-PT', { weekday: 'long' });
+      return `Após cada conclusão, a próxima ocorrência é agendada para a ${weekday} seguinte.`;
+    }
+    if (recurrence === 'MONTHLY') {
+      return `Após cada conclusão, a próxima ocorrência é agendada para o dia ${d.getDate()} do mês seguinte.`;
+    }
+    if (recurrence === 'ANNUAL') {
+      const day = d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' });
+      return `Após cada conclusão, a próxima ocorrência é agendada para ${day} do ano seguinte.`;
+    }
+    return null;
+  });
+
   const PRIORITIES: { value: Priority; label: string }[] = [
     { value: 'LOW', label: 'Baixa' },
     { value: 'MEDIUM', label: 'Média' },
@@ -60,6 +85,7 @@
 
   const RECURRENCES: { value: Recurrence; label: string }[] = [
     { value: 'NONE', label: 'Não recorrente' },
+    { value: 'WEEKLY', label: 'Semanal' },
     { value: 'MONTHLY', label: 'Mensal' },
     { value: 'ANNUAL', label: 'Anual' },
   ];
@@ -185,7 +211,8 @@
       <input
         name="dueDate"
         type="date"
-        value={initial.dueDate?.slice(0, 10) ?? ''}
+        bind:value={dueDate}
+        required={recurrence !== 'NONE'}
         class={input()}
         style="border-radius: var(--radius-btn);"
       />
@@ -206,7 +233,7 @@
     <span class={label()}>Recorrência</span>
     <select
       name="recurrence"
-      value={initial.recurrence ?? 'NONE'}
+      bind:value={recurrence}
       class={input()}
       style="border-radius: var(--radius-btn);"
     >
@@ -214,9 +241,15 @@
         <option value={r.value}>{r.label}</option>
       {/each}
     </select>
-    <span class="mt-1 text-[11px] text-[var(--color-text-faint)]">
-      Tarefas recorrentes geram uma nova ocorrência ao serem marcadas como concluídas.
-    </span>
+    {#if recurrenceHint}
+      <span class="mt-1.5 text-[11px] text-[var(--color-info)]">
+        {recurrenceHint}
+      </span>
+    {:else}
+      <span class="mt-1 text-[11px] text-[var(--color-text-faint)]">
+        Tarefas recorrentes voltam a aparecer no quadro no próximo ciclo após cada conclusão.
+      </span>
+    {/if}
   </label>
 
   <div class="flex items-center justify-between gap-3 pt-2">

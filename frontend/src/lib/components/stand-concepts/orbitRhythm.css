@@ -1,0 +1,424 @@
+/* Homepage-only composition. Keep motion, pinning and component internals untouched.
+ * The contact/footer frame is the common alignment; each chapter owns its trailing
+ * space so adjacent component margins cannot silently add another pause.
+ */
+.design.orbit-home {
+  --orbit-frame: min(96%, calc(100% - 48px));
+  --orbit-frame-max: 1720px;
+  --orbit-space-section: clamp(64px, 6vw, 96px);
+  --orbit-space-half: calc(var(--orbit-space-section) / 2);
+  --orbit-space-arrival: clamp(96px, 8vw, 128px);
+  --orbit-space-heading: clamp(28px, 3vw, 44px);
+  --orbit-space-grid: clamp(24px, 3vw, 48px);
+  --orbit-title-section: clamp(38px, 4.1vw, 64px);
+  --orbit-title-bridge: clamp(30px, 3.1vw, 46px);
+  --orbit-type-label: 10px;
+  --orbit-type-body: 15px;
+}
+
+.design.orbit.orbit-home .orbit-intro,
+.design.orbit.orbit-home.motion-on .orbit-intro,
+.design.orbit-home .showroom,
+.design.orbit-home .about,
+.design.orbit-home .cabin-reveal,
+.design.orbit-home .visit-invitation,
+.design.orbit-home > .services,
+.design.orbit-home > .questions {
+  width: var(--orbit-frame);
+  max-width: var(--orbit-frame-max);
+  margin-inline: auto;
+}
+
+.design.orbit-home .showroom {
+  padding-block: var(--orbit-space-section) 0;
+}
+
+/* Solid glyphs stay readable while the existing title/photo choreography runs. */
+.design.orbit-home .hero-period {
+  color: var(--red);
+}
+
+.design.orbit-home .showroom-heading {
+  margin-bottom: var(--orbit-space-heading);
+}
+
+/* Reserve the upper projection of the folding panels throughout their approach. */
+.design.orbit-home .cabin-heading {
+  margin-bottom: var(--orbit-space-section);
+}
+
+.design.orbit-home .showroom-heading h2,
+.design.orbit-home .about-head h2,
+.design.orbit-home .cabin-heading h2,
+.design.orbit-home .invitation-copy h2 {
+  font-size: var(--orbit-title-section);
+  line-height: 1.12;
+  letter-spacing: -0.05em;
+}
+
+.design.orbit-home .editorial-pause h2 {
+  font-size: var(--orbit-title-bridge);
+}
+
+.design.orbit-home .showroom-heading .kicker,
+.design.orbit-home .about-head .kicker,
+.design.orbit-home .cabin-heading .eyebrow,
+.design.orbit-home .invitation-copy .eyebrow {
+  margin-bottom: 20px;
+  font-size: var(--orbit-type-label);
+  line-height: 1.5;
+  letter-spacing: 0.13em;
+}
+
+.design.orbit-home .showroom-layout {
+  gap: var(--orbit-space-grid);
+}
+
+.design.orbit-home .car-grid {
+  gap: var(--orbit-space-half) 24px;
+}
+
+.design.orbit-home .about {
+  /* Close the dense catalogue before the quieter editorial reading begins. */
+  margin-top: var(--orbit-space-half);
+  border-top: 1px solid var(--line);
+  padding-block: var(--orbit-space-arrival) var(--orbit-space-section);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--orbit-space-grid);
+}
+
+.design.orbit-home .about-content {
+  padding-top: 35px;
+}
+
+.design.orbit-home .about-content > p {
+  max-width: 46ch;
+}
+
+.design.orbit-home .about-content > p.muted,
+.design.orbit-home .cabin-intro,
+.design.orbit-home .cabin-description p,
+.design.orbit-home .invitation-intro,
+.design.orbit-home .services p,
+.design.orbit-home .questions details p {
+  font-size: var(--orbit-type-body);
+  line-height: 1.75;
+}
+
+.design.orbit-home .questions summary {
+  font-size: 16px;
+}
+
+.design.orbit-home .questions details p {
+  max-width: 64ch;
+}
+
+.design.orbit-home .about-signature {
+  margin-top: var(--orbit-space-heading);
+}
+
+.design.orbit-home .cabin-reveal {
+  margin-block: 0;
+  padding-block: 0 var(--orbit-space-section);
+}
+
+.design.orbit-home .cabin-caption {
+  padding-top: var(--orbit-space-heading);
+  column-gap: var(--orbit-space-grid);
+}
+
+.design.orbit-home .editorial-pause {
+  margin-block: 0;
+  width: 100%;
+  max-width: none;
+}
+
+.design.orbit-home .pause-inner {
+  padding-block: clamp(48px, 4vw, 64px);
+}
+
+.design.orbit-home .visit-invitation {
+  margin-block: 0;
+  padding-block: var(--orbit-space-section) var(--orbit-space-half);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--orbit-space-grid);
+}
+
+.design.orbit-home > .services {
+  padding-block: var(--orbit-space-section);
+}
+
+.design.orbit-home .services > .kicker {
+  padding-bottom: var(--orbit-space-heading);
+}
+
+.design.orbit-home .services article {
+  padding-top: var(--orbit-space-heading);
+}
+
+.design.orbit-home > .questions {
+  padding-block: var(--orbit-space-half) var(--orbit-space-section);
+  gap: var(--orbit-space-grid);
+  align-items: start;
+}
+
+.design.orbit-home .questions > .kicker {
+  padding-top: 22px;
+}
+
+@media (min-width: 701px) {
+  .design.orbit.orbit-home header {
+    padding-inline: max(24px, 2%, calc((100% - var(--orbit-frame-max)) / 2));
+  }
+
+  .design.orbit-home .orbit-title,
+  .design.orbit-home .orbit-title-note,
+  .design.orbit-home .orbit-bottom {
+    left: 0;
+  }
+
+  .design.orbit-home .orbit-topline {
+    left: 0;
+    right: 0;
+  }
+}
+
+/* Three compact cards balance the catalogue with the editorial chapters.
+ * The existing sticky filters, keyed cards and entrance actions stay in place.
+ */
+@media (min-width: 1200px) {
+  .design.orbit-home .car-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .design.orbit-home {
+    --orbit-frame: 90%;
+    --orbit-space-section: 52px;
+    --orbit-space-arrival: 72px;
+    --orbit-space-heading: 28px;
+    --orbit-space-grid: 28px;
+    --orbit-title-section: clamp(32px, 9.7vw, 42px);
+    --orbit-title-bridge: 32px;
+    --orbit-type-body: 14px;
+  }
+
+  .design.orbit.orbit-home .orbit-intro,
+  .design.orbit.orbit-home.motion-on .orbit-intro,
+  .design.orbit-home .editorial-pause {
+    width: 100%;
+  }
+
+  .design.orbit-home .showroom-heading h2 {
+    max-width: 15ch;
+  }
+
+  .design.orbit-home .about {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .design.orbit-home .about-content {
+    padding-top: 0;
+  }
+
+  .design.orbit-home .car-grid {
+    row-gap: var(--orbit-space-section);
+  }
+
+  .design.orbit-home .pause-inner {
+    padding-block: 48px;
+  }
+
+  .design.orbit-home .questions > .kicker {
+    padding-top: 0;
+  }
+
+  .design.orbit-home .questions summary {
+    font-size: 15px;
+  }
+}
+
+/* Stable copy and unchanged content geometry; only the ambient canvas bleeds out. */
+.design.orbit.orbit-home .orbit-stage {
+  overflow: visible;
+}
+.design.orbit.orbit-home .orbit-object {
+  z-index: 1;
+}
+/* Light is composited on the existing surfaces; neither text nor photo moves. */
+.design.orbit.orbit-home .orbit-main-photo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 240px 170px at var(--light-x, 0px) var(--light-y, 0px),
+    #fa183c66,
+    #e306131c 44%,
+    transparent 75%
+  );
+  opacity: var(--nearby-light, 0);
+  mix-blend-mode: screen;
+}
+.design.orbit.orbit-home .orbit-copy .orbit-title,
+.design.orbit.orbit-home .orbit-copy .orbit-title-note {
+  /* Base glyphs are white in dark mode (ink in light mode for contrast).
+     Only the small, moving pool of light can tint individual nearby letters. */
+  background-image:
+    radial-gradient(
+      ellipse 440px 380px at var(--light-x, -1000px) var(--light-y, -1000px),
+      rgb(255 48 70 / calc(var(--nearby-light, 0) * 0.98)),
+      rgb(244 42 61 / calc(var(--nearby-light, 0) * 0.58)) 38%,
+      transparent 100%
+    ),
+    linear-gradient(var(--text), var(--text));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--text);
+  text-shadow: none;
+}
+.design.orbit.orbit-home .orbit-copy .orbit-title span {
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+  text-shadow: none;
+}
+@media (max-width: 700px) {
+  .design.orbit.orbit-home .orbit-copy .orbit-title,
+  .design.orbit.orbit-home .orbit-copy .orbit-title-note {
+    background-image:
+      radial-gradient(
+        ellipse 260px 250px at var(--light-x, -1000px) var(--light-y, -1000px),
+        rgb(255 48 70 / calc(var(--nearby-light, 0) * 0.98)),
+        rgb(244 42 61 / calc(var(--nearby-light, 0) * 0.58)) 38%,
+        transparent 100%
+      ),
+      linear-gradient(var(--text), var(--text));
+  }
+  .design.orbit.orbit-home .orbit-main-photo::before {
+    background: radial-gradient(
+      ellipse 140px 95px at var(--light-x, 0px) var(--light-y, 0px),
+      #fa183c66,
+      #e306131c 44%,
+      transparent 75%
+    );
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .design.orbit.orbit-home .orbit-main-photo::before {
+    opacity: 0;
+  }
+  .design.orbit.orbit-home .orbit-copy .orbit-title,
+  .design.orbit.orbit-home .orbit-copy .orbit-title-note {
+    background-image: linear-gradient(var(--text), var(--text));
+  }
+}
+.design.orbit.orbit-home .orbit-stage::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  top: -24px;
+  bottom: -24px;
+  left: 50%;
+  width: 100vw;
+  translate: -50% 0;
+  background: radial-gradient(ellipse at 70% 55%, #00000012, transparent 70%);
+  mask-image: linear-gradient(transparent, #000 18%, #000 78%, transparent);
+}
+.design.orbit.orbit-home .orbit-copy {
+  position: absolute;
+  z-index: 2;
+  top: 17%;
+  left: 0;
+  width: 40%;
+}
+.design.orbit.orbit-home .orbit-hero-signature {
+  display: block;
+  width: clamp(210px, 22vw, 320px);
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 24px;
+}
+.design.orbit.orbit-home .orbit-title {
+  position: relative;
+  inset: auto;
+  margin: 0;
+  font-size: clamp(64px, 7.1vw, 110px);
+  font-family: 'Barlow', 'Inter', sans-serif;
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.065em;
+}
+.design.orbit.orbit-home .orbit-title > span {
+  margin-top: 0.035em;
+  font-style: italic;
+  color: color-mix(in srgb, var(--text) 94%, var(--red));
+  text-shadow: 0 0 24px #e306130a;
+}
+.design.orbit.orbit-home .orbit-copy .orbit-title,
+.design.orbit.orbit-home .orbit-copy .orbit-title > span,
+.design.orbit.orbit-home .orbit-copy .orbit-title-note {
+  animation: none;
+  transition: none;
+  transform: none;
+  translate: none;
+  opacity: 1;
+}
+.design.orbit.orbit-home .orbit-title-note {
+  position: relative;
+  inset: auto;
+  display: block;
+  margin: 28px 0 0;
+  max-width: 32ch;
+  font-size: clamp(14px, 1.18vw, 18px);
+  line-height: 1.75;
+  letter-spacing: -0.015em;
+  color: var(--muted);
+}
+@media (min-width: 701px) and (max-width: 1050px) {
+  .design.orbit.orbit-home .orbit-copy {
+    top: 27%;
+    width: 40%;
+  }
+  .design.orbit.orbit-home .orbit-title {
+    font-size: clamp(48px, 6.4vw, 68px);
+  }
+  .design.orbit.orbit-home .orbit-title-note {
+    font-size: 13px;
+    margin-top: 22px;
+  }
+}
+@media (max-width: 700px) {
+  .design.orbit.orbit-home {
+    --intro-height: max(820px, calc(100svh - 40px));
+  }
+  .design.orbit.orbit-home .orbit-hero-signature {
+    width: 200px;
+    margin-bottom: 18px;
+  }
+  .design.orbit.orbit-home .orbit-copy {
+    left: 5%;
+    top: 11%;
+    width: 90%;
+  }
+  .design.orbit.orbit-home .orbit-title {
+    font-size: clamp(46px, 13vw, 72px);
+    line-height: 0.98;
+  }
+  .design.orbit.orbit-home .orbit-title-note {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 18px;
+  }
+  .design.orbit.orbit-home .orbit-object,
+  .design.orbit.orbit-home.motion-on .orbit-object {
+    top: 47%;
+    height: 35%;
+  }
+  .design.orbit.orbit-home .orbit-side {
+    bottom: 22px;
+  }
+}

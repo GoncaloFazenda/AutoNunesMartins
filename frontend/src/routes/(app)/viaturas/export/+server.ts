@@ -18,6 +18,7 @@ const STATUS_LABELS: Record<VehicleStatus, string> = {
   SOLD: 'Vendido',
   DELIVERED: 'Entregue',
   DOCS_PENDING: 'Docs Pendentes',
+  DRAFT: 'Rascunho',
 };
 
 function fmtDate(s: string): string {

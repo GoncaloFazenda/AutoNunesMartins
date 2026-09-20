@@ -2,6 +2,7 @@
   import { enhance } from '$app/forms';
   import { toast } from 'svelte-sonner';
   import {
+    ArrowRightLeft,
     Calendar,
     Car,
     Check,
@@ -189,6 +190,76 @@
     </div>
   </div>
 
+  <!--
+    DRAFT banner — viatura existe no inventário mas ainda não está pronta
+    para venda (preço por definir). Aparece SEMPRE em primeiro lugar para
+    o vendedor não esquecer este passo. O CTA leva ao fluxo dedicado de
+    publicação que pede preço + descrição.
+  -->
+  {#if v.status === 'DRAFT'}
+    <a
+      href={`/viaturas/${v.id}/publicar`}
+      class="flex items-center gap-3 p-4 pl-5 border bg-[color-mix(in_oklab,#f97316_8%,transparent)] hover:bg-[color-mix(in_oklab,#f97316_14%,transparent)] transition-colors group"
+      style="border-radius: var(--radius-btn); border-color: color-mix(in oklab, #f97316 45%, transparent);"
+    >
+      <span
+        class="inline-flex items-center justify-center h-9 w-9 rounded-full flex-shrink-0"
+        style="background: color-mix(in oklab, #f97316 25%, transparent);"
+      >
+        <Tag class="h-4 w-4" style="color: #f97316;" />
+      </span>
+      <div class="flex-1 min-w-0">
+        <div class="font-display font-semibold text-[14px]" style="color: #f97316;">
+          Esta viatura está em rascunho
+        </div>
+        <div class="font-mono text-[10.5px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mt-0.5 normal-case tracking-normal">
+          Define o preço de venda e a descrição para a publicar. Enquanto estiver em rascunho não pode ser vendida nem aparece como disponível.
+        </div>
+      </div>
+      <span
+        class="font-mono text-[10px] uppercase tracking-[0.18em] group-hover:translate-x-0.5 transition-transform flex-shrink-0"
+        style="color: #f97316;"
+      >
+        Publicar →
+      </span>
+    </a>
+  {/if}
+
+  <!--
+    Provenance banner — only renders for vehicles that came into stock as a
+    customer trade-in. Surfaces the link back to the originating sale so the
+    dealer can follow consolidated profit across both deals (the future sale
+    of this car + the sale that produced it).
+  -->
+  {#if v.sourceTradeIn}
+    {@const origin = v.sourceTradeIn}
+    <a
+      href={`/vendas/${origin.sale.id}`}
+      class="flex items-center gap-3 p-3 pl-4 border border-[color-mix(in_oklab,#f97316_30%,transparent)] bg-[color-mix(in_oklab,#f97316_6%,transparent)] hover:bg-[color-mix(in_oklab,#f97316_10%,transparent)] transition-colors group"
+      style="border-radius: var(--radius-btn);"
+    >
+      <span
+        class="inline-flex items-center justify-center h-8 w-8 rounded-full"
+        style="background: color-mix(in oklab, #f97316 18%, transparent);"
+      >
+        <ArrowRightLeft class="h-4 w-4" style="color: #f97316;" />
+      </span>
+      <div class="flex-1 min-w-0 text-[13px]">
+        <span class="font-display font-semibold">Adquirido como retoma</span>
+        <span class="text-[var(--color-text-muted)]">
+          · na venda de {origin.sale.vehicle.brand} {origin.sale.vehicle.model}
+          ({origin.sale.vehicle.year}) a {origin.sale.customer.name} em
+          {formatDate(origin.sale.saleDate)}
+        </span>
+      </div>
+      <span
+        class="font-mono text-[10px] uppercase tracking-[0.12em] text-[#f97316] group-hover:translate-x-0.5 transition-transform"
+      >
+        Ver venda →
+      </span>
+    </a>
+  {/if}
+
   <!-- Top grid: gallery + spec/profit -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
     <div class="lg:col-span-7 space-y-6">
@@ -271,7 +342,7 @@
     <Panel>
       <PanelHeader icon={Tag} title="Venda registada" meta={v.sale.deliveryStatus.toUpperCase()}>
         {#snippet actions()}
-          <Button variant="outline" size="sm" href={`/sales/${saleId}`}>Ver venda</Button>
+          <Button variant="outline" size="sm" href={`/vendas/${saleId}`}>Ver venda</Button>
         {/snippet}
       </PanelHeader>
       <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-5 text-[14px]">

@@ -16,6 +16,7 @@
     SOLD: 'Vendido',
     DELIVERED: 'Entregue',
     DOCS_PENDING: 'Docs Pendentes',
+    DRAFT: 'Rascunho',
   };
 
   const PRIORITY_LABELS: Record<Priority, string> = {
@@ -37,6 +38,9 @@
     SOLD: { bg: 'color-mix(in oklab, var(--color-text-muted) 22%, transparent)', fg: 'var(--color-text)' },
     DELIVERED: { bg: 'color-mix(in oklab, var(--color-info) 18%, transparent)', fg: 'var(--color-info)' },
     DOCS_PENDING: { bg: 'color-mix(in oklab, var(--color-red) 18%, transparent)', fg: 'var(--color-red)' },
+    // DRAFT — laranja (mesma família visual dos chips de retoma).
+    // Sinaliza "viatura pendente de preço" sem confundir com docs-em-falta.
+    DRAFT: { bg: 'color-mix(in oklab, #f97316 18%, transparent)', fg: '#f97316' },
     LOW: { bg: 'color-mix(in oklab, var(--color-text-muted) 16%, transparent)', fg: 'var(--color-text-muted)' },
     MEDIUM: { bg: 'color-mix(in oklab, var(--color-info) 18%, transparent)', fg: 'var(--color-info)' },
     HIGH: { bg: 'color-mix(in oklab, var(--color-warning) 18%, transparent)', fg: 'var(--color-warning)' },

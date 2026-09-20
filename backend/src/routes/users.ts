@@ -12,7 +12,7 @@ const USERS_CACHE_KEY = 'users:list';
 router.get('/', requireUser, async (_req: AuthedRequest, res: Response) => {
   const items = await cache.wrap(USERS_CACHE_KEY, USERS_TTL_MS, () =>
     prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, email: true, role: true, imageUrl: true },
       orderBy: { name: 'asc' },
     }),
   );

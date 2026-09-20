@@ -279,17 +279,16 @@ textarea:not(:disabled) {
   top: 0;
   bottom: 0;
   right: 0;
-  width: 12px;
+  width: 9px;
   background: linear-gradient(180deg, #e30613 0%, #b30410 100%);
   z-index: 3;
   opacity: 0.8;
   pointer-events: none;
 }
-/* Slim the wedge on phones — 12px is 3% of a 360px viewport, which
-   visually feels heavy. 6px preserves the brand accent without crowding. */
+/* Hide the wedge on phones — the accent feels heavy on narrow viewports. */
 @media (max-width: 767px) {
   .app-wedge {
-    width: 6px;
+    display: none;
   }
 }
 

@@ -3,10 +3,14 @@
   import { AlertOctagon } from 'lucide-svelte';
   import ItalicHero from '$lib/components/brand/ItalicHero.svelte';
   import Button from '$lib/components/common/Button.svelte';
+  import Wordmark from '$lib/components/brand/Wordmark.svelte';
+  import CrmBrandHead from '$lib/components/brand/CrmBrandHead.svelte';
 
   const status = $derived($page.status);
   const message = $derived($page.error?.message ?? 'Ocorreu um erro inesperado.');
 </script>
+
+<CrmBrandHead />
 
 <svelte:head>
   <title>{status} · Auto Nunes Martins</title>
@@ -16,6 +20,7 @@
   class="min-h-screen flex items-center justify-center bg-[var(--color-bg-0)] p-8"
 >
   <div class="max-w-md w-full text-center space-y-6">
+    <div class="flex justify-center"><Wordmark size="md" /></div>
     <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-red)]">
       ● {status} · Erro
     </div>

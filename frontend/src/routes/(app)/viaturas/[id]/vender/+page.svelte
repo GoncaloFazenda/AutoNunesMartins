@@ -2,7 +2,7 @@
   import { enhance } from '$app/forms';
   import { goto } from '$app/navigation';
   import { toast } from 'svelte-sonner';
-  import { Calendar, Search, Tag, User as UserIcon } from 'lucide-svelte';
+  import { ArrowRightLeft, Calendar, Search, Tag, User as UserIcon } from 'lucide-svelte';
   import ItalicHero from '$lib/components/brand/ItalicHero.svelte';
   import Panel from '$lib/components/common/Panel.svelte';
   import PanelHeader from '$lib/components/brand/PanelHeader.svelte';
@@ -27,6 +27,33 @@
   // pockets from the credit institution — added on top of the vehicle's
   // net margin in the live preview and persisted on the Sale row.
   let commissionInput = $state('');
+  // Tax regime selector. PARTICULAR → 23/123 margin scheme (IVA leaves the
+  // dealer's pocket). COMERCIANTE → B2B sale without IVA discriminated by
+  // the seller, so the full margin lands in Lucro Real.
+  let buyerType = $state<'PARTICULAR' | 'COMERCIANTE'>('PARTICULAR');
+  // ─── Retoma (trade-in) ───────────────────────────────────────────────
+  // Off by default — most sales are pure cash. When the dealer toggles it
+  // on, the sub-form appears, the allowance is abated from the live profit
+  // preview, and a TradeIn row gets persisted alongside the Sale on submit.
+  let hasTradeIn = $state(false);
+  let tradeInBrand = $state('');
+  let tradeInModel = $state('');
+  let tradeInYear = $state('');
+  let tradeInFuel = $state<'GASOLINE' | 'DIESEL' | 'HYBRID' | 'PLUGIN_HYBRID' | 'ELECTRIC' | 'LPG'>('GASOLINE');
+  let tradeInMileage = $state('');
+  let tradeInPlate = $state('');
+  let tradeInVin = $state('');
+  let tradeInAllowance = $state('');
+  // STOCK → carro entra no inventário (cria Vehicle nova, requer VIN).
+  // SCRAP → carro vai para abate/desmanche, nunca entra no stock.
+  let tradeInDisposition = $state<'STOCK' | 'SCRAP'>('STOCK');
+  let tradeInNotes = $state('');
+  // ─── Field-level errors devolvidos pelo backend ──────────────────────
+  // Preenchidos quando o servidor responde com 409 + `field` (ex.: VIN
+  // duplicado). Limpos no oninput do respetivo input para o aviso
+  // desaparecer assim que o utilizador começa a corrigir.
+  let tradeInVinError = $state<string | null>(null);
+  let tradeInPlateError = $state<string | null>(null);
   let submitting = $state(false);
 
   const filteredCustomers = $derived.by(() => {
@@ -69,10 +96,11 @@
         profit: commission.toFixed(2),
       };
     }
+    // Trade-in NÃO entra na margem nem no IVA — é uma compra separada que
+    // cria um carro novo no stock a custo = allowance. Aqui só importa a
+    // margem da venda do carro do stand (ver computeSaleFigures backend).
     const margin = price - purchase - expensesTotal;
-    if (margin <= 0) {
-      // Negative margin + commission can still net positive if the
-      // referral covers the loss.
+    if (margin <= 0 || buyerType === 'COMERCIANTE') {
       const profit = margin + commission;
       return {
         margin: margin.toFixed(2),
@@ -90,6 +118,23 @@
       profit: profit.toFixed(2),
     };
   });
+
+  // Client-side guard: refuse submit when the trade-in is enabled but its
+  // mandatory fields aren't filled. The allowance is NOT capped by the
+  // sale price anymore (the trade-in is a parallel deal — it can perfectly
+  // well be worth more than the sold car, e.g. a downgrade trade).
+  function validateTradeIn(): string | null {
+    if (!hasTradeIn) return null;
+    if (!tradeInBrand.trim()) return 'Indica a marca do carro de retoma.';
+    if (!tradeInModel.trim()) return 'Indica o modelo do carro de retoma.';
+    if (!tradeInYear) return 'Indica o ano do carro de retoma.';
+    if (!tradeInMileage) return 'Indica a quilometragem do carro de retoma.';
+    if (!tradeInAllowance || Number(tradeInAllowance) <= 0)
+      return 'Indica o valor atribuído à retoma.';
+    if (tradeInDisposition === 'STOCK' && !tradeInVin.trim())
+      return 'VIN é obrigatório quando a retoma vai para o stock.';
+    return null;
+  }
 
   function pickCustomer(id: string) {
     customerId = id;
@@ -127,6 +172,12 @@
         cancel();
         return;
       }
+      const tradeInError = validateTradeIn();
+      if (tradeInError) {
+        toast.error(tradeInError);
+        cancel();
+        return;
+      }
       submitting = true;
       return async ({ result }) => {
         submitting = false;
@@ -134,9 +185,23 @@
           toast.success('Venda registada.');
           await goto(`/viaturas/${v.id}`);
         } else if (result.type === 'failure') {
-          toast.error(
-            (result.data as { error?: string } | undefined)?.error ?? 'Falha ao registar.',
-          );
+          // IMPORTANTE: NÃO chamamos `update()` nem `applyAction()` aqui —
+          // o objetivo é PRESERVAR todo o estado do formulário (cliente,
+          // preço, dados da retoma) para o dono do stand não ter de
+          // reintroduzir tudo. Os $state acima sobrevivem porque a página
+          // não é refeita.
+          const data = result.data as
+            | { error?: string; field?: string | null }
+            | undefined;
+          toast.error(data?.error ?? 'Falha ao registar.');
+          // Marca o input com erro inline quando o backend identifica qual
+          // foi o campo que colidiu (VIN ou matrícula duplicada).
+          if (data?.field === 'tradeIn.vin') {
+            tradeInVinError = data.error ?? 'VIN duplicado.';
+          }
+          if (data?.field === 'tradeIn.licensePlate') {
+            tradeInPlateError = data.error ?? 'Matrícula duplicada.';
+          }
         }
       };
     }}
@@ -144,6 +209,12 @@
   >
     <input type="hidden" name="vehicleId" value={v.id} />
     <input type="hidden" name="customerId" value={customerId} />
+    <input type="hidden" name="buyerType" value={buyerType} />
+    <!-- Trade-in toggle + disposition travel as hidden inputs so the action
+         can branch on a single boolean string. When `hasTradeIn === 'true'`
+         the action collects the remaining `tradeIn.*` named fields. -->
+    <input type="hidden" name="hasTradeIn" value={hasTradeIn ? 'true' : 'false'} />
+    <input type="hidden" name="tradeIn.disposition" value={tradeInDisposition} />
 
     <!-- LEFT: customer + sale fields -->
     <div class="lg:col-span-7 space-y-6">
@@ -227,7 +298,64 @@
 
       <Panel>
         <PanelHeader icon={Tag} title="Detalhes da venda" />
-        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-5 space-y-4">
+          <!--
+            Tipo de comprador. Particular usa o regime de margem 23/123
+            (IVA sai do lucro). Comerciante é uma venda B2B sem IVA
+            discriminado pelo vendedor — a margem inteira fica como lucro
+            real. O selector atualiza a pré-visualização em tempo real.
+          -->
+          <div class="flex flex-col">
+            <span
+              class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+            >
+              Tipo de comprador
+            </span>
+            <div
+              class="inline-flex h-11 p-1 border border-[var(--color-border)] bg-[var(--color-bg-1)] self-start"
+              style="border-radius: var(--radius-btn);"
+              role="radiogroup"
+              aria-label="Tipo de comprador"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={buyerType === 'PARTICULAR'}
+                onclick={() => (buyerType = 'PARTICULAR')}
+                class="px-4 font-mono text-[10.5px] uppercase tracking-[0.12em] transition-colors {buyerType ===
+                'PARTICULAR'
+                  ? 'bg-[var(--color-red)] text-white'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}"
+                style="border-radius: calc(var(--radius-btn) - 2px);"
+              >
+                Particular
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={buyerType === 'COMERCIANTE'}
+                onclick={() => (buyerType = 'COMERCIANTE')}
+                class="px-4 font-mono text-[10.5px] uppercase tracking-[0.12em] transition-colors {buyerType ===
+                'COMERCIANTE'
+                  ? 'bg-[var(--color-red)] text-white'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}"
+                style="border-radius: calc(var(--radius-btn) - 2px);"
+              >
+                Comerciante
+              </button>
+            </div>
+            <span
+              class="mt-1.5 font-mono text-[10px] text-[var(--color-text-faint)] uppercase tracking-[0.12em] leading-relaxed"
+            >
+              {#if buyerType === 'PARTICULAR'}
+                Regime de margem 23/123 — IVA sai do lucro.
+              {:else}
+                Venda B2B sem IVA — margem inteira fica como lucro real.
+              {/if}
+            </span>
+          </div>
+        </div>
+        <div class="px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="flex flex-col">
             <span
               class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
@@ -328,12 +456,290 @@
           </label>
         </div>
       </Panel>
+
+      <!--
+        Retoma (trade-in). Off por defeito — só aparece quando o cliente
+        entrega um carro como parte do pagamento. O valor atribuído abate
+        ao preço de venda no cálculo de margem/IVA. STOCK cria uma
+        Viatura nova no inventário; SCRAP só regista o negócio sem
+        adicionar nada ao stock.
+      -->
+      <Panel>
+        <PanelHeader
+          icon={ArrowRightLeft}
+          title="Retoma"
+          meta={hasTradeIn
+            ? tradeInDisposition === 'STOCK'
+              ? 'ENTRA NO STOCK'
+              : 'PARA ABATE'
+            : 'OPCIONAL'}
+        />
+        <div class="p-5 space-y-4">
+          <label class="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              bind:checked={hasTradeIn}
+              class="mt-1 h-4 w-4 accent-[var(--color-red)]"
+            />
+            <span class="text-[13px] leading-snug">
+              <span class="font-display font-semibold">Cliente entrega carro como retoma</span>
+              <span
+                class="block mt-1 font-mono text-[10.5px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] normal-case tracking-normal"
+              >
+                A retoma é registada como compra separada — não afeta a margem nem o IVA desta venda.
+              </span>
+            </span>
+          </label>
+
+          {#if hasTradeIn}
+            <!-- Disposition picker — drives whether a Vehicle row is created. -->
+            <div class="flex flex-col">
+              <span
+                class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+              >
+                O que fazer com este carro?
+              </span>
+              <div
+                class="inline-flex h-11 p-1 border border-[var(--color-border)] bg-[var(--color-bg-1)] self-start"
+                style="border-radius: var(--radius-btn);"
+                role="radiogroup"
+                aria-label="Destino da retoma"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={tradeInDisposition === 'STOCK'}
+                  onclick={() => (tradeInDisposition = 'STOCK')}
+                  class="px-4 font-mono text-[10.5px] uppercase tracking-[0.12em] transition-colors {tradeInDisposition ===
+                  'STOCK'
+                    ? 'bg-[var(--color-red)] text-white'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}"
+                  style="border-radius: calc(var(--radius-btn) - 2px);"
+                >
+                  Pôr à venda no stand
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={tradeInDisposition === 'SCRAP'}
+                  onclick={() => (tradeInDisposition = 'SCRAP')}
+                  class="px-4 font-mono text-[10.5px] uppercase tracking-[0.12em] transition-colors {tradeInDisposition ===
+                  'SCRAP'
+                    ? 'bg-[var(--color-red)] text-white'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}"
+                  style="border-radius: calc(var(--radius-btn) - 2px);"
+                >
+                  Abate / desmanche
+                </button>
+              </div>
+              <span
+                class="mt-1.5 font-mono text-[10px] text-[var(--color-text-faint)] uppercase tracking-[0.12em] leading-relaxed"
+              >
+                {#if tradeInDisposition === 'STOCK'}
+                  Cria uma viatura nova em stock com preço de compra = valor da retoma.
+                {:else}
+                  Carro vai para abate/desmanche — não entra no inventário.
+                {/if}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label class="flex flex-col">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Marca
+                </span>
+                <input
+                  name="tradeIn.brand"
+                  type="text"
+                  bind:value={tradeInBrand}
+                  placeholder="Renault"
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] transition-colors"
+                  style="border-radius: var(--radius-btn);"
+                />
+              </label>
+              <label class="flex flex-col">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Modelo
+                </span>
+                <input
+                  name="tradeIn.model"
+                  type="text"
+                  bind:value={tradeInModel}
+                  placeholder="Clio"
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] transition-colors"
+                  style="border-radius: var(--radius-btn);"
+                />
+              </label>
+              <label class="flex flex-col">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Ano
+                </span>
+                <input
+                  name="tradeIn.year"
+                  type="number"
+                  min="1950"
+                  max={new Date().getFullYear() + 1}
+                  bind:value={tradeInYear}
+                  placeholder="2015"
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
+                  style="border-radius: var(--radius-btn);"
+                />
+              </label>
+              <label class="flex flex-col">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Combustível
+                </span>
+                <select
+                  name="tradeIn.fuel"
+                  bind:value={tradeInFuel}
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] transition-colors"
+                  style="border-radius: var(--radius-btn);"
+                >
+                  <option value="GASOLINE">Gasolina</option>
+                  <option value="DIESEL">Gasóleo</option>
+                  <option value="HYBRID">Híbrido</option>
+                  <option value="PLUGIN_HYBRID">Híbrido Plug-in</option>
+                  <option value="ELECTRIC">Elétrico</option>
+                  <option value="LPG">GPL</option>
+                </select>
+              </label>
+              <label class="flex flex-col">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Quilometragem
+                </span>
+                <input
+                  name="tradeIn.mileage"
+                  type="number"
+                  min="0"
+                  bind:value={tradeInMileage}
+                  placeholder="120000"
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] tabular-nums outline-none focus:border-[var(--color-red)] transition-colors"
+                  style="border-radius: var(--radius-btn);"
+                />
+              </label>
+              <label class="flex flex-col">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Matrícula (opcional)
+                </span>
+                <input
+                  name="tradeIn.licensePlate"
+                  type="text"
+                  bind:value={tradeInPlate}
+                  oninput={() => (tradeInPlateError = null)}
+                  placeholder="12-AB-34"
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border text-[14px] uppercase outline-none transition-colors {tradeInPlateError
+                    ? 'border-[var(--color-red)] focus:border-[var(--color-red)]'
+                    : 'border-[var(--color-border)] focus:border-[var(--color-red)]'}"
+                  style="border-radius: var(--radius-btn);"
+                />
+                {#if tradeInPlateError}
+                  <span class="mt-1.5 font-mono text-[10px] text-[var(--color-red)] tracking-[0.06em]">
+                    {tradeInPlateError}
+                  </span>
+                {/if}
+              </label>
+              <label class="flex flex-col md:col-span-2">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-2"
+                >
+                  VIN
+                  {#if tradeInDisposition === 'STOCK'}
+                    <span class="text-[var(--color-red)] normal-case tracking-normal text-[10.5px]">
+                      · obrigatório (vai entrar no stock)
+                    </span>
+                  {:else}
+                    <span
+                      class="text-[var(--color-text-faint)] normal-case tracking-normal text-[10.5px]"
+                    >
+                      · opcional (não entra no stock)
+                    </span>
+                  {/if}
+                </span>
+                <input
+                  name="tradeIn.vin"
+                  type="text"
+                  bind:value={tradeInVin}
+                  oninput={() => (tradeInVinError = null)}
+                  placeholder="VF1XXXXXXXXXXXXXX"
+                  maxlength="17"
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border text-[14px] uppercase font-mono outline-none transition-colors {tradeInVinError
+                    ? 'border-[var(--color-red)] focus:border-[var(--color-red)]'
+                    : 'border-[var(--color-border)] focus:border-[var(--color-red)]'}"
+                  style="border-radius: var(--radius-btn);"
+                />
+                {#if tradeInVinError}
+                  <span class="mt-1.5 font-mono text-[10px] text-[var(--color-red)] tracking-[0.06em]">
+                    {tradeInVinError}
+                  </span>
+                {/if}
+              </label>
+              <label class="flex flex-col md:col-span-2">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Valor atribuído à retoma (€)
+                </span>
+                <input
+                  name="tradeIn.allowanceValue"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  bind:value={tradeInAllowance}
+                  placeholder="4000.00"
+                  class="h-11 px-3 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] tabular-nums outline-none focus:border-[var(--color-red)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-red)_12%,transparent)] transition-colors"
+                  style="border-radius: var(--radius-btn);"
+                />
+                <span
+                  class="mt-1.5 font-mono text-[10px] text-[var(--color-text-faint)] uppercase tracking-[0.12em] leading-relaxed"
+                >
+                  {#if tradeInDisposition === 'STOCK'}
+                    Vira o preço de compra da viatura que entra no stock.
+                  {:else}
+                    Custo da aquisição da retoma (só para registo — não afeta esta venda).
+                  {/if}
+                </span>
+              </label>
+              <label class="flex flex-col md:col-span-2">
+                <span
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] mb-1.5"
+                >
+                  Notas (opcional)
+                </span>
+                <textarea
+                  name="tradeIn.notes"
+                  bind:value={tradeInNotes}
+                  rows="2"
+                  placeholder="Estado, danos visíveis, documentação em falta…"
+                  class="px-3 py-2 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[14px] outline-none focus:border-[var(--color-red)] transition-colors resize-y"
+                  style="border-radius: var(--radius-btn);"
+                ></textarea>
+              </label>
+            </div>
+          {/if}
+        </div>
+      </Panel>
     </div>
 
     <!-- RIGHT: live profit preview -->
     <div class="lg:col-span-5">
       <Panel>
-        <PanelHeader icon={Calendar} title="Pré-visualização" meta="REGIME MARGEM 23/123" />
+        <PanelHeader
+          icon={Calendar}
+          title="Pré-visualização"
+          meta={buyerType === 'COMERCIANTE' ? 'SEM IVA — COMERCIANTE' : 'REGIME MARGEM 23/123'}
+        />
         <div class="p-5 space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -366,18 +772,34 @@
                 {formatEUR(figures.margin)}
               </div>
             </div>
-            <div>
-              <div
-                class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"
-              >
-                IVA (23/123)
+            {#if buyerType === 'PARTICULAR'}
+              <div>
+                <div
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"
+                >
+                  IVA (23/123)
+                </div>
+                <div
+                  class="font-display text-[18px] font-bold italic tabular-nums text-[var(--color-warning)]"
+                >
+                  {formatEUR(figures.vat)}
+                </div>
               </div>
-              <div
-                class="font-display text-[18px] font-bold italic tabular-nums text-[var(--color-warning)]"
-              >
-                {formatEUR(figures.vat)}
+            {:else}
+              <div>
+                <div
+                  class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"
+                >
+                  IVA
+                </div>
+                <div
+                  class="font-display text-[18px] font-bold italic tabular-nums text-[var(--color-text-faint)]"
+                  title="Venda a comerciante — sem IVA discriminado pelo vendedor."
+                >
+                  —
+                </div>
               </div>
-            </div>
+            {/if}
           </div>
 
           <!--
@@ -405,7 +827,11 @@
             <div
               class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1.5"
             >
-              Lucro Real (após IVA{Number(figures.commission) > 0 ? ' + comissão' : ''})
+              Lucro Real{buyerType === 'PARTICULAR' ? ' (após IVA' : ' (margem inteira'}{Number(
+                figures.commission,
+              ) > 0
+                ? ' + comissão'
+                : ''})
             </div>
             <div
               class="font-display text-[26px] md:text-[36px] font-extrabold italic tabular-nums tracking-tight"

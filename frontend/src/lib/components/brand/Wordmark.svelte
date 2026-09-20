@@ -1,31 +1,66 @@
 <script lang="ts">
-  interface Props {
+  let {
+    size = 'md',
+    showCaption = false,
+    surface = 'auto',
+  }: {
     size?: 'sm' | 'md' | 'lg';
     showCaption?: boolean;
-  }
-
-  let { size = 'md', showCaption = true }: Props = $props();
-
-  // Match prototype: sidebar brand uses 20px / -0.02em tracking
-  const sizes = {
-    sm: 'text-[18px]',
-    md: 'text-[20px] tracking-[-0.02em]',
-    lg: 'text-[28px]',
-  };
+    surface?: 'auto' | 'dark' | 'light';
+  } = $props();
 </script>
 
-<div class="flex flex-col leading-none">
-  <div class="font-display font-black italic uppercase tracking-[-0.025em] {sizes[size]}">
-    <span class="text-[var(--color-red)]">AUTO</span><span class="text-[var(--color-text)]"
-      >NUNES</span
-    >
-    <span class="text-[var(--color-text)]">MARTINS</span>
-  </div>
-  {#if showCaption}
-    <div
-      class="mt-1.5 font-mono text-[9.5px] uppercase tracking-[0.25em] text-[var(--color-text-faint)]"
-    >
-      Comércio de Automóveis
-    </div>
-  {/if}
+<div class="wordmark" data-size={size} data-surface={surface}>
+  <img
+    class="light-logo"
+    src="/logo-transparent.png"
+    alt="Auto Nunes Martins"
+    width="1881"
+    height="836"
+  />
+  <img
+    class="dark-logo"
+    src="/logo-transparent-white-v3.png"
+    alt="Auto Nunes Martins"
+    width="1881"
+    height="836"
+  />
+  {#if showCaption}<span>Comércio de Automóveis</span>{/if}
 </div>
+
+<style>
+  .wordmark {
+    width: 190px;
+    max-width: 100%;
+  }
+  .wordmark[data-size='sm'] {
+    width: 146px;
+  }
+  .wordmark[data-size='lg'] {
+    width: 240px;
+  }
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  .dark-logo {
+    display: none;
+  }
+  .wordmark[data-surface='dark'] .light-logo,
+  :global(html[data-theme='dark']) .wordmark[data-surface='auto'] .light-logo {
+    display: none;
+  }
+  .wordmark[data-surface='dark'] .dark-logo,
+  :global(html[data-theme='dark']) .wordmark[data-surface='auto'] .dark-logo {
+    display: block;
+  }
+  span {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    margin-top: 6px;
+    color: var(--color-text-muted);
+  }
+</style>

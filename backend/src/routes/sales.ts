@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { DeliveryStatusEnum, saleCreateSchema } from '@anm/types';
 import {
   SaleNotFound,
+  TradeInVehicleConflict,
   VehicleAlreadySold,
   VehicleNotSellable,
   createSale,
   getSaleById,
+  listSales,
   updateSaleDelivery,
 } from '../lib/server/saleService.js';
 import { requireUser, type AuthedRequest } from '../middleware/clerk.js';
@@ -17,6 +19,30 @@ const router = Router();
 const deliveryUpdateSchema = z.object({
   deliveryStatus: DeliveryStatusEnum,
   deliveryDate: z.coerce.date().optional().nullable(),
+});
+
+const listQuerySchema = z.object({
+  q: z.string().optional(),
+  deliveryStatus: DeliveryStatusEnum.optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  // Cap is generous so the desktop /vendas export can pull the whole filtered
+  // set in a single call. Listing pages still default to 25.
+  pageSize: z.coerce.number().int().min(1).max(10000).default(25),
+  sortBy: z.enum(['saleDate', 'salePrice', 'realProfit', 'marginPct']).default('saleDate'),
+  sortDir: z.enum(['asc', 'desc']).default('desc'),
+});
+
+router.get('/', requireUser, async (req: AuthedRequest, res: Response) => {
+  const parsed = listQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid query', issues: parsed.error.issues });
+    return;
+  }
+  const result = await listSales(parsed.data);
+  res.set('Cache-Control', 'private, max-age=5, stale-while-revalidate=15');
+  res.json(result);
 });
 
 router.post('/', requireUser, async (req: AuthedRequest, res: Response) => {
@@ -43,6 +69,19 @@ router.post('/', requireUser, async (req: AuthedRequest, res: Response) => {
     if (err instanceof VehicleNotSellable) {
       res.status(409).json({
         error: `Viatura em estado "${err.status}" não pode ser vendida.`,
+      });
+      return;
+    }
+    // Trade-in vehicle collided with an existing inventory row. The body
+    // carries `field` so the form can paint the offending input red without
+    // losing the dealer's typed data (they fix it inline and resubmit).
+    if (err instanceof TradeInVehicleConflict) {
+      res.status(409).json({
+        error:
+          err.field === 'vin'
+            ? `Já existe uma viatura no sistema com este VIN (${err.value}).`
+            : `Já existe uma viatura no sistema com esta matrícula (${err.value}).`,
+        field: `tradeIn.${err.field}`,
       });
       return;
     }

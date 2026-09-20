@@ -7,8 +7,8 @@
   import BrandReceipt from '$lib/components/brand/icons/BrandReceipt.svelte';
   import BrandChart from '$lib/components/brand/icons/BrandChart.svelte';
   import BrandGauge from '$lib/components/brand/icons/BrandGauge.svelte';
-  import BrandDl from '$lib/components/brand/icons/BrandDl.svelte';
   import BrandPlus from '$lib/components/brand/icons/BrandPlus.svelte';
+  import ExportMenu from '$lib/components/common/ExportMenu.svelte';
   import Panel from '$lib/components/common/Panel.svelte';
   import Skeleton from '$lib/components/common/Skeleton.svelte';
   import SmartAlertsBanner from '$lib/components/dashboard/SmartAlertsBanner.svelte';
@@ -88,15 +88,10 @@
       on a phone is rare enough to not warrant the row space.
     -->
     <div class="hidden md:flex items-center gap-2 flex-shrink-0">
-      <button
-        type="button"
-        class="inline-flex items-center gap-2 px-[14px] py-[10px] bg-transparent border border-[var(--color-border-strong)] hover:border-[var(--color-red)] text-[var(--color-text)] font-display font-semibold italic uppercase text-[12px] tracking-[0.1em] transition-colors cursor-pointer"
-        style="border-radius: var(--radius-btn);"
-        aria-label="Exportar dashboard"
-      >
-        <BrandDl class="h-3 w-3" />
-        Exportar
-      </button>
+      <!-- Menu (sem default) — utilizador escolhe CSV ou PDF. O endpoint
+           /dashboard/export gera um snapshot executivo dos KPIs + agregados
+           dos últimos 12 meses + best sellers + alertas activos. -->
+      <ExportMenu baseHref="/dashboard/export" />
       <a
         href="/viaturas/nova"
         class="inline-flex items-center gap-2 px-[14px] py-[10px] bg-[var(--color-red)] hover:bg-[var(--color-red-soft)] text-white font-display font-semibold italic uppercase text-[12px] tracking-[0.1em] transition-colors cursor-pointer"

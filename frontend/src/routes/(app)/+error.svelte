@@ -4,6 +4,7 @@
   import ItalicHero from '$lib/components/brand/ItalicHero.svelte';
   import Panel from '$lib/components/common/Panel.svelte';
   import Button from '$lib/components/common/Button.svelte';
+  import Wordmark from '$lib/components/brand/Wordmark.svelte';
 
   const status = $derived($page.status);
   const message = $derived($page.error?.message ?? 'Ocorreu um erro inesperado.');
@@ -22,6 +23,7 @@
 </svelte:head>
 
 <section class="pt-12 pb-12 max-w-2xl">
+  <div class="mb-8"><Wordmark size="md" /></div>
   <div class="mb-8">
     <div class="mb-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--color-red)]">
       ● {t.eyebrow}

@@ -16,6 +16,12 @@ export interface ListTasksParams {
   actorId?: string;
   /** Narrow further within the actor's visible set. */
   scope?: TaskScope;
+  /**
+   * When true, include scheduled recurring tasks — those that have been
+   * spawned in TODO ahead of time but whose dueDate is still in the future.
+   * Defaults to false, hiding them from the board until their day arrives.
+   */
+  showScheduled?: boolean;
 }
 
 /**
@@ -49,10 +55,27 @@ export function buildTaskWhere(filter: ListTasksParams): Prisma.TaskWhereInput {
     ];
   }
 
-  if (filter.actorId) {
-    return { AND: [where, visibilityFilter(filter.actorId, filter.scope)] };
+  const clauses: Prisma.TaskWhereInput[] = [where];
+
+  // Hide scheduled recurring tasks (spawned in TODO ahead of their dueDate)
+  // unless the caller explicitly asked to see them.
+  if (!filter.showScheduled) {
+    clauses.push({
+      NOT: {
+        AND: [
+          { status: 'TODO' },
+          { recurrence: { not: 'NONE' } },
+          { dueDate: { gt: new Date() } },
+        ],
+      },
+    });
   }
-  return where;
+
+  if (filter.actorId) {
+    clauses.push(visibilityFilter(filter.actorId, filter.scope));
+  }
+
+  return clauses.length === 1 ? clauses[0]! : { AND: clauses };
 }
 
 export async function listAllTasks(tx: TxClient, params: ListTasksParams = {}) {
@@ -60,7 +83,7 @@ export async function listAllTasks(tx: TxClient, params: ListTasksParams = {}) {
     where: buildTaskWhere(params),
     orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
     include: {
-      assignee: { select: { id: true, name: true, email: true } },
+      assignee: { select: { id: true, name: true, email: true, imageUrl: true } },
     },
   });
 }
@@ -68,7 +91,7 @@ export async function listAllTasks(tx: TxClient, params: ListTasksParams = {}) {
 export async function getTaskById(tx: TxClient, id: string) {
   return tx.task.findUnique({
     where: { id },
-    include: { assignee: { select: { id: true, name: true, email: true } } },
+    include: { assignee: { select: { id: true, name: true, email: true, imageUrl: true } } },
   });
 }
 
@@ -79,6 +102,6 @@ export async function getTaskByIdForActor(tx: TxClient, id: string, actorId: str
       id,
       OR: [{ assigneeId: null }, { assigneeId: actorId }],
     },
-    include: { assignee: { select: { id: true, name: true, email: true } } },
+    include: { assignee: { select: { id: true, name: true, email: true, imageUrl: true } } },
   });
 }

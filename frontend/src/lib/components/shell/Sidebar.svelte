@@ -10,6 +10,7 @@
   import BrandDeal from '$lib/components/brand/icons/BrandDeal.svelte';
   import BrandChart from '$lib/components/brand/icons/BrandChart.svelte';
   import BrandDoc from '$lib/components/brand/icons/BrandDoc.svelte';
+  import BrandReceipt from '$lib/components/brand/icons/BrandReceipt.svelte';
   import BrandSet from '$lib/components/brand/icons/BrandSet.svelte';
   import BrandLogout from '$lib/components/brand/icons/BrandLogout.svelte';
   import { SignOutButton, useClerkContext } from 'svelte-clerk';
@@ -62,6 +63,10 @@
       items: [
         { href: '/dashboard', label: 'Dashboard', icon: BrandDash },
         { href: '/viaturas', label: 'Viaturas', icon: BrandCar, badge: () => vehicleCount },
+        // Sits between Viaturas and Clientes to mirror the natural workflow:
+        // first the car enters inventory, then it gets sold, then the buyer
+        // shows up in the customer registry.
+        { href: '/vendas', label: 'Vendas', icon: BrandReceipt },
         { href: '/clientes', label: 'Clientes', icon: BrandUsers },
         {
           href: '/tarefas',
@@ -158,7 +163,6 @@
       >
         <div class="brand-content">
           <Wordmark size="sm" />
-          <div class="brand-version">Painel · v1.0</div>
         </div>
       </a>
       <button
@@ -275,6 +279,16 @@
     .sidebar.collapsed.mobile-open {
       transform: translateX(0);
     }
+    /* While a swipe gesture is in progress, drop the transition and drive
+       position from --drawer-drag-x (set on <html> by the layout). The var
+       is a negative px value: 0 = fully open, -<drawer-width>px = closed. */
+    :global(html.drawer-dragging) .sidebar,
+    :global(html.drawer-dragging) .sidebar.mobile-open,
+    :global(html.drawer-dragging) .sidebar.collapsed,
+    :global(html.drawer-dragging) .sidebar.collapsed.mobile-open {
+      transform: translateX(var(--drawer-drag-x, 0));
+      transition: none;
+    }
     /* Inner box is the mobile width too — no clipping needed since
        collapse doesn't apply below md. */
     .sidebar .sidebar-inner,
@@ -347,14 +361,6 @@
   .sidebar.collapsed .brand-content {
     opacity: 0;
     pointer-events: none;
-  }
-  .brand-version {
-    margin-top: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9.5px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--color-text-faint);
   }
 
   /*

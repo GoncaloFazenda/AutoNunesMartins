@@ -1,10 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
   import { page } from '$app/stores';
+  import CrmBrandHead from '$lib/components/brand/CrmBrandHead.svelte';
   import RedWedge from '$lib/components/brand/RedWedge.svelte';
   import Sidebar from '$lib/components/shell/Sidebar.svelte';
   import Topbar from '$lib/components/shell/Topbar.svelte';
   import MobileBottomNav from '$lib/components/shell/MobileBottomNav.svelte';
+  import QuickTaskBubble from '$lib/components/shell/QuickTaskBubble.svelte';
   import { sidebar, mobileDrawer } from '$lib/stores/sidebar';
   import type { LayoutData } from './$types';
 
@@ -17,6 +20,176 @@
 
   onMount(() => {
     sidebar.hydrate();
+  });
+
+  /*
+    ─── Mobile drawer swipe gestures ──────────────────────────────────────
+    Native-feeling drag-to-open / drag-to-close for the sidebar drawer.
+
+    State machine:
+      idle → pending-open  (touch landed in left 20px while drawer closed)
+      idle → pending-close (any touch while drawer open)
+      pending-* → opening|closing once horizontal intent is confirmed
+                  (>8px horizontal AND horizontal > vertical AND correct direction)
+      opening|closing → idle on touchend, with snap-open or snap-close
+                        based on distance/velocity thresholds.
+
+    During the active drag phase we:
+      • Add `drawer-dragging` to <html> — CSS in Sidebar/layout disables
+        the transform transition and drives position from --drawer-drag-x.
+      • For opening: open the store immediately so the backdrop mounts;
+        if the gesture is cancelled mid-drag, close it again on touchend.
+      • preventDefault on touchmove to stop the page from scrolling
+        sideways while the drawer is being dragged.
+
+    Caveat: on iOS Safari (non-PWA) the very-left edge is owned by the
+    system back-gesture, so the first ~5px may not register. Users can
+    still grab from 5-20px in.
+  */
+  const EDGE_SIZE = 20;
+  const COMMIT_DISTANCE_RATIO = 0.4;
+  const COMMIT_VELOCITY = 0.3;
+  const DIRECTION_LOCK = 8;
+
+  onMount(() => {
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastT = 0;
+    let velocity = 0;
+    let drawerWidth = 280;
+    let mode: 'idle' | 'pending-open' | 'pending-close' | 'opening' | 'closing' = 'idle';
+
+    function readDrawerWidth(): number {
+      const v = getComputedStyle(document.documentElement)
+        .getPropertyValue('--sidebar-w-mobile')
+        .trim();
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) && n > 0 ? n : 280;
+    }
+
+    function reset() {
+      document.documentElement.classList.remove('drawer-dragging');
+      document.documentElement.style.removeProperty('--drawer-drag-x');
+      document.documentElement.style.removeProperty('--drawer-drag-progress');
+      mode = 'idle';
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      if (window.innerWidth >= 768) return;
+      if (e.touches.length !== 1) {
+        reset();
+        return;
+      }
+      const t = e.touches[0];
+      startX = lastX = t.clientX;
+      startY = t.clientY;
+      lastT = performance.now();
+      velocity = 0;
+      drawerWidth = readDrawerWidth();
+
+      const isOpen = get(mobileDrawer);
+      if (!isOpen) {
+        mode = startX < EDGE_SIZE ? 'pending-open' : 'idle';
+      } else {
+        mode = 'pending-close';
+      }
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (mode === 'idle') return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+
+      if (mode === 'pending-open' || mode === 'pending-close') {
+        if (Math.abs(dx) < DIRECTION_LOCK && Math.abs(dy) < DIRECTION_LOCK) return;
+        if (Math.abs(dy) > Math.abs(dx)) {
+          mode = 'idle';
+          return;
+        }
+        if (mode === 'pending-open' && dx <= 0) {
+          mode = 'idle';
+          return;
+        }
+        if (mode === 'pending-close' && dx >= 0) {
+          mode = 'idle';
+          return;
+        }
+        mode = mode === 'pending-open' ? 'opening' : 'closing';
+        document.documentElement.classList.add('drawer-dragging');
+        if (mode === 'opening') mobileDrawer.open();
+      }
+
+      if (mode === 'opening' || mode === 'closing') {
+        e.preventDefault();
+        const now = performance.now();
+        const dt = Math.max(1, now - lastT);
+        velocity = (t.clientX - lastX) / dt;
+        lastX = t.clientX;
+        lastT = now;
+
+        let translateX: number;
+        if (mode === 'opening') {
+          // dx is positive going right; map [0..drawerWidth] → [-drawerWidth..0]
+          translateX = Math.min(0, Math.max(-drawerWidth, dx - drawerWidth));
+        } else {
+          // dx is negative going left; map [-drawerWidth..0] → [-drawerWidth..0]
+          translateX = Math.min(0, Math.max(-drawerWidth, dx));
+        }
+        const progress = (drawerWidth + translateX) / drawerWidth;
+        document.documentElement.style.setProperty('--drawer-drag-x', `${translateX}px`);
+        document.documentElement.style.setProperty('--drawer-drag-progress', `${progress.toFixed(3)}`);
+      }
+    }
+
+    function onTouchEnd() {
+      if (mode !== 'opening' && mode !== 'closing') {
+        reset();
+        return;
+      }
+      const dx = lastX - startX;
+      const distance = Math.abs(dx);
+      const distanceCommit = distance > drawerWidth * COMMIT_DISTANCE_RATIO;
+      const velocityCommit =
+        (mode === 'opening' && velocity > COMMIT_VELOCITY) ||
+        (mode === 'closing' && velocity < -COMMIT_VELOCITY);
+      const commit = distanceCommit || velocityCommit;
+      const wasOpening = mode === 'opening';
+
+      reset();
+
+      if (wasOpening) {
+        if (commit) mobileDrawer.open();
+        else mobileDrawer.close();
+      } else {
+        if (commit) mobileDrawer.close();
+        else mobileDrawer.open();
+      }
+    }
+
+    function onTouchCancel() {
+      if (mode === 'opening' || mode === 'closing') {
+        const wasOpening = mode === 'opening';
+        reset();
+        if (wasOpening) mobileDrawer.close();
+      } else {
+        reset();
+      }
+    }
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchCancel, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchCancel);
+      reset();
+    };
   });
 
   // Lock the body scroll while the mobile drawer is open. Adds a class on
@@ -48,6 +221,8 @@
     return () => window.removeEventListener('keydown', onKey);
   });
 </script>
+
+<CrmBrandHead />
 
 <RedWedge />
 
@@ -84,6 +259,8 @@
   vehicleCount={data.vehicleStats?.active ?? null}
   taskCount={data.taskStats?.mineActive ?? null}
 />
+
+<QuickTaskBubble />
 
 <style>
   /* Sidebar is `position: fixed`; main content lives to its right with a
@@ -149,5 +326,13 @@
   :global(html.drawer-open),
   :global(html.drawer-open body) {
     overflow: hidden;
+  }
+
+  /* While a swipe gesture is in progress, fade the backdrop in lockstep
+     with the drawer's drag progress (0 = closed, 1 = fully open). */
+  :global(html.drawer-dragging) :global(.drawer-backdrop) {
+    opacity: var(--drawer-drag-progress, 1);
+    animation: none;
+    transition: none;
   }
 </style>

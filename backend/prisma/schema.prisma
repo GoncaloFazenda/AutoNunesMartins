@@ -15,6 +15,10 @@ model User {
   clerkId   String   @unique
   email     String   @unique
   name      String
+  /// Profile picture URL mirrored from Clerk on webhook + auto-provision.
+  /// Null when the user has not uploaded a custom photo (UI falls back to
+  /// red-gradient monogram).
+  imageUrl  String?
   role      Role     @default(ADMIN)
   createdAt DateTime @default(now())
 
@@ -46,12 +50,33 @@ model Vehicle {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  /// Website approval is independent of CRM availability. Never backfill true.
+  webPublished       Boolean              @default(false)
+  /// Assigned once at first web publication; retained on unpublish/edit.
+  publicSlug         String?              @unique
+  publicPrice        Decimal?             @db.Decimal(12, 2)
+  publicDescription  String?              @db.Text
+  /// Explicitly approved subset of this vehicle's private storage photos.
+  publicPhotoPaths   String[]             @default([])
+  publicTransmission PublicTransmission?
+
   expenses VehicleExpense[]
   sale     Sale?
+  /// Set when this vehicle was added to stock as the resulting car of a
+  /// customer trade-in. Lets the detail page surface "Adquirido como retoma
+  /// da venda X" so the dealer can follow consolidated profit across both
+  /// deals. NULL for vehicles purchased the regular way.
+  sourceTradeIn TradeIn? @relation("TradeInToVehicle")
 
   @@index([status])
   @@index([brand, model])
   @@index([acquisitionDate])
+  @@index([webPublished, status])
+}
+
+enum PublicTransmission {
+  MANUAL
+  AUTOMATIC
 }
 
 model VehicleExpense {
@@ -98,6 +123,11 @@ model Sale {
   /// through them. Folded into `realProfit` so the dashboard KPI and the
   /// "Lucro por viatura" view automatically include it.
   commission     Decimal        @default(0) @db.Decimal(12, 2)
+  /// Tipo de comprador para efeitos de IVA. PARTICULAR → regime de margem
+  /// 23/123 (IVA sai do bolso do stand). COMERCIANTE → venda B2B sem IVA
+  /// discriminado (margem inteira fica como lucro). Default mantém o
+  /// comportamento original para vendas existentes.
+  buyerType      BuyerType      @default(PARTICULAR)
   realProfit     Decimal        @db.Decimal(12, 2)
   saleDate       DateTime
   deliveryDate   DateTime?
@@ -107,9 +137,46 @@ model Sale {
 
   vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
   customer Customer @relation(fields: [customerId], references: [id])
+  tradeIn  TradeIn?
 
   @@index([saleDate])
   @@index([customerId])
+}
+
+// ─── Trade-ins ───────────────────────────────────────────────────────────
+// A car handed over by the customer as partial payment for the vehicle they
+// are buying. Always tied to exactly one Sale (1:1) — never exists standalone.
+// `disposition = STOCK` creates a new Vehicle row at sale-creation time, which
+// is linked back via `resultingVehicleId`. `disposition = SCRAP` skips the
+// stock entry (car goes to scrap / dismantler / B2B auction) while still
+// recording the deal context and the allowance abated from the sale price.
+model TradeIn {
+  id     String @id @default(cuid())
+  saleId String @unique
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  // Minimal vehicle identification — enough for the receipt and to seed a
+  // future Vehicle row if the car goes to stock.
+  brand        String
+  model        String
+  year         Int
+  fuel         Fuel
+  mileage      Int
+  licensePlate String?
+  vin          String?
+
+  /// Allowance attributed to the trade-in. Subtracted from `Sale.salePrice`
+  /// before margin/VAT is computed (PT margin scheme cares about the *net*
+  /// the dealer effectively received in cash).
+  allowanceValue Decimal @db.Decimal(12, 2)
+
+  disposition        TradeInDisposition
+  resultingVehicleId String?            @unique
+  resultingVehicle   Vehicle?           @relation("TradeInToVehicle", fields: [resultingVehicleId], references: [id])
+
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─── Tasks ───────────────────────────────────────────────────────────────
@@ -189,6 +256,11 @@ enum VehicleStatus {
   SOLD
   DELIVERED
   DOCS_PENDING
+  /// "Rascunho" — viatura existe no inventário mas ainda não está publicada
+  /// para venda (preço por definir, fotos por carregar, etc.). Típicamente
+  /// criado quando entra uma retoma STOCK; sai de DRAFT via publishVehicle()
+  /// quando o dono do stand decide o preço final e descrição.
+  DRAFT
 }
 
 enum Fuel {
@@ -223,6 +295,16 @@ enum DeliveryStatus {
   DELIVERED
 }
 
+enum BuyerType {
+  PARTICULAR
+  COMERCIANTE
+}
+
+enum TradeInDisposition {
+  STOCK // resulted in a new Vehicle row added to inventory
+  SCRAP // car went to scrap / dismantler / auction — no inventory entry
+}
+
 enum TaskStatus {
   TODO
   IN_PROGRESS
@@ -238,6 +320,7 @@ enum Priority {
 
 enum Recurrence {
   NONE
+  WEEKLY
   MONTHLY
   ANNUAL
 }
@@ -249,6 +332,7 @@ enum ActivityType {
   VEHICLE_DELETED
   SALE_CREATED
   SALE_UPDATED
+  TRADE_IN_RECEIVED
   CUSTOMER_ADDED
   CUSTOMER_UPDATED
   TASK_CREATED

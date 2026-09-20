@@ -42,6 +42,7 @@
     VEHICLE_DELETED:        { icon: Trash2,           color: 'var(--color-red)', label: 'Viatura eliminada' },
     SALE_CREATED:           { icon: Receipt,          color: '#e6b800', label: 'Venda registada' },
     SALE_UPDATED:           { icon: PencilLine,       color: '#f59e0b', label: 'Venda editada' },
+    TRADE_IN_RECEIVED:      { icon: ArrowRightLeft,   color: '#f97316', label: 'Retoma recebida' },
     CUSTOMER_ADDED:         { icon: UserPlus,         color: '#a78bfa', label: 'Cliente adicionado' },
     CUSTOMER_UPDATED:       { icon: UserCog,          color: '#c4b5fd', label: 'Cliente editado' },
     TASK_CREATED:           { icon: ListPlus,         color: '#5c8def', label: 'Tarefa criada' },
@@ -60,7 +61,7 @@
       case 'vehicle':
         return `/viaturas/${row.entityId}`;
       case 'sale':
-        return `/sales/${row.entityId}`;
+        return `/vendas/${row.entityId}`;
       case 'customer':
         return `/clientes/${row.entityId}`;
       case 'task':

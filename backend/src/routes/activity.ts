@@ -14,6 +14,7 @@ const ACTIVITY_TYPES = [
   'VEHICLE_DELETED',
   'SALE_CREATED',
   'SALE_UPDATED',
+  'TRADE_IN_RECEIVED',
   'CUSTOMER_ADDED',
   'CUSTOMER_UPDATED',
   'TASK_CREATED',
@@ -29,7 +30,27 @@ const listQuerySchema = z.object({
   actorId: z.string().optional(),
   /** Comma-separated list of ActivityType keys */
   type: z.string().optional(),
-  entityType: z.enum(ENTITY_TYPES).optional(),
+  /**
+   * Either a single entity type, or a comma-separated list. The list form is
+   * how the per-sale timeline pulls events for *both* the sale row and its
+   * associated vehicle (which is where document-flag updates land) in one
+   * request — e.g. `entityType=sale,vehicle&scope=...`.
+   */
+  entityType: z.string().optional(),
+  /**
+   * Filter to a single entity instance. When `entityType` is a single value,
+   * this scopes to (entityType, entityId). When `entityType` is multi-valued,
+   * the route additionally accepts `entityScope` to express a list of
+   * (type, id) pairs — see `scope` below.
+   */
+  entityId: z.string().optional(),
+  /**
+   * Multi-entity scope, JSON-encoded array of {type, id} pairs. Used by the
+   * sale-timeline to combine sale+vehicle events without OR-stuffing the URL
+   * — e.g. `scope=[{"type":"sale","id":"abc"},{"type":"vehicle","id":"xyz"}]`.
+   * When present it overrides `entityType` + `entityId`.
+   */
+  scope: z.string().optional(),
   /** ISO date — inclusive lower bound on createdAt */
   from: z.string().optional(),
   /** ISO date — inclusive upper bound on createdAt (interpreted as end-of-day) */
@@ -69,6 +90,37 @@ function parseTypes(raw: string | undefined): string[] | undefined {
   return valid.length > 0 ? valid : undefined;
 }
 
+interface ScopePair {
+  type: string;
+  id: string;
+}
+
+function parseScope(raw: string | undefined): ScopePair[] | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return undefined;
+    const valid = parsed.filter(
+      (p): p is ScopePair =>
+        !!p
+        && typeof p === 'object'
+        && typeof (p as ScopePair).type === 'string'
+        && typeof (p as ScopePair).id === 'string'
+        && (ENTITY_TYPES as readonly string[]).includes((p as ScopePair).type),
+    );
+    return valid.length > 0 ? valid : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseEntityTypes(raw: string | undefined): string[] | undefined {
+  if (!raw) return undefined;
+  const list = raw.split(',').map((t) => t.trim()).filter(Boolean);
+  const valid = list.filter((t) => (ENTITY_TYPES as readonly string[]).includes(t));
+  return valid.length > 0 ? valid : undefined;
+}
+
 function buildWhere(params: ListQuery): Prisma.ActivityLogWhereInput {
   const where: Prisma.ActivityLogWhereInput = {};
 
@@ -77,7 +129,17 @@ function buildWhere(params: ListQuery): Prisma.ActivityLogWhereInput {
   const types = parseTypes(params.type);
   if (types) where.type = { in: types as Prisma.ActivityLogWhereInput['type'] extends infer T ? T : never } as Prisma.ActivityLogWhereInput['type'];
 
-  if (params.entityType) where.entityType = params.entityType;
+  // Scope precedence: `scope` (multi-entity) > entityType+entityId > entityType.
+  const scopePairs = parseScope(params.scope);
+  if (scopePairs) {
+    where.OR = scopePairs.map((p) => ({ entityType: p.type, entityId: p.id }));
+  } else {
+    const entityTypes = parseEntityTypes(params.entityType);
+    if (entityTypes) {
+      where.entityType = entityTypes.length === 1 ? entityTypes[0] : { in: entityTypes };
+    }
+    if (params.entityId) where.entityId = params.entityId;
+  }
 
   if (params.from || params.to) {
     where.createdAt = {};
@@ -118,6 +180,8 @@ router.get('/', requireUser, async (req: AuthedRequest, res: Response) => {
     actorId: params.actorId ?? '',
     type: params.type ?? '',
     entityType: params.entityType ?? '',
+    entityId: params.entityId ?? '',
+    scope: params.scope ?? '',
     from: params.from ?? '',
     to: params.to ?? '',
     q: params.q ?? '',

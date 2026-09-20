@@ -87,11 +87,110 @@
   let mounted = $state(false);
   let scrollY = $state(0);
 
+  // ─── Customizações ────────────────────────────────────────────────────
+  // Painel flutuante no canto inferior direito com controlos para afinar
+  // o layout em tempo real. Cada eixo aplica-se via `data-*` em `.site` e
+  // as escolhas ficam guardadas em localStorage. Todos os eixos são
+  // independentes — podes combinar à vontade.
+  type SiteStyle = 'stand' | 'v2';
+  type Width = 'full' | 'wide' | 'medium' | 'narrow';
+  type Density = 'comfortable' | 'compact';
+  type Accent = 'red' | 'orange' | 'amber' | 'blue' | 'emerald' | 'purple';
+  type Radius = 'soft' | 'square' | 'round';
+  type NavMode = 'aligned' | 'wide';
+
+  const styleOptions: { id: SiteStyle; label: string }[] = [
+    { id: 'stand', label: 'Original' },
+    { id: 'v2', label: 'Estilo V2' },
+  ];
+  const widthOptions: { id: Width; label: string; hint: string }[] = [
+    { id: 'full', label: 'Cheia', hint: '100% do ecrã' },
+    { id: 'wide', label: 'Larga', hint: '1600 px' },
+    { id: 'medium', label: 'Média', hint: '1200 px' },
+    { id: 'narrow', label: 'Estreita', hint: '1040 px' },
+  ];
+  const densityOptions: { id: Density; label: string }[] = [
+    { id: 'comfortable', label: 'Confortável' },
+    { id: 'compact', label: 'Compacta' },
+  ];
+  const accentOptions: { id: Accent; label: string; hex: string }[] = [
+    { id: 'red', label: 'Vermelho', hex: '#e30613' },
+    { id: 'orange', label: 'Laranja', hex: '#ff6b1a' },
+    { id: 'amber', label: 'Âmbar', hex: '#f59e0b' },
+    { id: 'blue', label: 'Azul', hex: '#2563eb' },
+    { id: 'emerald', label: 'Esmeralda', hex: '#10b981' },
+    { id: 'purple', label: 'Roxo', hex: '#7c3aed' },
+  ];
+  const radiusOptions: { id: Radius; label: string }[] = [
+    { id: 'soft', label: 'Suaves' },
+    { id: 'square', label: 'Quadrados' },
+    { id: 'round', label: 'Arredondados' },
+  ];
+  const navOptions: { id: NavMode; label: string; hint: string }[] = [
+    { id: 'aligned', label: 'Alinhada', hint: 'acompanha o conteúdo' },
+    { id: 'wide', label: 'Ponta a ponta', hint: 'colada às bordas' },
+  ];
+
+  const defaults = {
+    style: 'stand' as SiteStyle,
+    width: 'wide' as Width,
+    density: 'comfortable' as Density,
+    accent: 'red' as Accent,
+    radius: 'soft' as Radius,
+    nav: 'aligned' as NavMode,
+  };
+
+  let siteStyle = $state<SiteStyle>(defaults.style);
+  let width = $state<Width>(defaults.width);
+  let density = $state<Density>(defaults.density);
+  let accent = $state<Accent>(defaults.accent);
+  let radius = $state<Radius>(defaults.radius);
+  let navMode = $state<NavMode>(defaults.nav);
+  let customizerOpen = $state(false);
+
   onMount(() => {
     // Tiny delay so the hero stagger starts after the first paint —
     // otherwise Svelte's in: transitions render mid-paint and skip frames.
     requestAnimationFrame(() => (mounted = true));
+
+    try {
+      const raw = localStorage.getItem('stand-customizations');
+      if (!raw) return;
+      const saved = JSON.parse(raw) as Partial<{
+        style: SiteStyle;
+        width: Width;
+        density: Density;
+        accent: Accent;
+        radius: Radius;
+        nav: NavMode;
+      }>;
+      if (saved.style && styleOptions.some((o) => o.id === saved.style)) siteStyle = saved.style;
+      if (saved.width && widthOptions.some((o) => o.id === saved.width)) width = saved.width;
+      if (saved.density && densityOptions.some((o) => o.id === saved.density)) density = saved.density;
+      if (saved.accent && accentOptions.some((o) => o.id === saved.accent)) accent = saved.accent;
+      if (saved.radius && radiusOptions.some((o) => o.id === saved.radius)) radius = saved.radius;
+      if (saved.nav && navOptions.some((o) => o.id === saved.nav)) navMode = saved.nav;
+    } catch {
+      /* ignore malformed JSON / blocked localStorage */
+    }
   });
+
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(
+      'stand-customizations',
+      JSON.stringify({ style: siteStyle, width, density, accent, radius, nav: navMode }),
+    );
+  });
+
+  function resetCustomizations() {
+    siteStyle = defaults.style;
+    width = defaults.width;
+    density = defaults.density;
+    accent = defaults.accent;
+    radius = defaults.radius;
+    navMode = defaults.nav;
+  }
 
   // ─── Custom actions ─────────────────────────────────────────────────────
   /**
@@ -177,7 +276,15 @@
 
 <svelte:window bind:scrollY />
 
-<div class="site">
+<div
+  class="site"
+  data-style={siteStyle}
+  data-width={width}
+  data-density={density}
+  data-accent={accent}
+  data-radius={radius}
+  data-nav={navMode}
+>
   <!-- ─── Top nav ──────────────────────────────────────────────────── -->
   <header class="nav" class:scrolled={scrollY > 60}>
     <a href="/stand" class="brand">
@@ -518,6 +625,160 @@
       <span>Lic. IMT · 1234</span>
     </div>
   </footer>
+
+  <!-- ─── Customizações (typography A/B) ───────────────────────────── -->
+  <button
+    type="button"
+    class="customizer-fab"
+    class:open={customizerOpen}
+    aria-label="Customizações"
+    aria-expanded={customizerOpen}
+    onclick={() => (customizerOpen = !customizerOpen)}
+  >
+    <span class="fab-aa" aria-hidden="true">Aa</span>
+    <span class="fab-label">Customizações</span>
+  </button>
+
+  {#if customizerOpen}
+    <button
+      type="button"
+      class="customizer-scrim"
+      aria-label="Fechar customizações"
+      onclick={() => (customizerOpen = false)}
+    ></button>
+    <aside
+      class="customizer"
+      aria-labelledby="customizer-title"
+      transition:fly={{ x: 40, duration: 320, easing: cubicOut }}
+    >
+      <header class="customizer-head">
+        <div>
+          <span class="customizer-eyebrow">
+            <span class="red-dot"></span>
+            CUSTOMIZAÇÕES
+          </span>
+          <h3 id="customizer-title">Afinar o site</h3>
+          <p>Mude os controlos abaixo e veja a página actualizar em directo.</p>
+        </div>
+        <button
+          type="button"
+          class="customizer-close"
+          aria-label="Fechar"
+          onclick={() => (customizerOpen = false)}
+        >×</button>
+      </header>
+
+      <div class="customizer-body">
+        <section class="cust-section">
+          <span class="cust-label">Tipografia</span>
+          <div class="cust-pills">
+            {#each styleOptions as o (o.id)}
+              <button
+                type="button"
+                class="pill"
+                class:active={o.id === siteStyle}
+                aria-pressed={o.id === siteStyle}
+                onclick={() => (siteStyle = o.id)}
+              >{o.label}</button>
+            {/each}
+          </div>
+        </section>
+
+        <section class="cust-section">
+          <span class="cust-label">
+            Largura do conteúdo
+            <span class="cust-value">{widthOptions.find((o) => o.id === width)?.hint}</span>
+          </span>
+          <div class="cust-pills">
+            {#each widthOptions as o (o.id)}
+              <button
+                type="button"
+                class="pill"
+                class:active={o.id === width}
+                aria-pressed={o.id === width}
+                onclick={() => (width = o.id)}
+              >{o.label}</button>
+            {/each}
+          </div>
+        </section>
+
+        <section class="cust-section">
+          <span class="cust-label">
+            Navegação
+            <span class="cust-value">{navOptions.find((o) => o.id === navMode)?.hint}</span>
+          </span>
+          <div class="cust-pills">
+            {#each navOptions as o (o.id)}
+              <button
+                type="button"
+                class="pill"
+                class:active={o.id === navMode}
+                aria-pressed={o.id === navMode}
+                onclick={() => (navMode = o.id)}
+              >{o.label}</button>
+            {/each}
+          </div>
+        </section>
+
+        <section class="cust-section">
+          <span class="cust-label">Densidade</span>
+          <div class="cust-pills">
+            {#each densityOptions as o (o.id)}
+              <button
+                type="button"
+                class="pill"
+                class:active={o.id === density}
+                aria-pressed={o.id === density}
+                onclick={() => (density = o.id)}
+              >{o.label}</button>
+            {/each}
+          </div>
+        </section>
+
+        <section class="cust-section">
+          <span class="cust-label">
+            Cor de destaque
+            <span class="cust-value">{accentOptions.find((o) => o.id === accent)?.label}</span>
+          </span>
+          <div class="cust-swatches">
+            {#each accentOptions as o (o.id)}
+              <button
+                type="button"
+                class="swatch"
+                class:active={o.id === accent}
+                aria-label={o.label}
+                aria-pressed={o.id === accent}
+                title={o.label}
+                style:--swatch={o.hex}
+                onclick={() => (accent = o.id)}
+              ></button>
+            {/each}
+          </div>
+        </section>
+
+        <section class="cust-section">
+          <span class="cust-label">Cantos</span>
+          <div class="cust-pills">
+            {#each radiusOptions as o (o.id)}
+              <button
+                type="button"
+                class="pill"
+                class:active={o.id === radius}
+                aria-pressed={o.id === radius}
+                onclick={() => (radius = o.id)}
+              >{o.label}</button>
+            {/each}
+          </div>
+        </section>
+      </div>
+
+      <footer class="customizer-foot">
+        <button type="button" class="reset-btn" onclick={resetCustomizations}>
+          ↺ Restaurar padrões
+        </button>
+      </footer>
+    </aside>
+  {/if}
 </div>
 
 <style>
@@ -531,6 +792,7 @@
   .site {
     --acc: #e30613;
     --acc-soft: #ff3b49;
+    --acc-rgb: 227, 6, 19;
     --bg-0: #07070a;
     --bg-1: #0e0e12;
     --bg-2: #15151a;
@@ -540,9 +802,18 @@
     --line: rgba(255, 255, 255, 0.08);
     --line-strong: rgba(255, 255, 255, 0.16);
 
+    /*
+      Typography is exposed as CSS variables so the floating "Customizações"
+      panel can swap font families live for A/B testing. Defaults below match
+      the original Barlow / Inter / JetBrains Mono trio.
+    */
+    --font-display: 'Barlow', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
     background: var(--bg-0);
     color: var(--text);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-body);
     font-size: 15px;
     line-height: 1.55;
     min-height: 100vh;
@@ -615,7 +886,7 @@
     display: inline-flex;
     align-items: baseline;
     gap: 8px;
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     text-transform: uppercase;
@@ -634,7 +905,7 @@
     align-items: center;
     gap: 28px;
     margin-left: auto;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -675,7 +946,7 @@
     gap: 8px;
     padding: 10px 18px;
     border: 1px solid var(--line-strong);
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-style: italic;
     text-transform: uppercase;
@@ -695,7 +966,7 @@
   .nav-cta:hover {
     border-color: var(--acc);
     color: var(--acc);
-    background: rgba(227, 6, 19, 0.06);
+    background: rgba(var(--acc-rgb), 0.06);
   }
 
   /* ─── Hero ─────────────────────────────────────────────────────────── */
@@ -728,7 +999,7 @@
     background:
       linear-gradient(180deg, rgba(7, 7, 10, 0.6) 0%, transparent 35%, rgba(7, 7, 10, 0.85) 100%),
       linear-gradient(90deg, rgba(7, 7, 10, 0.7) 0%, transparent 60%),
-      radial-gradient(1200px 600px at 80% 30%, rgba(227, 6, 19, 0.15), transparent 60%);
+      radial-gradient(1200px 600px at 80% 30%, rgba(var(--acc-rgb), 0.15), transparent 60%);
   }
   .hero-grid {
     position: absolute;
@@ -750,7 +1021,7 @@
   .hero-eyebrow {
     display: inline-flex;
     align-items: center;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.25em;
     text-transform: uppercase;
@@ -758,7 +1029,7 @@
     margin-bottom: 32px;
   }
   .hero-title {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     text-transform: uppercase;
@@ -797,7 +1068,7 @@
     align-items: center;
     gap: 10px;
     padding: 14px 22px;
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-style: italic;
     text-transform: uppercase;
@@ -820,12 +1091,12 @@
     background: var(--acc);
     color: white;
     border: 1px solid var(--acc);
-    box-shadow: 0 0 0 0 rgba(227, 6, 19, 0);
+    box-shadow: 0 0 0 0 rgba(var(--acc-rgb), 0);
   }
   .btn-primary:hover {
     background: var(--acc-soft);
     border-color: var(--acc-soft);
-    box-shadow: 0 12px 40px -8px rgba(227, 6, 19, 0.55);
+    box-shadow: 0 12px 40px -8px rgba(var(--acc-rgb), 0.55);
     transform: translateY(-1px);
   }
   .btn-outline {
@@ -854,7 +1125,7 @@
     gap: 4px;
   }
   .meta-num {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     font-size: 28px;
@@ -862,7 +1133,7 @@
     letter-spacing: -0.02em;
   }
   .meta-lbl {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 9.5px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -898,7 +1169,7 @@
     100% { transform: scaleY(0); transform-origin: bottom; }
   }
   .scroll-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 9.5px;
     letter-spacing: 0.3em;
     color: var(--faint);
@@ -919,7 +1190,7 @@
   .eyebrow {
     display: inline-flex;
     align-items: center;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.25em;
     text-transform: uppercase;
@@ -927,7 +1198,7 @@
     margin-bottom: 16px;
   }
   .section-title {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     text-transform: uppercase;
@@ -949,7 +1220,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -1008,7 +1279,7 @@
     padding: 5px 10px;
     background: var(--acc);
     color: white;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 9.5px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -1036,7 +1307,7 @@
     padding: 20px 22px 22px;
   }
   .vcard-brand {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.25em;
     text-transform: uppercase;
@@ -1044,7 +1315,7 @@
     margin-bottom: 6px;
   }
   .vcard-model {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 800;
     font-style: italic;
     text-transform: uppercase;
@@ -1062,7 +1333,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.05em;
     color: var(--muted);
@@ -1084,7 +1355,7 @@
     gap: 12px;
   }
   .vcard-price {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     font-size: 24px;
@@ -1095,7 +1366,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -1137,8 +1408,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(227, 6, 19, 0.08);
-    border: 1px solid rgba(227, 6, 19, 0.25);
+    background: rgba(var(--acc-rgb), 0.08);
+    border: 1px solid rgba(var(--acc-rgb), 0.25);
     border-radius: 4px;
     color: var(--acc);
   }
@@ -1147,7 +1418,7 @@
     height: 22px;
   }
   .service h3 {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 800;
     font-style: italic;
     text-transform: uppercase;
@@ -1160,7 +1431,7 @@
     flex: 1;
   }
   .service-meta {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 9.5px;
     letter-spacing: 0.22em;
     color: var(--faint);
@@ -1180,14 +1451,14 @@
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     background:
-      radial-gradient(1200px 400px at 50% -10%, rgba(227, 6, 19, 0.08), transparent 60%),
+      radial-gradient(1200px 400px at 50% -10%, rgba(var(--acc-rgb), 0.08), transparent 60%),
       var(--bg-0);
   }
   .stat {
     text-align: center;
   }
   .stat-num {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     font-size: clamp(48px, 6vw, 80px);
@@ -1200,7 +1471,7 @@
   }
   .stat-label {
     margin-top: 12px;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 10.5px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -1235,13 +1506,13 @@
     inset: 0;
     background:
       linear-gradient(135deg, rgba(7, 7, 10, 0.92) 0%, rgba(7, 7, 10, 0.6) 70%),
-      radial-gradient(900px 500px at 80% 30%, rgba(227, 6, 19, 0.2), transparent 60%);
+      radial-gradient(900px 500px at 80% 30%, rgba(var(--acc-rgb), 0.2), transparent 60%);
   }
   .visit-inner {
     max-width: 720px;
   }
   .visit-title {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     text-transform: uppercase;
@@ -1270,14 +1541,14 @@
     margin-bottom: 40px;
   }
   .info-label {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 9.5px;
     letter-spacing: 0.25em;
     color: var(--faint);
     margin-bottom: 8px;
   }
   .info-val {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 16px;
   }
@@ -1299,7 +1570,7 @@
     }
   }
   .footer-brand .brand-mark {
-    font-family: 'Barlow', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-style: italic;
     text-transform: uppercase;
@@ -1318,7 +1589,7 @@
     gap: 32px;
   }
   .footer-cols h4 {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 10.5px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -1348,11 +1619,449 @@
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 12px;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--faint);
+  }
+
+  /*
+    ─── Estilo V2 overrides ────────────────────────────────────────────
+    Replicam o uso tipográfico de /stand-v2 mantendo as mesmas três
+    famílias. Resumo:
+      · Headings passam a Barlow 700 sentence case (sem itálico, sem upper)
+      · `<em>` em headings fica itálico + vermelho (peso 800)
+      · Números (preços, stats, hero meta) usam JetBrains Mono 600
+      · Botões e CTAs usam Inter 600 (sem itálico, sem upper, sem tracking)
+      · Wordmark e brand-mark do footer mantêm o estilo 900 italic upper
+        — é identidade de marca, não muda entre estilos.
+  */
+  .site[data-style='v2'] .hero-title,
+  .site[data-style='v2'] .section-title,
+  .site[data-style='v2'] .visit-title {
+    font-weight: 700;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: -0.02em;
+  }
+  .site[data-style='v2'] .hero-title .red {
+    font-style: italic;
+    font-weight: 800;
+  }
+  .site[data-style='v2'] .vcard-model,
+  .site[data-style='v2'] .service h3 {
+    font-weight: 700;
+    font-style: normal;
+    text-transform: none;
+  }
+
+  /* Números migram para JetBrains Mono com tabular-nums. */
+  .site[data-style='v2'] .stat-num,
+  .site[data-style='v2'] .vcard-price,
+  .site[data-style='v2'] .meta-num {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-style: normal;
+    letter-spacing: -0.01em;
+    font-feature-settings: 'tnum' 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Botões/CTAs passam de Barlow italic upper para Inter sentence. */
+  .site[data-style='v2'] .btn,
+  .site[data-style='v2'] .nav-cta {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /*
+    ─── Largura do conteúdo ───────────────────────────────────────────
+    Não tocamos no `.nav` (mantém o brand-mark colado ao canto, como um
+    site real) nem nas imagens full-bleed do hero/visit — narrowing
+    afecta apenas os blocos de conteúdo que de outra forma se esticam
+    de bordo a bordo em ecrãs largos.
+  */
+  .site[data-width='wide'] .section,
+  .site[data-width='wide'] .stats,
+  .site[data-width='wide'] .visit-inner,
+  .site[data-width='wide'] .hero-content,
+  .site[data-width='wide'] .footer-inner,
+  .site[data-width='wide'] .footer-bottom {
+    max-width: 1600px;
+    margin-inline: auto;
+  }
+  .site[data-width='medium'] .section,
+  .site[data-width='medium'] .stats,
+  .site[data-width='medium'] .visit-inner,
+  .site[data-width='medium'] .hero-content,
+  .site[data-width='medium'] .footer-inner,
+  .site[data-width='medium'] .footer-bottom {
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+  .site[data-width='narrow'] .section,
+  .site[data-width='narrow'] .stats,
+  .site[data-width='narrow'] .visit-inner,
+  .site[data-width='narrow'] .hero-content,
+  .site[data-width='narrow'] .footer-inner,
+  .site[data-width='narrow'] .footer-bottom {
+    max-width: 1040px;
+    margin-inline: auto;
+  }
+
+  /*
+    ─── Navegação alinhada (controlo "Navegação" na widget) ────────────
+    Por defeito ('aligned'), o conteúdo da barra (logo + links + CTA) passa
+    a acompanhar a mesma coluna do conteúdo, alinhando o logótipo com os
+    cards. O fundo/blur da barra continua de ponta a ponta — só o miolo é
+    que encosta à coluna (o gutter vive no padding, sem mexer no markup).
+    Em largura "Cheia" não há diferença (o conteúdo também é full-bleed);
+    'wide' (Ponta a ponta) = comportamento original sem alinhamento.
+  */
+  .site .nav {
+    transition: background 320ms ease, border-color 320ms ease,
+      backdrop-filter 320ms ease, padding 320ms ease;
+  }
+  .site[data-nav='aligned'][data-width='wide'] .nav {
+    padding-inline: max(clamp(20px, 4vw, 56px), calc((100% - 1600px) / 2 + clamp(20px, 4vw, 56px)));
+  }
+  .site[data-nav='aligned'][data-width='medium'] .nav {
+    padding-inline: max(clamp(20px, 4vw, 56px), calc((100% - 1200px) / 2 + clamp(20px, 4vw, 56px)));
+  }
+  .site[data-nav='aligned'][data-width='narrow'] .nav {
+    padding-inline: max(clamp(20px, 4vw, 56px), calc((100% - 1040px) / 2 + clamp(20px, 4vw, 56px)));
+  }
+
+  /* ─── Densidade ──────────────────────────────────────────────────── */
+  .site[data-density='compact'] .section {
+    padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 56px);
+  }
+  .site[data-density='compact'] .section-head {
+    margin-bottom: 36px;
+  }
+  .site[data-density='compact'] .vehicles-grid {
+    gap: 16px;
+  }
+  .site[data-density='compact'] .services {
+    margin-top: 36px;
+  }
+  .site[data-density='compact'] .service {
+    padding: 28px 24px;
+  }
+  .site[data-density='compact'] .stats {
+    padding: 36px clamp(20px, 4vw, 56px);
+  }
+  .site[data-density='compact'] .visit {
+    padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 56px);
+  }
+  .site[data-density='compact'] .hero {
+    padding: 100px clamp(20px, 4vw, 56px) 60px;
+  }
+  .site[data-density='compact'] .footer-inner {
+    padding: 40px clamp(20px, 4vw, 56px) 28px;
+    gap: 28px;
+  }
+
+  /* ─── Cor de destaque ────────────────────────────────────────────── */
+  .site[data-accent='orange'] {
+    --acc: #ff6b1a;
+    --acc-soft: #ff8b3d;
+    --acc-rgb: 255, 107, 26;
+  }
+  .site[data-accent='amber'] {
+    --acc: #f59e0b;
+    --acc-soft: #fbbf24;
+    --acc-rgb: 245, 158, 11;
+  }
+  .site[data-accent='blue'] {
+    --acc: #2563eb;
+    --acc-soft: #3b82f6;
+    --acc-rgb: 37, 99, 235;
+  }
+  .site[data-accent='emerald'] {
+    --acc: #10b981;
+    --acc-soft: #34d399;
+    --acc-rgb: 16, 185, 129;
+  }
+  .site[data-accent='purple'] {
+    --acc: #7c3aed;
+    --acc-soft: #9333ea;
+    --acc-rgb: 124, 58, 237;
+  }
+
+  /*
+    ─── Cantos ─────────────────────────────────────────────────────────
+    Apenas alteramos os elementos mais visíveis (cards, botões, ícones).
+    Pontos / dots circulares (50%) ficam inalterados.
+  */
+  .site[data-radius='square'] .btn,
+  .site[data-radius='square'] .nav-cta,
+  .site[data-radius='square'] .vcard,
+  .site[data-radius='square'] .services,
+  .site[data-radius='square'] .service-icon,
+  .site[data-radius='square'] .vcard-tag {
+    border-radius: 0;
+  }
+
+  .site[data-radius='round'] .btn,
+  .site[data-radius='round'] .nav-cta {
+    border-radius: 999px;
+  }
+  .site[data-radius='round'] .vcard,
+  .site[data-radius='round'] .services {
+    border-radius: 18px;
+  }
+  .site[data-radius='round'] .service-icon {
+    border-radius: 12px;
+  }
+  .site[data-radius='round'] .vcard-tag {
+    border-radius: 999px;
+  }
+
+  /* ─── Customizações floating panel ────────────────────────────────── */
+  .customizer-fab {
+    position: fixed;
+    right: clamp(16px, 3vw, 28px);
+    bottom: clamp(16px, 3vw, 28px);
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px 12px 12px;
+    background: var(--bg-1);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.7);
+    transition:
+      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 220ms,
+      background 220ms;
+  }
+  .customizer-fab:hover {
+    border-color: var(--acc);
+    transform: translateY(-2px);
+  }
+  .customizer-fab.open {
+    border-color: var(--acc);
+    background: var(--bg-2);
+  }
+  .fab-aa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--acc);
+    color: white;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-style: italic;
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .fab-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .customizer-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(0, 0, 0, 0.4);
+    border: 0;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .customizer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: min(420px, 92vw);
+    background: var(--bg-1);
+    border-left: 1px solid var(--line-strong);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .customizer-head {
+    padding: 24px 24px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .customizer-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .customizer-head h3 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    font-size: 32px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .customizer-head p {
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 320px;
+  }
+  .customizer-close {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: color 180ms, border-color 180ms;
+  }
+  .customizer-close:hover {
+    color: var(--acc);
+    border-color: var(--acc);
+  }
+
+  .customizer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .cust-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cust-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .cust-value {
+    color: var(--text);
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    text-transform: none;
+  }
+  .cust-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pill {
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    background: var(--bg-0);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 180ms, border-color 180ms, background 180ms;
+  }
+  .pill:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
+  }
+  .pill.active {
+    color: var(--text);
+    border-color: var(--acc);
+    background: rgba(var(--acc-rgb), 0.1);
+  }
+
+  .cust-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .swatch {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background: var(--swatch);
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+    transition: transform 180ms, border-color 180ms;
+  }
+  .swatch:hover {
+    transform: scale(1.08);
+  }
+  .swatch.active {
+    border-color: var(--text);
+    transform: scale(1.05);
+  }
+
+  .reset-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 180ms, border-color 180ms;
+  }
+  .reset-btn:hover {
+    color: var(--acc);
+    border-color: var(--acc);
+  }
+
+  .customizer-foot {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 480px) {
+    .fab-label {
+      display: none;
+    }
+    .customizer-fab {
+      padding: 10px;
+    }
   }
 
   /* ─── Reduced motion ──────────────────────────────────────────────── */

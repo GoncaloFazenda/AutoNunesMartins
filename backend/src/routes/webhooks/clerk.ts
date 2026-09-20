@@ -14,6 +14,8 @@ interface ClerkUserPayload {
   primary_email_address_id: string | null;
   first_name: string | null;
   last_name: string | null;
+  image_url: string | null;
+  has_image: boolean;
 }
 
 interface ClerkWebhookEvent {
@@ -74,10 +76,14 @@ router.post('/', async (req: Request, res: Response) => {
       }
 
       const name = fullName(event.data);
+      // Only store imageUrl when the user actually uploaded a real picture
+      // — otherwise Clerk returns a generic auto-generated coloured chip,
+      // which we don't want to render in place of our branded fallback.
+      const imageUrl = event.data.has_image ? event.data.image_url : null;
       await prisma.user.upsert({
         where: { clerkId: event.data.id },
-        update: { email, name },
-        create: { clerkId: event.data.id, email, name, role: 'ADMIN' },
+        update: { email, name, imageUrl },
+        create: { clerkId: event.data.id, email, name, imageUrl, role: 'ADMIN' },
       });
       invalidateUsersCache();
       logger.info({ clerkId: event.data.id, type: event.type }, 'Clerk user synced');

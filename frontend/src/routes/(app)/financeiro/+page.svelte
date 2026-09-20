@@ -3,10 +3,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/stores';
   import {
-    BarChart3,
-    Car,
     Check,
-    Download,
     Pencil,
     Plus,
     Trash2,
@@ -18,11 +15,10 @@
   import Panel from '$lib/components/common/Panel.svelte';
   import PanelHeader from '$lib/components/brand/PanelHeader.svelte';
   import Button from '$lib/components/common/Button.svelte';
+  import ExportMenu from '$lib/components/common/ExportMenu.svelte';
   import Skeleton from '$lib/components/common/Skeleton.svelte';
   import { formatDate, formatDateLong, formatEUR } from '$lib/utils/format';
   import type { OpExpenseCategory } from '@anm/types';
-  import type { OperationalExpenseDto } from '$lib/server/operationalExpenses';
-  import type { ProfitByVehicleRow } from '$lib/server/financial';
   import type { PageData } from './$types';
 
   interface Props {
@@ -48,14 +44,6 @@
     return CATEGORIES.find((x) => x.value === c)?.label ?? c;
   }
 
-  function setTab(tab: 'despesas' | 'lucro') {
-    const usp = new URLSearchParams($page.url.searchParams);
-    if (tab === 'despesas') usp.delete('tab');
-    else usp.set('tab', tab);
-    const qs = usp.toString();
-    goto(qs ? `?${qs}` : '?', { keepFocus: true, noScroll: true });
-  }
-
   function setParam(name: string, value: string | undefined) {
     const usp = new URLSearchParams($page.url.searchParams);
     if (value === undefined || value === '') usp.delete(name);
@@ -74,23 +62,6 @@
   }
 
   const todayISO = today.toISOString().slice(0, 10);
-
-  // Sort the profit table client-side fallback if user toggles header
-  function setPfSort(by: 'saleDate' | 'realProfit' | 'salePrice' | 'marginPct') {
-    const usp = new URLSearchParams($page.url.searchParams);
-    if (data.profitFilters.sortBy === by) {
-      usp.set('pfSortDir', data.profitFilters.sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      usp.set('pfSortBy', by);
-      usp.set('pfSortDir', 'desc');
-    }
-    goto(`?${usp.toString()}`, { keepFocus: true, noScroll: true });
-  }
-
-  function sortIndicator(by: string): string {
-    if (data.profitFilters.sortBy !== by) return '';
-    return data.profitFilters.sortDir === 'asc' ? '↑' : '↓';
-  }
 </script>
 
 <svelte:head>
@@ -109,59 +80,15 @@
         {formatDateLong(today)}
       </div>
     </div>
-    <!-- Export is desktop-only. -->
+    <!-- Export is desktop-only. Menu (sem default) — utilizador escolhe formato. -->
     <div class="hidden md:flex items-center gap-2">
-      {#if data.tab === 'despesas'}
-        <Button
-          variant="outline"
-          size="md"
-          href={`/financeiro/despesas/export?format=csv${$page.url.search.replace('?', '&')}`}
-        >
-          <Download class="h-4 w-4" />
-          Exportar
-        </Button>
-      {:else}
-        <Button
-          variant="outline"
-          size="md"
-          href={`/financeiro/lucro/export?format=csv${$page.url.search.replace('?', '&')}`}
-        >
-          <Download class="h-4 w-4" />
-          Exportar
-        </Button>
-      {/if}
+      <ExportMenu baseHref="/financeiro/despesas/export" extraQuery={$page.url.search} />
     </div>
   </div>
 
-  <!-- Tab bar — horizontally scrollable on narrow screens so both tabs
-       remain reachable without truncating their labels. -->
-  <div class="flex items-center gap-1 border-b border-[var(--color-border)] overflow-x-auto">
-    <button
-      type="button"
-      onclick={() => setTab('despesas')}
-      class="flex items-center gap-2 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors border-b-2 -mb-px {data.tab ===
-      'despesas'
-        ? 'border-[var(--color-red)] text-[var(--color-text)]'
-        : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}"
-    >
-      <Wallet class="h-3.5 w-3.5" />
-      Despesas Operacionais
-    </button>
-    <button
-      type="button"
-      onclick={() => setTab('lucro')}
-      class="flex items-center gap-2 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors border-b-2 -mb-px {data.tab ===
-      'lucro'
-        ? 'border-[var(--color-red)] text-[var(--color-text)]'
-        : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'}"
-    >
-      <BarChart3 class="h-3.5 w-3.5" />
-      Lucro por Viatura
-    </button>
-  </div>
-
-  {#if data.tab === 'despesas'}
-    <!-- ============ Tab 1: Despesas Operacionais ============ -->
+  <!-- Per-vehicle profit analysis used to live here as a second tab; it now
+       sits inside /vendas (single source of truth). This page is dedicated to
+       operational expenses (rent, bills, services). -->
     <Panel>
       <PanelHeader icon={Wallet} title="Filtros" />
       <div class="p-4 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
@@ -538,215 +465,4 @@
         {/if}
       {/await}
     </Panel>
-  {:else}
-    <!-- ============ Tab 2: Lucro por Viatura ============ -->
-    <Panel>
-      <PanelHeader icon={BarChart3} title="Filtros" />
-      <div class="p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <label class="flex flex-col">
-          <span class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1">
-            Venda desde
-          </span>
-          <input
-            type="date"
-            value={data.profitFilters.dateFrom ?? ''}
-            onchange={(e) => setParam('pfFrom', e.currentTarget.value || undefined)}
-            class="h-10 px-2 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[13px] outline-none focus:border-[var(--color-red)]"
-            style="border-radius: var(--radius-btn);"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)] mb-1">
-            Venda até
-          </span>
-          <input
-            type="date"
-            value={data.profitFilters.dateTo ?? ''}
-            onchange={(e) => setParam('pfTo', e.currentTarget.value || undefined)}
-            class="h-10 px-2 bg-[var(--color-bg-1)] border border-[var(--color-border)] text-[13px] outline-none focus:border-[var(--color-red)]"
-            style="border-radius: var(--radius-btn);"
-          />
-        </label>
-      </div>
-    </Panel>
-
-    <Panel>
-      <PanelHeader icon={BarChart3} title="Lucro por viatura" />
-
-      {#await data.profit}
-        <div class="p-4 space-y-2">
-          {#each Array(5) as _, i (i)}
-            <Skeleton width="100%" height="40px" />
-          {/each}
-        </div>
-      {:then pf}
-        {#if '_error' in pf && pf._error}
-          <div class="p-4 text-[13px] text-[var(--color-red)]">{pf._error}</div>
-        {:else if pf.items.length === 0}
-          <div
-            class="p-8 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
-          >
-            Sem vendas no intervalo selecionado
-          </div>
-        {:else}
-          <div class="overflow-x-auto">
-            <table class="w-full text-[13px] min-w-[860px]">
-              <thead>
-                <tr class="border-b border-[var(--color-border)]">
-                  <th class="text-left px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
-                    Viatura
-                  </th>
-                  <th class="text-left px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
-                    Cliente
-                  </th>
-                  <th
-                    class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)] cursor-pointer hover:text-[var(--color-text)]"
-                    onclick={() => setPfSort('saleDate')}
-                  >
-                    Data {sortIndicator('saleDate')}
-                  </th>
-                  <th class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
-                    Compra
-                  </th>
-                  <th
-                    class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)] cursor-pointer hover:text-[var(--color-text)]"
-                    onclick={() => setPfSort('salePrice')}
-                  >
-                    Venda {sortIndicator('salePrice')}
-                  </th>
-                  <th class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
-                    Despesas
-                  </th>
-                  <th class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]">
-                    IVA
-                  </th>
-                  <th
-                    class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
-                    title="Comissão de financiamento (banco) somada ao Lucro Real"
-                  >
-                    Comissão
-                  </th>
-                  <th
-                    class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)] cursor-pointer hover:text-[var(--color-text)]"
-                    onclick={() => setPfSort('realProfit')}
-                  >
-                    Lucro {sortIndicator('realProfit')}
-                  </th>
-                  <th
-                    class="text-right px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-text-faint)] cursor-pointer hover:text-[var(--color-text)]"
-                    onclick={() => setPfSort('marginPct')}
-                  >
-                    Margem {sortIndicator('marginPct')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {#each pf.items as r (r.saleId)}
-                  {@const isLoss = Number(r.realProfit) < 0}
-                  <tr
-                    class="border-b border-[var(--color-border)] hover:bg-[color-mix(in_oklab,var(--color-red)_5%,transparent)] transition-colors group"
-                  >
-                    <td class="px-4 py-2.5">
-                      <a href={`/viaturas/${r.vehicle.id}`} class="flex items-center gap-2">
-                        <Car class="h-4 w-4 text-[var(--color-red)] flex-shrink-0" />
-                        <div class="min-w-0">
-                          <div class="font-display font-semibold text-[13px] group-hover:text-[var(--color-red)] transition-colors truncate">
-                            {r.vehicle.brand} {r.vehicle.model}
-                          </div>
-                          <div class="font-mono text-[10px] text-[var(--color-text-faint)] truncate">
-                            {r.vehicle.year} · {r.vehicle.vin}
-                          </div>
-                        </div>
-                      </a>
-                    </td>
-                    <td class="px-4 py-2.5">
-                      <a
-                        href={`/clientes/${r.customer.id}`}
-                        class="text-[var(--color-text)] hover:text-[var(--color-red)] transition-colors text-[13px] truncate inline-block max-w-[200px]"
-                      >
-                        {r.customer.name}
-                      </a>
-                    </td>
-                    <td class="px-4 py-2.5 font-mono text-[11px] text-right text-[var(--color-text-muted)]">
-                      {formatDate(r.saleDate)}
-                    </td>
-                    <td class="px-4 py-2.5 num-value text-[13px] text-right">
-                      {formatEUR(r.purchasePrice)}
-                    </td>
-                    <td class="px-4 py-2.5 num-value text-[13px] text-right">
-                      {formatEUR(r.salePrice)}
-                    </td>
-                    <td
-                      class="px-4 py-2.5 num-value text-[13px] text-right text-[var(--color-text-muted)]"
-                    >
-                      {formatEUR(r.expensesTotal)}
-                    </td>
-                    <td
-                      class="px-4 py-2.5 num-value text-[13px] text-right text-[var(--color-warning)]"
-                    >
-                      {formatEUR(r.vatAmount)}
-                    </td>
-                    <td
-                      class="px-4 py-2.5 num-value text-[13px] text-right {Number(r.commission) > 0
-                        ? 'text-[var(--color-success)]'
-                        : 'text-[var(--color-text-faint)]'}"
-                    >
-                      {Number(r.commission) > 0 ? formatEUR(r.commission) : '—'}
-                    </td>
-                    <td
-                      class="px-4 py-2.5 num-value text-[15px] text-right {isLoss
-                        ? 'text-[var(--color-red)]'
-                        : 'text-[var(--color-success)]'}"
-                    >
-                      {formatEUR(r.realProfit)}
-                    </td>
-                    <td class="px-4 py-2.5 num-value text-[13px] text-right">
-                      {r.marginPct.toFixed(1)}%
-                    </td>
-                  </tr>
-                {/each}
-              </tbody>
-              <tfoot>
-                <tr class="border-t border-[var(--color-border)] bg-[var(--color-bg-2)] font-medium">
-                  <td colspan="3" class="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)] text-right">
-                    Totais ({pf.totals.count})
-                  </td>
-                  <td></td>
-                  <td class="px-4 py-3 num-value text-[13px] text-right">
-                    {formatEUR(pf.totals.revenue)}
-                  </td>
-                  <td
-                    class="px-4 py-3 num-value text-[13px] text-right text-[var(--color-text-muted)]"
-                  >
-                    {formatEUR(pf.totals.expenses)}
-                  </td>
-                  <td
-                    class="px-4 py-3 num-value text-[13px] text-right text-[var(--color-warning)]"
-                  >
-                    {formatEUR(pf.totals.vat)}
-                  </td>
-                  <td
-                    class="px-4 py-3 num-value text-[13px] text-right {Number(pf.totals.commission) > 0
-                      ? 'text-[var(--color-success)]'
-                      : 'text-[var(--color-text-faint)]'}"
-                    title="Total de comissões de financiamento (isentas de IVA — art. 9.º, 27.º, a) CIVA)"
-                  >
-                    {Number(pf.totals.commission) > 0
-                      ? formatEUR(pf.totals.commission)
-                      : '—'}
-                  </td>
-                  <td class="px-4 py-3 num-value text-[16px] text-right text-[var(--color-success)]">
-                    {formatEUR(pf.totals.profit)}
-                  </td>
-                  <td class="px-4 py-3 num-value text-[13px] text-right">
-                    {pf.totals.avgMarginPct.toFixed(1)}%
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        {/if}
-      {/await}
-    </Panel>
-  {/if}
 </section>

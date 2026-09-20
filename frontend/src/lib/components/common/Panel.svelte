@@ -10,7 +10,7 @@
 </script>
 
 <section
-  class="panel-surface overflow-hidden border border-[var(--color-border)] {className}"
+  class="panel-surface overflow-hidden border border-[var(--color-border)]  {className}"
   style="border-radius: var(--radius-card);"
 >
   {@render children?.()}

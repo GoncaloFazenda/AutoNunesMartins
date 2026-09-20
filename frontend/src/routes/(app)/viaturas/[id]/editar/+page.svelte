@@ -5,6 +5,8 @@
   import ItalicHero from '$lib/components/brand/ItalicHero.svelte';
   import Panel from '$lib/components/common/Panel.svelte';
   import VehicleForm from '$lib/components/vehicle/VehicleForm.svelte';
+  import WebPublicationPanel from '$lib/components/vehicle/WebPublicationPanel.svelte';
+  import PhotoGallery from '$lib/components/vehicle/PhotoGallery.svelte';
   import type { PageData } from './$types';
 
   interface Props {
@@ -66,9 +68,7 @@
                 if (result.type === 'redirect') {
                   toast.success('Viatura eliminada.');
                 } else if (result.type === 'failure') {
-                  toast.error(
-                    (result.data as { error?: string } | undefined)?.error ?? 'Falha.',
-                  );
+                  toast.error((result.data as { error?: string } | undefined)?.error ?? 'Falha.');
                 }
               };
             }}
@@ -87,4 +87,6 @@
       </VehicleForm>
     </div>
   </Panel>
+  <PhotoGallery vehicleId={data.vehicle.id} photos={data.signedPhotos} />
+  <WebPublicationPanel vehicle={data.vehicle} photos={data.signedPhotos} />
 </section>

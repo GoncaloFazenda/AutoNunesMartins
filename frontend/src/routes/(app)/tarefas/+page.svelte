@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Download, Plus, Search, X } from 'lucide-svelte';
+  import { CalendarClock, Plus, Search, X } from 'lucide-svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/stores';
   import { dndzone, type DndEvent } from 'svelte-dnd-action';
@@ -8,8 +8,11 @@
   import ItalicHero from '$lib/components/brand/ItalicHero.svelte';
   import Panel from '$lib/components/common/Panel.svelte';
   import Button from '$lib/components/common/Button.svelte';
+  import ExportMenu from '$lib/components/common/ExportMenu.svelte';
+  import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+  import RecentActivityFeed from '$lib/components/dashboard/RecentActivityFeed.svelte';
   import TaskCard from '$lib/components/task/TaskCard.svelte';
-  import { formatDateLong } from '$lib/utils/format';
+  import { formatDate, formatDateLong } from '$lib/utils/format';
   import type { TaskDto } from '$lib/server/tasks';
   import type { Priority, TaskStatus } from '@anm/types';
   import type { PageData } from './$types';
@@ -34,18 +37,38 @@
     { value: 'URGENT', label: 'Urgente', color: 'var(--color-red)' },
   ];
 
-  // Local mutable copy of tasks so DnD can update positions optimistically.
+  // Local mutable copy of active (non-standby) tasks so DnD can update
+  // positions optimistically.
   let board = $state<Record<TaskStatus, TaskDto[]>>({
     TODO: [],
     IN_PROGRESS: [],
     DONE: [],
   });
 
-  // Keep the board in sync with server data whenever it reloads.
+  // Scheduled (standby) tasks live alongside the board but outside the
+  // dndzone — they're not draggable. Only shown when the user toggled the
+  // "Tarefas agendadas" filter on (otherwise the backend filters them out).
+  let standbyTasks = $state<TaskDto[]>([]);
+
+  // A recurring task in TODO with a future dueDate is "scheduled" — already
+  // spawned by a previous completion but not yet active.
+  function isStandby(t: TaskDto): boolean {
+    if (t.status !== 'TODO' || t.recurrence === 'NONE' || !t.dueDate) return false;
+    return new Date(t.dueDate) > new Date();
+  }
+
+  // Keep board + standby in sync with server data whenever it reloads.
+  // Standby tasks are filtered out of the board to keep them outside the
+  // dndzone; they render in a separate non-draggable strip in the TODO column.
   $effect(() => {
     const next: Record<TaskStatus, TaskDto[]> = { TODO: [], IN_PROGRESS: [], DONE: [] };
-    for (const t of data.tasks) next[t.status].push(t);
+    const standby: TaskDto[] = [];
+    for (const t of data.tasks) {
+      if (isStandby(t)) standby.push(t);
+      else next[t.status].push(t);
+    }
     board = next;
+    standbyTasks = standby;
   });
 
   const FLIP_MS = 180;
@@ -71,21 +94,56 @@
         body: JSON.stringify({ status }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const result = (await res.json()) as { spawnedTaskId: string | null };
+      const result = (await res.json()) as {
+        spawnedTaskId: string | null;
+        nextOccurrenceDate: string | null;
+      };
 
-      if (result.spawnedTaskId) {
-        toast.success('Tarefa concluída — nova ocorrência recorrente criada.');
+      if (result.spawnedTaskId && result.nextOccurrenceDate) {
+        toast.success(
+          `Tarefa concluída — próxima ocorrência agendada para ${formatDate(result.nextOccurrenceDate)}.`,
+        );
       } else if (status === 'DONE') {
         toast.success('Tarefa concluída.');
       } else {
         toast.message(`Estado: ${status}`);
       }
-      // Reload to pick up any spawned recurring task
+      // Reload to pick up the spawned next occurrence (hidden by default).
       await invalidateAll();
     } catch (err) {
       toast.error(`Falha ao mover tarefa: ${(err as Error).message}`);
       // Revert
       board = { ...board, [status]: previous };
+    }
+  }
+
+  // Modal state for cancelling a scheduled standby occurrence via the X
+  // button on its card. Deleting a standby task means the recurrence chain
+  // stops — no new instance will be spawned until the user completes
+  // another recurring task of the same kind.
+  let pendingCancel = $state<TaskDto | null>(null);
+  let cancelling = $state(false);
+
+  function requestCancel(task: TaskDto) {
+    pendingCancel = task;
+  }
+
+  async function confirmCancel() {
+    if (!pendingCancel) return;
+    const target = pendingCancel;
+    cancelling = true;
+    try {
+      const res = await fetch(`/tarefas/${target.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Drop locally for instant feedback, then revalidate.
+      standbyTasks = standbyTasks.filter((t) => t.id !== target.id);
+      toast.success('Próxima ocorrência cancelada.');
+      pendingCancel = null;
+      await invalidateAll();
+    } catch (err) {
+      toast.error(`Falha ao cancelar: ${(err as Error).message}`);
+    } finally {
+      cancelling = false;
     }
   }
 
@@ -115,7 +173,16 @@
     goto(qs ? `?${qs}` : '?', { keepFocus: true, noScroll: true });
   }
 
+  function toggleShowScheduled() {
+    const usp = new URLSearchParams($page.url.searchParams);
+    if (usp.get('showScheduled') === 'true') usp.delete('showScheduled');
+    else usp.set('showScheduled', 'true');
+    const qs = usp.toString();
+    goto(qs ? `?${qs}` : '?', { keepFocus: true, noScroll: true });
+  }
+
   const currentScope = $derived<Scope>(data.filters.scope ?? 'all');
+  const showScheduledActive = $derived(Boolean(data.filters.showScheduled));
   const hasFilters = $derived(
     Boolean(data.filters.priority || currentScope !== 'all' || data.filters.q),
   );
@@ -153,10 +220,10 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <Button variant="outline" size="md" href="/tarefas/export?format=csv" class="hidden md:inline-flex">
-        <Download class="h-4 w-4" />
-        Exportar
-      </Button>
+      <!-- Menu (sem default) — utilizador escolhe CSV ou PDF. -->
+      <div class="hidden md:inline-flex">
+        <ExportMenu baseHref="/tarefas/export" />
+      </div>
       <a
         href="/tarefas/nova"
         class="inline-flex md:hidden items-center justify-center h-10 w-10 text-white bg-[var(--color-red)] hover:bg-[var(--color-red-soft)] transition-colors"
@@ -235,6 +302,20 @@
             {opt.label}
           </button>
         {/each}
+
+        <span class="w-px h-5 bg-[var(--color-border)] mx-1"></span>
+
+        <button
+          type="button"
+          onclick={toggleShowScheduled}
+          title="Mostrar tarefas recorrentes (semanais, mensais, anuais) já agendadas para um próximo ciclo"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] border transition-colors {showScheduledActive
+            ? 'border-[var(--color-red)] bg-[color-mix(in_oklab,var(--color-red)_15%,transparent)] text-[var(--color-red)]'
+            : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border-strong)]'}"
+        >
+          <CalendarClock class="h-3 w-3" />
+          Tarefas agendadas
+        </button>
       </div>
     </div>
   </Panel>
@@ -338,7 +419,7 @@
             </div>
           {/each}
 
-          {#if board[col.status].length === 0}
+          {#if board[col.status].length === 0 && !(col.status === 'TODO' && standbyTasks.length > 0)}
             <div
               class="flex items-center justify-center h-32 border-2 border-dashed border-[var(--color-border)] font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
               style="border-radius: var(--radius-btn);"
@@ -347,11 +428,63 @@
             </div>
           {/if}
         </div>
+
+        {#if col.status === 'TODO' && standbyTasks.length > 0}
+          <!--
+            Standby strip: scheduled recurring tasks that haven't reached
+            their dueDate yet. Outside the dndzone above so they cannot be
+            dragged. The X on each card cancels the upcoming occurrence.
+          -->
+          <div
+            class="px-3 pb-3 pt-1 border-t border-dashed border-[var(--color-border)] space-y-2.5"
+          >
+            <div class="flex items-center gap-1.5 pt-1 pb-0.5">
+              <span class="h-1 w-1 rounded-full bg-[var(--color-text-faint)]"></span>
+              <span
+                class="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--color-text-faint)]"
+              >
+                Agendadas · {standbyTasks.length}
+              </span>
+            </div>
+            {#each standbyTasks as t (t.id)}
+              <TaskCard
+                task={t}
+                standby
+                onclick={() => openTask(t.id)}
+                ondelete={() => requestCancel(t)}
+              />
+            {/each}
+          </div>
+        {/if}
       </Panel>
       </div>
     {/each}
   </div>
+
+  <!--
+    Task activity feed — created / status-changed / completed. Lives at the
+    end of the page so the kanban stays the visual primary while still giving
+    users a quick log of the latest moves. Extra top spacing puts visible
+    breathing room between the board and the log.
+  -->
+  <div class="mt-36 md:mt-48">
+    <RecentActivityFeed items={data.taskActivity} title="Atividade de Tarefas" />
+  </div>
 </section>
+
+<ConfirmDialog
+  open={pendingCancel !== null}
+  title="Cancelar próxima ocorrência?"
+  message={pendingCancel
+    ? `A tarefa "${pendingCancel.title}" agendada para ${pendingCancel.dueDate ? formatDate(pendingCancel.dueDate) : '—'} será eliminada. Não voltará a ser criada automaticamente — para retomar, terás de criar a tarefa de novo.`
+    : ''}
+  confirmLabel="Cancelar ocorrência"
+  cancelLabel="Voltar"
+  tone="danger"
+  busy={cancelling}
+  onconfirm={confirmCancel}
+  oncancel={() => (pendingCancel = null)}
+/>
 
 <style>
   /*

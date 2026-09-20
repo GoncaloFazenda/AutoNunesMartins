@@ -1,11 +1,20 @@
-import { fail } from '@sveltejs/kit';
+import { fail, error, redirect } from '@sveltejs/kit';
 import { vehicleCreateSchema } from '@anm/types';
 import { vehiclesApi } from '$lib/server/vehicles';
 import { ApiError } from '$lib/server/api';
+import { webPublicationAction } from '$lib/server/webPublication';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
-  return {};
+export const load: PageServerLoad = async (event) => {
+  const id = event.url.searchParams.get('viatura');
+  if (!id) return { vehicle: null, signedPhotos: [] };
+  if (!/^c[a-z0-9]{24}$/.test(id)) error(400, 'Viatura inválida.');
+  const vehicle = await vehiclesApi.get(event, id);
+  const signedPhotos = await vehiclesApi
+    .signedPhotos(event, id)
+    .then((result) => result.photos)
+    .catch(() => []);
+  return { vehicle, signedPhotos };
 };
 
 function parseFormToVehicleCreate(formData: FormData) {
@@ -40,6 +49,8 @@ function parseFormToVehicleCreate(formData: FormData) {
 }
 
 export const actions: Actions = {
+  webPublication: (event) =>
+    webPublicationAction(event, event.url.searchParams.get('viatura') ?? ''),
   submit: async (event) => {
     const formData = await event.request.formData();
     const raw = parseFormToVehicleCreate(formData);
@@ -54,7 +65,7 @@ export const actions: Actions = {
 
     try {
       const { id } = await vehiclesApi.create(event, parsed.data);
-      return { id };
+      redirect(303, `/viaturas/nova?viatura=${id}`);
     } catch (err) {
       if (err instanceof ApiError) {
         const body = err.body as { error?: string } | null;

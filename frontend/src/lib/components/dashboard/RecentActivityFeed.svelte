@@ -22,9 +22,12 @@
 
   interface Props {
     items: RecentActivityRow[];
+    /** Header title (default: "Atividade Recente"). Overridden by the tasks
+     *  page to read "Atividade de Tarefas" so the panel context is clear. */
+    title?: string;
   }
 
-  let { items }: Props = $props();
+  let { items, title = 'Atividade Recente' }: Props = $props();
 
   /**
    * Distinct color + icon per activity type so each row reads at a glance.
@@ -46,6 +49,7 @@
     // Sales — gold (money won)
     SALE_CREATED:           { icon: Receipt,         color: '#e6b800' },
     SALE_UPDATED:           { icon: PencilLine,      color: '#f59e0b' },
+    TRADE_IN_RECEIVED:      { icon: ArrowRightLeft,  color: '#f97316' },
     // Customers — violet
     CUSTOMER_ADDED:         { icon: UserPlus,        color: '#a78bfa' },
     CUSTOMER_UPDATED:       { icon: UserCog,         color: '#c4b5fd' },
@@ -67,7 +71,7 @@
       case 'vehicle':
         return `/viaturas/${row.entityId}`;
       case 'sale':
-        return `/sales/${row.entityId}`;
+        return `/vendas/${row.entityId}`;
       case 'customer':
         return `/clientes/${row.entityId}`;
       case 'task':
@@ -92,7 +96,7 @@
 </script>
 
 <Panel>
-  <PanelHeader icon={Activity} title="Atividade Recente" meta={`${items.length} EVENTOS`} />
+  <PanelHeader icon={Activity} {title} meta={`${items.length} EVENTOS`} />
 
   {#if items.length === 0}
     <div

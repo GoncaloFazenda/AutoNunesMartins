@@ -15,7 +15,15 @@ export function buildVehicleWhere(filter: VehicleFilter): Prisma.VehicleWhereInp
   if (filter.brand) where.brand = { contains: filter.brand, mode: 'insensitive' };
   if (filter.model) where.model = { contains: filter.model, mode: 'insensitive' };
   if (filter.fuel) where.fuel = filter.fuel;
-  if (filter.status) where.status = filter.status;
+  if (filter.status) {
+    where.status = filter.status;
+  } else if (filter.notStatus) {
+    // Exclui um único estado quando o positivo não está definido. Caso
+    // típico: a página /viaturas pede notStatus=DRAFT para a tabela
+    // principal não duplicar os carros que aparecem na secção destacada
+    // de "Rascunhos" no topo.
+    where.status = { not: filter.notStatus };
+  }
   if (filter.yearMin !== undefined || filter.yearMax !== undefined) {
     where.year = {};
     if (filter.yearMin !== undefined) where.year.gte = filter.yearMin;
@@ -98,6 +106,21 @@ export async function getVehicleById(tx: TxClient, id: string) {
       sale: {
         include: {
           customer: { select: { id: true, name: true, nif: true } },
+        },
+      },
+      // Surfaces "Adquirido como retoma da venda X" on the vehicle detail
+      // page. Includes the parent sale so the page can deep-link without a
+      // second round trip.
+      sourceTradeIn: {
+        include: {
+          sale: {
+            select: {
+              id: true,
+              saleDate: true,
+              customer: { select: { id: true, name: true } },
+              vehicle: { select: { id: true, brand: true, model: true, year: true } },
+            },
+          },
         },
       },
     },

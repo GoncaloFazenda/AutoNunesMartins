@@ -715,7 +715,8 @@
     inset: 0 0 auto 0;
     z-index: 50;
     height: 72px;
-    padding: 0 clamp(20px, 4vw, 56px);
+    /* Navegação alinhada à coluna de 1600px (fundo continua full-bleed). */
+    padding: 0 max(clamp(20px, 4vw, 56px), calc((100% - 1600px) / 2 + clamp(20px, 4vw, 56px)));
     display: flex;
     align-items: center;
     gap: 32px;
@@ -845,6 +846,8 @@
     position: relative;
     z-index: 1;
     width: 100%;
+    max-width: 1600px;
+    margin-inline: auto;
   }
 
   .back-link {
@@ -1033,6 +1036,8 @@
   /* ─── Section primitives ──────────────────────────────────────────── */
   .section {
     padding: clamp(80px, 12vw, 140px) clamp(20px, 4vw, 56px);
+    max-width: 1600px;
+    margin-inline: auto;
   }
   .section-head {
     display: flex;
@@ -1406,6 +1411,8 @@
   }
   .footer-inner {
     padding: 60px clamp(20px, 4vw, 56px) 40px;
+    max-width: 1600px;
+    margin-inline: auto;
     display: grid;
     grid-template-columns: 1fr;
     gap: 40px;
