@@ -39,7 +39,7 @@ auto-nunes-martins/
 │       ├── lib/server/      # service layer (transactions + ActivityLog emission)
 │       ├── middleware/      # Clerk JWT + auto-provision
 │       └── routes/          # Express routers
-├── frontend/
+├── apps/crm/
 │   ├── vercel.json          # Vercel deployment config
 │   └── src/
 │       ├── lib/components/  # brand/ + common/ + per-feature folders
@@ -49,6 +49,10 @@ auto-nunes-martins/
 │       └── routes/
 │           ├── +page.svelte # login (Clerk SignIn, custom styled)
 │           └── (app)/       # authenticated route group with sidebar+topbar
+├── apps/website/            # independent public SvelteKit app, no Clerk
+│   ├── static/              # public assets + pre-paint startup
+│   └── src/                 # stand routes (including Orbit references), public API client
+├── scripts/                 # independent deployment change detection
 └── shared/types/            # zod schemas + ts types
 ```
 
@@ -73,8 +77,9 @@ yarn install
 
 # 2) Provision Supabase + Clerk (see "Production deploy" below for what each key is for)
 Copy-Item backend\.env.example backend\.env
-Copy-Item frontend\.env.example frontend\.env
-# Edit both files
+Copy-Item apps\crm\.env.example apps\crm\.env
+Copy-Item apps\website\.env.example apps\website\.env
+# Edit the configuration for each app; never copy CRM secrets to the website.
 
 # 3) Run the first migration + seed
 yarn workspace @anm/backend prisma:migrate     # type "init" when prompted
@@ -84,14 +89,16 @@ yarn workspace @anm/backend prisma:seed
 yarn workspace @anm/backend supabase:bucket
 
 # 5) Start dev
-yarn dev   # frontend → http://localhost:5173, backend → http://localhost:4000
+yarn dev   # website → :5173, CRM → :5174, backend → :4000
 ```
 
 ### Day-to-day commands
 
 | Command | Description |
 |---|---|
-| `yarn dev` | Start frontend + backend in parallel |
+| `yarn dev` | Start website, CRM and backend in parallel |
+| `yarn dev:website` | Public website on port 5173 |
+| `yarn dev:crm` | CRM on port 5174 |
 | `yarn typecheck` | Type-check all workspaces |
 | `yarn lint` | Lint all workspaces |
 | `yarn test` | Vitest suites in all workspaces |
@@ -99,13 +106,14 @@ yarn dev   # frontend → http://localhost:5173, backend → http://localhost:40
 | `yarn workspace @anm/backend prisma:studio` | Open Prisma Studio against the DB |
 | `yarn workspace @anm/backend check:env` | Diagnose backend env-var setup |
 | `yarn workspace @anm/backend supabase:bucket` | Create the Storage bucket (idempotent) |
-| `yarn workspace @anm/frontend test:e2e` | Playwright E2E suite |
+| `yarn workspace @anm/crm test:e2e` | CRM Playwright command (requires configured tests) |
+| `node --test scripts/deployment-scope.test.mjs` | Independent deployment scope tests |
 
 ---
 
 ## Production deploy
 
-The two apps deploy independently. Database + storage live on Supabase.
+The website, CRM and backend deploy independently. Database + storage live on Supabase. See [application deployment guide](docs/application-deployment.md).
 
 ### 1. Supabase (production data)
 
@@ -149,23 +157,26 @@ The `fly.toml` config:
 - `/health` HTTP check every 30s
 - `512mb` / 1 shared CPU — plenty for low-traffic admin app
 
-> **Windows local-build note**: `yarn workspace @anm/frontend build` on Windows
+> **Windows local-build note**: the Vercel-adapted app builds on Windows
 > fails on a symlink the `adapter-vercel` creates (`EPERM: symlink ...catchall.func`).
 > Either enable Windows Developer Mode (Settings → Privacy & security →
 > For developers) or skip the local production build — Vercel's Linux build
 > environment doesn't have this restriction. `yarn dev` is unaffected.
 
-### 3. Frontend on Vercel
+### 3. CRM and website on Vercel
 
 1. Connect the GitHub repo at <https://vercel.com/new>
-2. Set the root to **`frontend/`** (or use the monorepo wizard)
-3. Vercel auto-detects SvelteKit. The `frontend/vercel.json` declares:
+2. Create two projects, rooted at **`apps/crm`** and **`apps/website`**. Include files outside each root for workspace dependencies and deployment scripts.
+3. Vercel auto-detects SvelteKit. Each application's `vercel.json` declares:
    - `cdg1` (Paris) region — closest to Lisbon
    - Custom install/build that respects Yarn 4 workspaces
-4. Add env vars in the Vercel dashboard:
+4. Add env vars to the **CRM project** only:
    - `PUBLIC_CLERK_PUBLISHABLE_KEY` = `pk_live_...`
    - `CLERK_SECRET_KEY` = `sk_live_...`
    - `PUBLIC_BACKEND_URL` = `https://auto-nunes-martins-api.fly.dev`
+   - `PUBLIC_WEBSITE_URL` = the public website origin
+5. The **website project** needs only `PUBLIC_BACKEND_URL`. Do not add Clerk keys or storage/database secrets.
+6. Set backend `FRONTEND_ORIGIN` to the CRM origin, and configure Clerk for the CRM domain. Validate both deployment pipelines before publishing; local production builds have not been run for this migration.
 
 ### 4. Wire the Clerk webhook
 

@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/barlow/600.css';
+@import '@fontsource/barlow/600-italic.css';
+
+/* Public baseline only. Orbit defines its own local, preloaded font faces. */
+html,
+body {
+  background: #0a0a0b;
+  color: #f4f4f2;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 14%) transparent;
+}
+[data-theme='light'] * {
+  scrollbar-color: rgb(0 0 0 / 16%) transparent;
+}
+::selection {
+  background: #e30613;
+  color: white;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

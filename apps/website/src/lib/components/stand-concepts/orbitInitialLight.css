@@ -1,0 +1,190 @@
+/* Initial illumination sampled at scroll zero. The runtime refines these values
+   against actual geometry; percentage coordinates follow each target's dimensions.
+   Keep layout, line path and initial scroll pose unchanged. */
+@media (prefers-reduced-motion: no-preference) and (max-width: 375px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 78.377%;
+    --light-y: 182.192%;
+    --nearby-light: 0.7525;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 95.287%;
+    --light-y: 153.077%;
+    --nearby-light: 0.9096;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: 77.829%;
+    --light-y: 1.779%;
+    --nearby-light: 1.0000;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 376px) and (max-width: 430px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 78.357%;
+    --light-y: 168.271%;
+    --nearby-light: 0.7772;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 103.454%;
+    --light-y: 134.415%;
+    --nearby-light: 0.8668;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: 77.898%;
+    --light-y: 2.007%;
+    --nearby-light: 1.0000;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 431px) and (max-width: 600px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 78.296%;
+    --light-y: 147.968%;
+    --nearby-light: 0.8071;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 127.956%;
+    --light-y: 112.608%;
+    --nearby-light: 0.6732;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: 77.963%;
+    --light-y: 2.527%;
+    --nearby-light: 1.0000;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 601px) and (max-width: 700px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 78.146%;
+    --light-y: 152.124%;
+    --nearby-light: 0.7574;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 187.851%;
+    --light-y: 152.368%;
+    --nearby-light: 0.1796;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: 77.916%;
+    --light-y: 3.600%;
+    --nearby-light: 1.0000;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 701px) and (max-width: 900px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 99.666%;
+    --light-y: 140.901%;
+    --nearby-light: 0.9079;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 117.584%;
+    --light-y: 54.868%;
+    --nearby-light: 0.8391;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: 1.918%;
+    --light-y: 80.266%;
+    --nearby-light: 1.0000;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 901px) and (max-width: 1050px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 99.603%;
+    --light-y: 70.717%;
+    --nearby-light: 1.0000;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 149.063%;
+    --light-y: -127.790%;
+    --nearby-light: 0.6456;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: -3.836%;
+    --light-y: 79.903%;
+    --nearby-light: 0.8840;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 1051px) and (max-width: 1360px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 99.525%;
+    --light-y: 63.026%;
+    --nearby-light: 1.0000;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 161.974%;
+    --light-y: -175.258%;
+    --nearby-light: 0.4931;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: -4.174%;
+    --light-y: 76.098%;
+    --nearby-light: 0.8436;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 1361px) and (max-width: 1680px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 99.479%;
+    --light-y: 74.795%;
+    --nearby-light: 1.0000;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 162.119%;
+    --light-y: -127.426%;
+    --nearby-light: 0.4485;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: -2.742%;
+    --light-y: 76.646%;
+    --nearby-light: 0.8847;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 1681px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 99.373%;
+    --light-y: 76.872%;
+    --nearby-light: 1.0000;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 191.686%;
+    --light-y: -118.342%;
+    --nearby-light: 0.2010;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: -0.503%;
+    --light-y: 76.781%;
+    --nearby-light: 0.9738;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 701px) and (max-width: 1050px) and (max-height: 850px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 99.603%;
+    --light-y: 70.717%;
+    --nearby-light: 1.0000;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 149.063%;
+    --light-y: -127.790%;
+    --nearby-light: 0.6456;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: -3.836%;
+    --light-y: 79.903%;
+    --nearby-light: 0.8840;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 1051px) and (max-width: 1680px) and (min-height: 1000px) {
+  .design.orbit-home .orbit-title {
+    --light-x: 99.373%;
+    --light-y: 76.872%;
+    --nearby-light: 1.0000;
+  }
+  .design.orbit-home .orbit-title-note {
+    --light-x: 191.686%;
+    --light-y: -118.342%;
+    --nearby-light: 0.2010;
+  }
+  .design.orbit-home .orbit-main-photo {
+    --light-x: -0.503%;
+    --light-y: 76.781%;
+    --nearby-light: 0.9738;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "sveltekit",
+  "ignoreCommand": "node ../../scripts/ignore-deployment.mjs crm",
+  "buildCommand": "yarn workspace @anm/types build && yarn workspace @anm/crm build",
+  "installCommand": "corepack enable && yarn install --immutable",
+  "outputDirectory": ".svelte-kit/output",
+  "regions": ["cdg1"],
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}

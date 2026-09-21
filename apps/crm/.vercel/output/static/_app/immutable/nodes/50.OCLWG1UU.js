@@ -1,0 +1,1 @@
+import"../chunks/BiIkXg5C.js";import{aZ as e,aW as o}from"../chunks/CAed52Cu.js";import{D as a}from"../chunks/BviAu3c3.js";function m(t,i){e(i,!0),a(t,{edition:"orbit",get publicVehicle(){return i.data.vehicle}}),o()}export{m as component};

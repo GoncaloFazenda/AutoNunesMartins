@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "website",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["workspace", "@anm/website", "dev"],
+      "port": 5173,
+      "autoPort": false
+    },
+    {
+      "name": "crm",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["workspace", "@anm/crm", "dev"],
+      "port": 5174,
+      "autoPort": false
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["workspace", "@anm/backend", "dev"],
+      "port": 4000
+    }
+  ]
+}

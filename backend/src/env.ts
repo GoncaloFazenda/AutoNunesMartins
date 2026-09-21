@@ -4,7 +4,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().default(4000),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.string().default('info'),
-  FRONTEND_ORIGIN: z.string().url().default('http://localhost:5173'),
+  FRONTEND_ORIGIN: z.string().url().default('http://localhost:5174'),
 
   DATABASE_URL: z.string().min(1),
   DIRECT_URL: z.string().min(1).optional(),

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 650" fill="none">
+  <rect width="1000" height="650" fill="#19191c"/>
+  <path d="M155 395h695M230 371v-61l68-19 70-72h255l81 77 66 19v56h-51m-77 0H352" stroke="#5d5d65" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m344 288 43-48h107v48H344Zm170-48h94l53 48H514v-48Z" stroke="#5d5d65" stroke-width="3"/>
+  <circle cx="310" cy="366" r="39" stroke="#7a7a82" stroke-width="3"/><circle cx="681" cy="366" r="39" stroke="#7a7a82" stroke-width="3"/>
+  <path d="M465 466h70" stroke="#e30613" stroke-width="2"/>
+  <text x="500" y="508" text-anchor="middle" fill="#aaaab2" font-family="Arial,sans-serif" font-size="34" letter-spacing="1.5">IMAGEM INDISPONÍVEL</text>
+</svg>

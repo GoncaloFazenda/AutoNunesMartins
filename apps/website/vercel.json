@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "sveltekit",
+  "ignoreCommand": "node ../../scripts/ignore-deployment.mjs website",
+  "buildCommand": "yarn workspace @anm/website build",
+  "installCommand": "corepack enable && yarn install --immutable",
+  "regions": ["cdg1"]
+}

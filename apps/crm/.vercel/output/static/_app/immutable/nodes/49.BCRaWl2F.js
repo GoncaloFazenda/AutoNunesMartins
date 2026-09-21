@@ -1,0 +1,1 @@
+import"../chunks/BiIkXg5C.js";import{aZ as a,aW as i}from"../chunks/CAed52Cu.js";import{D as r}from"../chunks/BviAu3c3.js";function s(o,t){a(t,!0),r(o,{edition:"orbit",catalog:!0,get stock(){return t.data.stock}}),i()}export{s as component};

@@ -1,0 +1,57 @@
+<div id="soft-light-comparison" aria-label="Comparação de fundos claros para o CRM">
+  <style>
+    #soft-light-comparison { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #151619; }
+    #soft-light-comparison * { box-sizing: border-box; }
+    #soft-light-comparison .options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    #soft-light-comparison .option { min-width: 0; }
+    #soft-light-comparison .label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 9px; }
+    #soft-light-comparison h3 { margin: 0; font-size: 15px; font-weight: 600; }
+    #soft-light-comparison .note { color: #60636a; font-size: 12px; }
+    #soft-light-comparison .app { min-height: 350px; overflow: hidden; border: 1px solid rgba(17, 18, 20, .11); border-radius: 7px; background: var(--canvas); }
+    #soft-light-comparison .chrome { height: 44px; display: flex; align-items: center; gap: 9px; padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--chrome); }
+    #soft-light-comparison .mark { width: 17px; height: 17px; background: #e30613; transform: skewX(-13deg); }
+    #soft-light-comparison .brand { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    #soft-light-comparison .content { padding: 18px; }
+    #soft-light-comparison .eyebrow { margin: 0 0 4px; color: #74777d; font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    #soft-light-comparison h4 { margin: 0 0 15px; font-size: 18px; font-weight: 600; }
+    #soft-light-comparison .summary { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-bottom: 12px; }
+    #soft-light-comparison .card { min-height: 80px; padding: 13px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); }
+    #soft-light-comparison .metric { display: block; margin-top: 9px; font-size: 22px; font-weight: 650; }
+    #soft-light-comparison .bar { display: flex; align-items: end; gap: 4px; height: 35px; margin-top: 8px; }
+    #soft-light-comparison .bar span { width: 15%; background: #e30613; opacity: .18; }
+    #soft-light-comparison .bar span:nth-child(2) { height: 42%; opacity: .35; }
+    #soft-light-comparison .bar span:nth-child(3) { height: 75%; opacity: .72; }
+    #soft-light-comparison .bar span:nth-child(4) { height: 55%; opacity: .48; }
+    #soft-light-comparison .bar span:nth-child(5) { height: 94%; }
+    #soft-light-comparison .bar span:nth-child(6) { height: 68%; opacity: .64; }
+    #soft-light-comparison .rows { padding: 1px 13px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); }
+    #soft-light-comparison .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 35px; border-bottom: 1px solid var(--line); font-size: 11px; }
+    #soft-light-comparison .row:last-child { border-bottom: 0; }
+    #soft-light-comparison .status { padding: 3px 6px; border-radius: 3px; background: #eaf3ed; color: #256842; font-size: 10px; font-weight: 650; }
+    #soft-light-comparison .current { --canvas: #f4f2ee; --chrome: #ffffff; --panel: #ffffff; --line: rgba(15, 15, 17, .08); }
+    #soft-light-comparison .warm { --canvas: #f3f1ec; --chrome: #faf9f6; --panel: #fdfcf9; --line: rgba(48, 42, 34, .10); }
+    #soft-light-comparison .mist { --canvas: #f3f5f6; --chrome: #f9fafb; --panel: #fcfdfd; --line: rgba(27, 35, 42, .10); }
+    #soft-light-comparison .swatch { display: flex; gap: 4px; margin-top: 10px; }
+    #soft-light-comparison .swatch i { width: 18px; height: 18px; border: 1px solid rgba(15, 15, 17, .12); border-radius: 50%; background: var(--canvas); }
+    #soft-light-comparison .swatch i:nth-child(2) { background: var(--chrome); }
+    #soft-light-comparison .swatch i:nth-child(3) { background: var(--panel); }
+    @media (max-width: 680px) { #soft-light-comparison .options { grid-template-columns: 1fr; } #soft-light-comparison .app { min-height: 290px; } }
+  </style>
+  <div class="options">
+    <section class="option current" aria-label="Opção atual">
+      <div class="label"><h3>Atual</h3><span class="note">contraste alto</span></div>
+      <div class="app"><div class="chrome"><span class="mark"></span><span class="brand">Auto Nunes Martins</span></div><div class="content"><p class="eyebrow">Visão geral</p><h4>Bom dia, Gonçalo</h4><div class="summary"><div class="card"><span class="note">Vendas do mês</span><strong class="metric">24 580 EUR</strong></div><div class="card"><span class="note">Conversão</span><div class="bar"><span></span><span></span><span></span><span></span><span></span><span></span></div></div></div><div class="rows"><div class="row"><span>Mercedes-Benz Classe A</span><span class="status">Publicado</span></div><div class="row"><span>BMW 320d Touring</span><span class="status">Publicado</span></div><div class="row"><span>Peugeot 3008</span><span class="status">Publicado</span></div></div></div></div>
+      <div class="swatch"><i></i><i></i><i></i></div>
+    </section>
+    <section class="option warm" aria-label="Opção papel suave">
+      <div class="label"><h3>Papel suave</h3><span class="note">recomendada</span></div>
+      <div class="app"><div class="chrome"><span class="mark"></span><span class="brand">Auto Nunes Martins</span></div><div class="content"><p class="eyebrow">Visão geral</p><h4>Bom dia, Gonçalo</h4><div class="summary"><div class="card"><span class="note">Vendas do mês</span><strong class="metric">24 580 EUR</strong></div><div class="card"><span class="note">Conversão</span><div class="bar"><span></span><span></span><span></span><span></span><span></span><span></span></div></div></div><div class="rows"><div class="row"><span>Mercedes-Benz Classe A</span><span class="status">Publicado</span></div><div class="row"><span>BMW 320d Touring</span><span class="status">Publicado</span></div><div class="row"><span>Peugeot 3008</span><span class="status">Publicado</span></div></div></div></div>
+      <div class="swatch"><i></i><i></i><i></i></div>
+    </section>
+    <section class="option mist" aria-label="Opção névoa fria">
+      <div class="label"><h3>Névoa fria</h3><span class="note">mais técnica</span></div>
+      <div class="app"><div class="chrome"><span class="mark"></span><span class="brand">Auto Nunes Martins</span></div><div class="content"><p class="eyebrow">Visão geral</p><h4>Bom dia, Gonçalo</h4><div class="summary"><div class="card"><span class="note">Vendas do mês</span><strong class="metric">24 580 EUR</strong></div><div class="card"><span class="note">Conversão</span><div class="bar"><span></span><span></span><span></span><span></span><span></span><span></span></div></div></div><div class="rows"><div class="row"><span>Mercedes-Benz Classe A</span><span class="status">Publicado</span></div><div class="row"><span>BMW 320d Touring</span><span class="status">Publicado</span></div><div class="row"><span>Peugeot 3008</span><span class="status">Publicado</span></div></div></div></div>
+      <div class="swatch"><i></i><i></i><i></i></div>
+    </section>
+  </div>
+</div>

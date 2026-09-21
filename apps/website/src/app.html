@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-PT" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0A0A0B" />
+    <script src="%sveltekit.assets%/orbit-startup.js"></script>
+    <style>
+      html[data-orbit-restoring] {
+        scroll-behavior: auto !important;
+        overflow-anchor: none;
+      }
+      html[data-orbit-restoring] body {
+        min-height: var(--orbit-restore-height, 0px);
+      }
+    </style>
+    %sveltekit.head%
+  </head>
+  <body data-sveltekit-preload-data="hover">
+    <div style="display: contents">%sveltekit.body%</div>
+    <script>
+      window.initializeOrbitDocument();
+    </script>
+  </body>
+</html>

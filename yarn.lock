@@ -37,9 +37,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@anm/frontend@workspace:frontend":
+"@anm/crm@workspace:apps/crm":
   version: 0.0.0-use.local
-  resolution: "@anm/frontend@workspace:frontend"
+  resolution: "@anm/crm@workspace:apps/crm"
   dependencies:
     "@anm/types": "workspace:^"
     "@clerk/themes": "npm:2.4.57"
@@ -80,6 +80,33 @@ __metadata:
   resolution: "@anm/types@workspace:shared/types"
   dependencies:
     typescript: "npm:^5.7.2"
+    vitest: "npm:^2.1.8"
+    zod: "npm:^3.24.1"
+  languageName: unknown
+  linkType: soft
+
+"@anm/website@workspace:apps/website":
+  version: 0.0.0-use.local
+  resolution: "@anm/website@workspace:apps/website"
+  dependencies:
+    "@fontsource/barlow": "npm:^5.1.0"
+    "@fontsource/inter": "npm:^5.1.0"
+    "@sveltejs/adapter-vercel": "npm:^5.5.1"
+    "@sveltejs/kit": "npm:^2.9.0"
+    "@sveltejs/vite-plugin-svelte": "npm:^5.0.1"
+    "@tailwindcss/vite": "npm:^4.0.0-beta.7"
+    "@types/node": "npm:^22.10.0"
+    "@typescript-eslint/eslint-plugin": "npm:^8.19.0"
+    "@typescript-eslint/parser": "npm:^8.19.0"
+    eslint: "npm:^9.17.0"
+    eslint-plugin-svelte: "npm:^2.46.1"
+    lucide-svelte: "npm:^0.460.0"
+    svelte: "npm:^5.16.0"
+    svelte-check: "npm:^4.1.1"
+    svelte-eslint-parser: "npm:^0.43.0"
+    tailwindcss: "npm:^4.0.0-beta.7"
+    typescript: "npm:^5.7.2"
+    vite: "npm:^6.0.3"
     vitest: "npm:^2.1.8"
     zod: "npm:^3.24.1"
   languageName: unknown

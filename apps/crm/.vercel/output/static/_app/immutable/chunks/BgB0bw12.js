@@ -1,0 +1,1 @@
+import{ax as l,av as n}from"./CAed52Cu.js";function o(i,f,e,r,s){var d;l&&n();var t=(d=f.$$slots)==null?void 0:d[e],a=!1;t===!0&&(t=f[e==="default"?"children":e],a=!0),t===void 0?s!==null&&s(i):t(i,a?()=>r:r)}export{o as s};

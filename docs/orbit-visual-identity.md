@@ -1,5 +1,24 @@
 # Identidade visual — website público Orbit
 
+## Estabilidade visual e carregamento
+
+Tratar a estabilidade do layout como requisito de cada alteração, não apenas do estado final.
+Reservar a mesma geometria antes e depois da hidratação: alturas de cenas, espaços da navegação,
+proporções de imagens e posição inicial de elementos animados. Animações devem preferir
+transform e opacity; o foco dos campos reforça a borda para dentro, sem alterar dimensões.
+
+Verificar homepage, catálogo e ficha em desktop e mobile: entrada direta, refresh no topo,
+refresh com scroll restaurado, fontes/imagens a carregar, filtros, formulário e navegação.
+Não declarar CLS ou SEO aprovados apenas com svelte-check: medir num build de produção.
+
+Correções aplicadas: fontes locais Orbit Inter com preload dos pesos principais e display=optional
+(em ligação lenta pode manter Arial nessa navegação, evitando substituição tardia); DiscoverVehicles
+usa altura automática e linhas de grelha uniformes, sem ResizeObserver; o header reserva a
+geometria sticky antes da hidratação. As fotos da ficha já reservam proporção 4/3.
+Pendente: medição de CLS em produção e testes de refresh com scroll restaurado nas diferentes
+dimensões de ecrã. Não confundir regras antigas de cenas já removidas com problemas ativos.
+Manter noindex nas páginas demonstrativas até à revisão de conteúdo e publicação real.
+
 ## Brilho das linhas vermelhas
 
 O brilho das linhas é uma assinatura visual do Orbit: núcleo vermelho definido,

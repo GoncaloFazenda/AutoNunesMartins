@@ -1,0 +1,1 @@
+import{af as c,bt as o,b1 as i,a6 as b,b6 as d}from"./CAed52Cu.js";function u(e,n,f){c(()=>{var r=o(()=>n(e,f==null?void 0:f())||{});if(f&&(r!=null&&r.update)){var s=!1,t={};i(()=>{var a=f();b(a),s&&d(t,a)&&(t=a,r.update(a))}),s=!0}if(r!=null&&r.destroy)return()=>r.destroy()})}export{u as a};
