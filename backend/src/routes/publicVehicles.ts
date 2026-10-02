@@ -6,6 +6,7 @@ import {
   getPublicPhotoPath,
   getPublicVehicle,
   listPublicVehicles,
+  relatedPublicVehicles,
 } from '../lib/data/publicVehicle.js';
 import { getBucketName, getSupabase } from '../lib/data/storage.js';
 import { publicSlugSchema, publicVehicleQuerySchema } from '../lib/domain/publicVehicle.js';
@@ -27,6 +28,19 @@ router.get('/', async (req, res) => {
   } catch {
     logger.error('Public vehicle listing unavailable');
     res.status(503).json({ error: 'Public catalogue temporarily unavailable' });
+  }
+});
+
+router.get('/:slug/related', async (req, res) => {
+  const slug = publicSlugSchema.safeParse(req.params.slug);
+  if (!slug.success) { res.status(404).json({ error: 'Vehicle not found' }); return; }
+  try {
+    const items = await relatedPublicVehicles(prisma, slug.data);
+    if (items === null) { res.status(404).json({ error: 'Vehicle not found' }); return; }
+    res.json(items);
+  } catch {
+    logger.error('Related public vehicles unavailable');
+    res.status(503).json({ error: 'Related vehicles temporarily unavailable' });
   }
 });
 

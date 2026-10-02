@@ -59,6 +59,8 @@ model Vehicle {
   /// Explicitly approved subset of this vehicle's private storage photos.
   publicPhotoPaths   String[]             @default([])
   publicTransmission PublicTransmission?
+  /// Optional confirmed specifications and equipment approved for public display.
+  publicSpecifications Json?
 
   expenses VehicleExpense[]
   sale     Sale?

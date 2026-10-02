@@ -11,6 +11,7 @@
   let description = $state('');
   let transmission = $state('');
   let selected = $state<string[]>([]);
+  let specs = $state({ powerHp: '', engineCc: '', doors: '', seats: '', category: '', color: '', equipment: '' });
   let pending = $state(false);
   let message = $state('');
   let confirmationDialog: HTMLDialogElement;
@@ -55,6 +56,8 @@
     description =
       vehicle.publicDescription ?? `${vehicle.brand} ${vehicle.model}, de ${vehicle.year}.`;
     transmission = vehicle.publicTransmission ?? '';
+    const details = vehicle.publicSpecifications;
+    specs = { powerHp: String(details?.powerHp ?? ''), engineCc: String(details?.engineCc ?? ''), doors: String(details?.doors ?? ''), seats: String(details?.seats ?? ''), category: details?.category ?? '', color: details?.color ?? '', equipment: details?.equipment?.join('\n') ?? '' };
     selected = (
       vehicle.webPublished
         ? vehicle.publicPhotoPaths
@@ -162,6 +165,20 @@
       Apenas este texto será publicado. Não inclua notas internas, matrícula, VIN ou dados pessoais.
       O preço público é aprovado separadamente do preço interno.
     </p>
+    <fieldset>
+      <legend>Detalhes públicos confirmados (opcional)</legend>
+      <input type="hidden" name="specificationsPresent" value="true" />
+      <p class="note">Preencha apenas características e equipamento confirmados nesta viatura. Os campos vazios não aparecem no site.</p>
+      <div class="fields">
+        <label>Potência (cv)<input name="powerHp" type="number" min="1" max="3000" step="1" bind:value={specs.powerHp} /></label>
+        <label>Cilindrada (cm³)<input name="engineCc" type="number" min="1" max="20000" step="1" bind:value={specs.engineCc} /></label>
+        <label>Portas<input name="doors" type="number" min="1" max="8" step="1" bind:value={specs.doors} /></label>
+        <label>Lugares<input name="seats" type="number" min="1" max="20" step="1" bind:value={specs.seats} /></label>
+        <label>Categoria<input name="category" maxlength="80" bind:value={specs.category} /></label>
+        <label>Cor<input name="color" maxlength="80" bind:value={specs.color} /></label>
+      </div>
+      <label>Equipamento confirmado (um item por linha)<textarea name="equipment" rows="5" bind:value={specs.equipment}></textarea></label>
+    </fieldset>
     <fieldset>
       <legend>Fotografias autorizadas para o site</legend>
       {#each allowedPhotos as path, index}<label class="photo-choice"

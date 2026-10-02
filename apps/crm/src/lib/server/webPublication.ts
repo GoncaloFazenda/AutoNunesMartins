@@ -1,5 +1,6 @@
 import { fail, type RequestEvent } from '@sveltejs/kit';
 import { z } from 'zod';
+import { publicSpecificationsSchema } from '@anm/types';
 import { vehiclesApi } from './vehicles';
 import { ApiError } from './api';
 const schema = z.object({
@@ -11,6 +12,7 @@ const schema = z.object({
   description: z.string().trim().min(1, 'Escreva uma descrição pública.').max(6000),
   photoPaths: z.array(z.string()).max(20),
   transmission: z.enum(['MANUAL', 'AUTOMATIC']).nullable(),
+  specifications: publicSpecificationsSchema.optional(),
 });
 export async function webPublicationAction(event: RequestEvent, id: string) {
   if (!/^c[a-z0-9]{24}$/.test(id)) return fail(400, { error: 'Viatura inválida.' });
@@ -21,6 +23,12 @@ export async function webPublicationAction(event: RequestEvent, id: string) {
     description: form.get('publicDescription'),
     photoPaths: form.getAll('publicPhotoPaths'),
     transmission: form.get('publicTransmission') || null,
+    ...(form.has('specificationsPresent') ? { specifications: {
+      ...Object.fromEntries(['powerHp', 'engineCc', 'doors', 'seats'].map(key => [key, form.get(key) ? Number(form.get(key)) : null])),
+      category: form.get('category') || '',
+      color: form.get('color') || '',
+      equipment: String(form.get('equipment') || '').split(/\r?\n/).map(value => value.trim()).filter(Boolean),
+    } } : {}),
   });
   if (!remove && !parsed.success)
     return fail(400, { error: parsed.error.issues[0]?.message ?? 'Reveja os dados públicos.' });

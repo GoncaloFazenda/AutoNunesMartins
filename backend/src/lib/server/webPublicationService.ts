@@ -84,6 +84,7 @@ export async function setWebPublication(
                   publicDescription: input.description,
                   publicPhotoPaths: input.photoPaths,
                   publicTransmission: input.transmission,
+                  ...(input.specifications !== undefined ? { publicSpecifications: input.specifications } : {}),
                 }
               : { webPublished: false },
             select: { webPublished: true, publicSlug: true },

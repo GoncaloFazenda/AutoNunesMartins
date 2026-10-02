@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
+import { publicSpecificationsSchema } from '@anm/types';
 import { isApprovedPhotoPath, type PublicVehicleQuery } from '../domain/publicVehicle.js';
 
 // Never reuse the CRM's Vehicle select, filter builder, or serializer here.
@@ -16,6 +17,7 @@ export const publicVehicleSelect = {
   publicDescription: true,
   publicPhotoPaths: true,
   publicTransmission: true,
+  publicSpecifications: true,
   photos: true,
 } satisfies Prisma.VehicleSelect;
 type PublicRow = Prisma.VehicleGetPayload<{ select: typeof publicVehicleSelect }>;
@@ -94,6 +96,7 @@ export function publicVehicleDto(row: PublicRow) {
     currency: 'EUR' as const,
     description: row.publicDescription,
     transmission: row.publicTransmission,
+    specifications: publicSpecificationsSchema.safeParse(row.publicSpecifications ?? {}).data ?? {},
     availability: row.status,
     // Storage paths/tokens/URLs stay on the server. Each request checks approval.
     photos: approvedPaths(row).map(
@@ -179,6 +182,38 @@ export async function getPublicVehicle(db: PrismaClient, slug: string) {
     select: publicVehicleSelect,
   });
   return row ? publicVehicleDto(row) : null;
+}
+
+/** The nearest three must be among the nearest three on either side of the price. */
+export async function relatedPublicVehicles(db: PrismaClient, slug: string) {
+  return db.$transaction(async (tx) => {
+    const current = await tx.vehicle.findFirst({
+      where: { ...publicVehicleWhere(), publicSlug: slug },
+      select: publicVehicleSelect,
+    });
+    if (!current) return null;
+    const price = current.publicPrice;
+    if (!price || !price.isFinite() || !price.gt(0)) return [];
+    const where = { ...publicVehicleWhere(), id: { not: current.id } };
+    const [below, above] = await Promise.all([
+      tx.vehicle.findMany({
+        where: { ...where, publicPrice: { gt: 0, lte: price } },
+        select: publicVehicleSelect,
+        orderBy: [{ publicPrice: 'desc' }, { publicSlug: 'asc' }], take: 3,
+      }),
+      tx.vehicle.findMany({
+        where: { ...where, publicPrice: { gt: price } },
+        select: publicVehicleSelect,
+        orderBy: [{ publicPrice: 'asc' }, { publicSlug: 'asc' }], take: 3,
+      }),
+    ]);
+    return [...new Map([...below, ...above]
+      .filter(row => row.id !== current.id && row.publicPrice?.isFinite() && row.publicPrice.gt(0))
+      .map(row => [row.publicSlug, row])).values()]
+      .sort((a, b) => a.publicPrice!.minus(price).abs().comparedTo(b.publicPrice!.minus(price).abs())
+        || a.publicSlug!.localeCompare(b.publicSlug!))
+      .slice(0, 3).map(publicVehicleDto);
+  }, { isolationLevel: 'RepeatableRead' });
 }
 
 export async function getPublicPhotoPath(db: PrismaClient, slug: string, index: number) {

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
+import { publicSpecificationsSchema } from '@anm/types';
 
 const fuelValues = ['GASOLINE', 'DIESEL', 'HYBRID', 'PLUGIN_HYBRID', 'ELECTRIC', 'LPG'] as const;
 const fuelLabels: Record<string, (typeof fuelValues)[number]> = {
@@ -50,6 +51,9 @@ export const publicVehicleQuerySchema = z
   })
   .strict()
   .superRefine((v, ctx) => {
+    if (v.modelo && !v.marca) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['modelo'], message: 'Choose a brand before a model' });
+    }
     for (const [min, max] of [
       ['ano_min', 'ano_max'],
       ['km_min', 'km_max'],
@@ -99,6 +103,7 @@ export const webPublicationSchema = z.discriminatedUnion('published', [
         .max(20)
         .refine((v) => new Set(v).size === v.length, 'Duplicate photos'),
       transmission: z.enum(['MANUAL', 'AUTOMATIC']).nullable(),
+      specifications: publicSpecificationsSchema.optional(),
     })
     .strict(),
 ]);

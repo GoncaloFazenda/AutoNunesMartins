@@ -7,3 +7,4 @@ export * from './sale.js';
 export * from './task.js';
 export * from './expense.js';
 export * from './activity.js';
+export * from './publicSpecifications.js';

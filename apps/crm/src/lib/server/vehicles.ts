@@ -1,3 +1,4 @@
+import type { PublicSpecifications } from '@anm/types';
 import type { VehicleCreate, VehicleFilter, VehicleStatus, Fuel } from '@anm/types';
 import type { RequestEvent } from '@sveltejs/kit';
 import { apiJson } from './api.js';
@@ -49,6 +50,7 @@ export interface VehicleDetailResponse {
   publicDescription: string | null;
   publicPhotoPaths: string[];
   publicTransmission: 'MANUAL' | 'AUTOMATIC' | null;
+  publicSpecifications?: PublicSpecifications | null;
   id: string;
   brand: string;
   model: string;
@@ -138,6 +140,7 @@ export const vehiclesApi = {
           description: string;
           photoPaths: string[];
           transmission: 'MANUAL' | 'AUTOMATIC' | null;
+          specifications?: PublicSpecifications;
         },
   ): Promise<{ published: boolean; slug: string | null }> {
     return apiJson(event, `/api/vehicles/${id}/web-publication`, {

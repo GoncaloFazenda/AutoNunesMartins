@@ -171,6 +171,8 @@ describe('public query validation and search boundary', () => {
     });
   });
   it.each([
+    { modelo: 'Série 1' },
+    { modelo: 'Série 1', marca: ' ' },
     { pageSize: '31' },
     { pageSize: '0' },
     { pagina: '1001' },
@@ -249,6 +251,7 @@ describe('public HTTP responses never disclose private inventory', () => {
       price: '21900.25',
       currency: 'EUR',
       description: 'Approved public description',
+      specifications: {},
       transmission: 'MANUAL',
       availability: 'AVAILABLE',
       photos: [`/api/public/vehicles/${slug}/photos/0`],
@@ -526,4 +529,47 @@ describe('explicit publication and stable unique slugs', () => {
     expect(sql).toContain('CREATE UNIQUE INDEX "Vehicle_publicSlug_key"');
     expect(sql).not.toMatch(/\b(?:UPDATE|DELETE|DROP|TRUNCATE)\b/);
   });
+});
+
+describe('nearest-price recommendations', () => {
+ const candidate = (suffix: string, price: string | null) => ({...fixture(), id: 'candidate-'+suffix, publicSlug: 'car-'+suffix.padStart(12,'a'), publicPrice: price === null ? null : new Prisma.Decimal(price), publicPhotoPaths: []});
+ it('ranks both sides of the price, excludes current and duplicates, and enforces eligibility', async () => {
+  mocks.db.vehicle.findMany.mockResolvedValueOnce([candidate('1','21800.25'),candidate('2','20000'),fixture()]).mockResolvedValueOnce([candidate('3','22000.25'),candidate('1','21800.25'),candidate('4','23000')]);
+  const response=await fetch(base+'/api/public/vehicles/'+slug+'/related');
+  expect(response.status).toBe(200);
+  expect((await response.json()).map((v: {price:string})=>v.price)).toEqual(['21800.25','22000.25','23000.00']);
+  for(const [query] of mocks.db.vehicle.findMany.mock.calls) expect(query.where).toMatchObject({webPublished:true,publicSlug:{not:null},status:{in:['AVAILABLE','RESERVED']},soldDate:null,sale:{is:null},id:{not:id}});
+ });
+ it.each([null,'0','-1','NaN'])('omits suggestions for invalid source price %s',async(price)=>{
+  mocks.db.vehicle.findFirst.mockResolvedValue(candidate('1',price));
+  const response=await fetch(base+'/api/public/vehicles/'+slug+'/related');
+  expect(await response.json()).toEqual([]);expect(mocks.db.vehicle.findMany).not.toHaveBeenCalled();
+ });
+ it('rejects invalid candidate prices',async()=>{
+  mocks.db.vehicle.findMany.mockResolvedValueOnce([candidate('1',null),candidate('2','0'),candidate('3','-1')]).mockResolvedValueOnce([candidate('4','NaN'),candidate('5','22000')]);
+  const response=await fetch(base+'/api/public/vehicles/'+slug+'/related');
+  expect((await response.json()).map((v:{price:string})=>v.price)).toEqual(['22000.00']);
+ });
+ it('returns 404 for a non-public source',async()=>{
+  mocks.db.vehicle.findFirst.mockResolvedValue(null);
+  const response=await fetch(base+'/api/public/vehicles/'+slug+'/related');
+  expect(response.status).toBe(404);expect(mocks.db.vehicle.findMany).not.toHaveBeenCalled();
+ });
+});
+
+describe('confirmed public specifications boundary',()=>{
+ it('persists optional specifications through the publication write path',async()=>{
+  const input=webPublicationSchema.parse({...publication,specifications:{powerHp:110,seats:7,equipment:['Bluetooth']}});
+  await setWebPublication(mocks.db as unknown as PrismaClient,id,input,null);
+  expect(mocks.db.vehicle.update).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({publicSpecifications:{powerHp:110,seats:7,equipment:['Bluetooth']}})}));
+ });
+ it('rejects private or invalid specification keys at the boundary',()=>{
+  expect(webPublicationSchema.safeParse({...publication,specifications:{purchasePrice:100}}).success).toBe(false);
+  expect(webPublicationSchema.safeParse({...publication,specifications:{powerHp:0}}).success).toBe(false);
+ });
+ it('returns approved specifications in the public DTO',async()=>{
+  mocks.db.vehicle.findFirst.mockResolvedValue({...fixture(),publicSpecifications:{powerHp:110,equipment:['Bluetooth']}});
+  const response=await fetch(base+'/api/public/vehicles/'+slug);
+  const result=await response.json();expect(result.specifications).toEqual({powerHp:110,equipment:['Bluetooth']});expect(JSON.stringify(result)).not.toMatch(/SECRET|PRIVATE/);
+ });
 });
