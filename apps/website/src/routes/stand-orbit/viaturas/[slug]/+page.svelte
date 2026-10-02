@@ -4,4 +4,4 @@
   let { data }: { data: PageData } = $props();
 </script>
 
-<DesignEdition edition="orbit" publicVehicle={data.vehicle} />
+<DesignEdition edition="orbit" publicVehicle={data.vehicle} relatedVehicles={data.relatedVehicles} />

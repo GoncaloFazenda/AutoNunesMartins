@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { loadPublicVehicle } from '$lib/server/publicVehicles';
+import { loadPublicVehicle, loadRelatedVehicles } from '$lib/server/publicVehicles';
 import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ params, setHeaders }) => {
   setHeaders({ 'cache-control': 'no-store' });
@@ -11,5 +11,5 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
         ? 'Esta viatura não está publicada.'
         : 'A ficha está temporariamente indisponível.',
     );
-  return { vehicle: result.vehicle };
+  return { vehicle: result.vehicle, relatedVehicles: await loadRelatedVehicles(params.slug) };
 };

@@ -1,0 +1,332 @@
+/* Same outer frame as Orbit's homepage; only vehicle-detail pages opt in. */
+.design.orbit.orbit-detail.porsche-lab {
+  --orbit-frame: min(96%, calc(100% - 48px));
+  --orbit-frame-max: 1720px;
+  --detail-space: clamp(56px, 5vw, 88px);
+  --detail-gap: clamp(32px, 4vw, 72px);
+  --orbit-space-section: var(--detail-space);
+}
+.design.orbit.orbit-detail.porsche-lab header {
+  padding-inline: max(24px, 2%, calc((100% - 1720px) / 2));
+}
+.design.orbit.orbit-detail.porsche-lab .breadcrumbs,
+.design.orbit.orbit-detail.porsche-lab .services,
+.design.orbit.orbit-detail.porsche-lab .vehicle-layout,
+.design.orbit.orbit-detail.porsche-lab .detail-facts,
+.design.orbit.orbit-detail.porsche-lab .equipment,
+.design.orbit.orbit-detail.porsche-lab .related,
+.design.orbit.orbit-detail.porsche-lab .detail-band {
+  width: var(--orbit-frame);
+  max-width: var(--orbit-frame-max);
+  margin-inline: auto;
+  padding-inline: 0;
+}
+.design.orbit.orbit-detail.porsche-lab .breadcrumbs {
+  padding-block: 24px;
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.6fr) minmax(280px, 1fr);
+  gap: var(--detail-gap);
+  padding-block: 8px var(--detail-space);
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-photo {
+  aspect-ratio: 1.4;
+  height: auto;
+  max-height: 690px;
+}
+.design.orbit.orbit-detail.porsche-lab .purchase {
+  top: 24px;
+  padding-top: 12px;
+}
+.design.orbit.orbit-detail.porsche-lab .purchase h1 {
+  font-size: clamp(34px, 3.2vw, 48px);
+  margin-block: 24px 16px;
+  line-height: 1.06;
+}
+.design.orbit.orbit-detail.porsche-lab .purchase-price {
+  margin-top: 30px;
+}
+.design.orbit.orbit-detail.porsche-lab .quick-specs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 26px;
+}
+.design.orbit.orbit-detail.porsche-lab .quick-specs > span:last-child {
+  grid-column: auto;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-facts,
+.design.orbit.orbit-detail.porsche-lab .equipment {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.35fr);
+  gap: var(--detail-gap);
+  padding-block: var(--detail-space);
+  align-items: start;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-facts {
+  border-top: 1px solid var(--line);
+}
+.design.orbit.orbit-detail.porsche-lab .detail-facts h2,
+.design.orbit.orbit-detail.porsche-lab .equipment h2,
+.design.orbit.orbit-detail.porsche-lab .related h2 {
+  font-size: clamp(34px, 3.4vw, 56px);
+  line-height: 1.14;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-facts dl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 32px;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-facts dl > div {
+  padding-block: 20px;
+  align-items: baseline;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-facts dt {
+  font-size: 13px;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-facts dd {
+  font-size: 14px;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-band {
+  height: clamp(360px, 34vw, 520px);
+}
+.design.orbit.orbit-detail.porsche-lab .detail-band > div {
+  left: clamp(24px, 4vw, 64px);
+}
+.design.orbit.orbit-detail.porsche-lab .equipment > div {
+  min-width: 0;
+}
+.design.orbit.orbit-detail.porsche-lab .related {
+  padding-block: 0 var(--detail-space);
+}
+.design.orbit.orbit-detail.porsche-lab .related-grid {
+  gap: 28px;
+  margin-top: 36px;
+}
+.design.orbit.orbit-detail.porsche-lab .related-grid > a {
+  min-width: 0;
+}
+.design.orbit.orbit-detail.porsche-lab .related-grid h3 {
+  font-size: clamp(20px, 1.8vw, 27px);
+}
+.design.orbit.orbit-detail.porsche-lab footer {
+  padding-inline: max(24px, 2%, calc((100% - 1720px) / 2));
+}
+@media (max-width: 1050px) {
+  .design.orbit.orbit-detail.porsche-lab .vehicle-layout {
+    gap: 28px;
+    grid-template-columns: minmax(0, 1.8fr) minmax(260px, 1fr);
+  }
+  .design.orbit.orbit-detail.porsche-lab .purchase h1 {
+    font-size: clamp(30px, 3.4vw, 36px);
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-facts,
+  .design.orbit.orbit-detail.porsche-lab .equipment {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.2fr);
+    gap: 32px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-facts dl {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .design.orbit.orbit-detail.porsche-lab {
+    --orbit-frame: 90%;
+    --detail-space: 48px;
+  }
+  .design.orbit.orbit-detail.porsche-lab header,
+  .design.orbit.orbit-detail.porsche-lab footer {
+    padding-inline: 5%;
+  }
+  .design.orbit.orbit-detail.porsche-lab .breadcrumbs {
+    padding-block: 16px;
+    gap: 16px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .vehicle-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding-top: 0;
+  }
+  .design.orbit.orbit-detail.porsche-lab .vehicle-photo {
+    aspect-ratio: 1.3;
+    max-height: none;
+  }
+  .design.orbit.orbit-detail.porsche-lab .photo-controls {
+    align-items: start;
+    gap: 8px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .photo-controls > div {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .design.orbit.orbit-detail.porsche-lab .photo-controls button {
+    min-height: 44px;
+    padding-inline: 8px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .purchase {
+    position: static;
+    padding: 0;
+  }
+  .design.orbit.orbit-detail.porsche-lab .purchase h1 {
+    font-size: clamp(38px, 10vw, 54px);
+  }
+  .design.orbit.orbit-detail.porsche-lab .quick-specs {
+    gap: 10px;
+    margin-block: 22px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-facts,
+  .design.orbit.orbit-detail.porsche-lab .equipment {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-facts h2,
+  .design.orbit.orbit-detail.porsche-lab .equipment h2,
+  .design.orbit.orbit-detail.porsche-lab .related h2 {
+    font-size: clamp(32px, 8.8vw, 44px);
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-band {
+    height: 360px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-band > div {
+    left: 24px;
+    top: 14%;
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-band h2 {
+    font-size: clamp(42px, 12vw, 58px);
+  }
+  .design.orbit.orbit-detail.porsche-lab .band-index {
+    font-size: 90px;
+    right: 20px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .related-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    margin-top: 28px;
+  }
+}
+
+/* The purchase panel spans the story and stops before related vehicles. */
+.design.orbit.orbit-detail.porsche-lab
+  .vehicle-layout
+  > :is(.detail-facts, .detail-band, .equipment) {
+  grid-column: 1;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-layout {
+  row-gap: 0;
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-layout > .vehicle-photography {
+  grid-column: 1;
+  padding-bottom: 32px;
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-layout > .purchase {
+  grid-column: 2;
+  grid-row: 1 / span 5;
+  position: sticky;
+  align-self: start;
+  top: 24px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-layout > :is(.detail-facts, .equipment) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-gallery {
+  position: relative;
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-gallery .vehicle-photo {
+  padding-right: clamp(72px, 8vw, 108px);
+}
+.design.orbit.orbit-detail.porsche-lab .vehicle-gallery .expand {
+  right: calc(clamp(72px, 8vw, 108px) + 12px);
+}
+.design.orbit.orbit-detail.porsche-lab .detail-thumbnails {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: clamp(72px, 8vw, 108px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  background: var(--surface);
+}
+.design.orbit.orbit-detail.porsche-lab .detail-thumbnails button {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  min-height: 44px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 3px;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-thumbnails button[aria-pressed='true'] {
+  border-color: var(--red);
+}
+.design.orbit.orbit-detail.porsche-lab .detail-thumbnails button:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-thumbnails img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.design.orbit.orbit-detail.porsche-lab .detail-thumbnails span {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 3px 0;
+  background: #000a;
+  color: white;
+  font-size: 9px;
+}
+@media (max-width: 700px) {
+  .design.orbit.orbit-detail.porsche-lab .vehicle-layout {
+    row-gap: 28px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .vehicle-layout > .purchase {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .design.orbit.orbit-detail.porsche-lab .vehicle-layout > .vehicle-photography {
+    padding-bottom: 0;
+  }
+}
+
+/* Below 702px, thumbnails sit under the photo in their own scroll row. */
+@media (max-width: 701px) {
+  .design.orbit.orbit-detail.porsche-lab .vehicle-gallery .vehicle-photo {
+    padding-right: 0;
+  }
+  .design.orbit.orbit-detail.porsche-lab .vehicle-gallery .expand {
+    right: 20px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-thumbnails {
+    position: static;
+    width: 100%;
+    box-sizing: border-box;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-top: 8px;
+  }
+  .design.orbit.orbit-detail.porsche-lab .detail-thumbnails button {
+    flex: 0 0 96px;
+    width: 96px;
+  }
+}
+
+.design.orbit.orbit-detail.porsche-lab .vehicle-gallery:not(:has(.detail-thumbnails)) .vehicle-photo { padding-right: 0; }
+.design.orbit.orbit-detail.porsche-lab .vehicle-gallery:not(:has(.detail-thumbnails)) .expand { right: 20px; }
+.design.orbit.orbit-detail.porsche-lab .public-description p { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); font-size: 16px; line-height: 1.8; }
+.design.orbit.orbit-detail.porsche-lab .confirmed-equipment { list-style: none; padding: 0; margin: 0; }
+.design.orbit.orbit-detail.porsche-lab .confirmed-equipment li { padding-block: 18px; border-bottom: 1px solid var(--line); font-size: 16px; }

@@ -1,0 +1,78 @@
+export const cars = [
+  {
+    id: 'porsche-911',
+    brand: 'Porsche',
+    model: '911 Carrera',
+    line: '3.0 PDK · Uma referência, reinventada.',
+    year: 2021,
+    km: 18900,
+    fuel: 'Gasolina',
+    power: 385,
+    price: 112900,
+    image: 'photo-1503376780353-7e6692767b70',
+    category: 'Desportivo',
+  },
+  {
+    id: 'bmw-serie-3',
+    brand: 'BMW',
+    model: 'Série 3',
+    line: '320d Touring · Espaço para ir mais longe.',
+    year: 2022,
+    km: 38400,
+    fuel: 'Diesel',
+    power: 190,
+    price: 38900,
+    image: 'photo-1555215695-3004980ad54e',
+    category: 'Familiar',
+  },
+  {
+    id: 'mercedes-classe-c',
+    brand: 'Mercedes-Benz',
+    model: 'Classe C',
+    line: '220d AMG Line · O conforto tem presença.',
+    year: 2022,
+    km: 31200,
+    fuel: 'Diesel',
+    power: 200,
+    price: 42900,
+    image: 'photo-1618843479313-40f8afb4b4d8',
+    category: 'Berlina',
+  },
+  {
+    id: 'audi-a6',
+    brand: 'Audi',
+    model: 'A6 Avant',
+    line: '40 TDI S tronic · Feito para o quotidiano.',
+    year: 2023,
+    km: 22500,
+    fuel: 'Diesel',
+    power: 204,
+    price: 49900,
+    image: 'photo-1606664515524-ed2f786a0bd6',
+    category: 'Familiar',
+  },
+  {
+    id: 'tesla-model-s',
+    brand: 'Tesla',
+    model: 'Model S',
+    line: 'Dual Motor · Uma nova forma de partir.',
+    year: 2022,
+    km: 27100,
+    fuel: 'Elétrico',
+    power: 670,
+    price: 62900,
+    image: 'photo-1617788138017-80ad40651399',
+    category: 'Berlina',
+  },
+];
+export const photo = (id: string, width = 1400) =>
+  id.startsWith('/')
+    ? id
+    : `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=85`;
+export const eur = (n: number) =>
+  new Intl.NumberFormat('pt-PT', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(n);
+export const number = (n: number) => new Intl.NumberFormat('pt-PT').format(n);

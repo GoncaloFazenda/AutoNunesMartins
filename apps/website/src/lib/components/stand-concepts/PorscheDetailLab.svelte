@@ -34,7 +34,7 @@
     Menu,
     Phone,
   } from 'lucide-svelte';
-  import { cars, photo, eur, number } from './data';
+  import { cars, photo, eur, number } from './porscheLabData';
   import { responsivePhoto, cardImageSizes, heroImageSizes } from './images';
   import { designMotion, entrance } from './designMotion';
   import StageBackdrop from './StageBackdrop.svelte';
@@ -55,12 +55,12 @@
   import OrbitSelect from './OrbitSelect.svelte';
   import OrbitPrivacy from './OrbitPrivacy.svelte';
   import OrbitAbout from './OrbitAbout.svelte';
-  import { catalogCars, transmissionFor } from './catalogDemo';
+  import { transmissionFor } from './catalogDemo';
   import type { CatalogCar } from './catalog';
   import { catalogResults, sortOptions } from './catalog';
   import './orbitRhythm.css';
   import './orbitInitialLight.css';
-  import './orbitDetail.css';
+  import './porscheDetailLab.css';
   let {
     edition,
     id,
@@ -89,7 +89,7 @@
     line: publicVehicle.availability === 'RESERVED' ? 'Reservada' : '',
     power: publicVehicle.specifications?.powerHp ?? 0, category: publicVehicle.specifications?.category ?? '',
     price: publicVehicle.price === null ? Number.NaN : Number(publicVehicle.price), image: publicVehicle.photos.length ? publicPhoto(publicVehicle.slug, 0) : '/catalog-placeholder.svg',
-  } : (edition === 'orbit' ? catalogCars : cars).find((item) => item.id === id));
+  } : cars.find((item) => item.id === id));
   const detailSpecs = $derived(car ? [
     ['Marca', car.brand], ['Modelo', car.model], ['Ano', car.year], ['Quilometragem', number(car.km) + ' km'],
     ...(car.power ? [['Potência', car.power + ' cv']] : []),
@@ -101,6 +101,7 @@
     ...(publicVehicle?.specifications?.color ? [['Cor', publicVehicle.specifications.color]] : []),
   ] : []);
   const suggestions = $derived(publicVehicle ? relatedVehicles.map(item => ({ id: item.slug, brand: item.brand, model: item.model, year: item.year, price: item.price, image: item.photos.length ? publicPhoto(item.slug,0) : '/catalog-placeholder.svg' })) : car ? cars.filter(item => item.id !== car.id && Number.isFinite(item.price) && item.price > 0 && Number.isFinite(car.price) && car.price > 0).toSorted((a,b) => Math.abs(a.price-car.price)-Math.abs(b.price-car.price) || a.id.localeCompare(b.id)).slice(0,3) : []);
+
   let isDark = $state(edition === 'orbit');
   let query = $state('');
   let category = $state('Todas');
@@ -269,7 +270,7 @@
 
 <div
   id={edition === 'orbit' && !about && !id && !catalog && !privacy && !publicVehicle ? 'inicio' : undefined}
-  class="design {edition}"
+  class="design {edition} porsche-lab"
   class:orbit-home={edition === 'orbit' && !about && !id && !catalog && !privacy && !publicVehicle}
   class:orbit-catalog={catalog}
   class:orbit-privacy={privacy || about}
