@@ -89,6 +89,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@anm/website@workspace:apps/website"
   dependencies:
+    "@anm/types": "workspace:^"
     "@fontsource/barlow": "npm:^5.1.0"
     "@fontsource/inter": "npm:^5.1.0"
     "@sveltejs/adapter-vercel": "npm:^5.5.1"

@@ -12,6 +12,7 @@ export const filterLabels = {
   preco_max: 'Preço máximo',
   ano_min: 'Ano mínimo',
   ano_max: 'Ano máximo',
+  km_min: 'Quilometragem mínima (km)',
   km_max: 'Quilometragem máxima',
   combustivel: 'Combustível',
   transmissao: 'Transmissão',
@@ -76,10 +77,11 @@ export function catalogResults(params: URLSearchParams, source: CatalogCar[] = c
 
 export function catalogUrl(params: URLSearchParams, key: string, value: string) {
   const next = new URLSearchParams(params);
-  if (value) next.set(key, value);
+  const clean = value.trim();
+  if (clean && !(key === 'ordem' && clean === 'relevancia')) next.set(key, clean);
   else next.delete(key);
   if (key !== 'pagina') next.delete('pagina');
-  if (key === 'marca') next.delete('modelo');
+  if (key === 'marca' || !next.get('marca')) next.delete('modelo');
   const query = next.toString();
   return `/stand-orbit/viaturas${query ? `?${query}` : ''}`;
 }

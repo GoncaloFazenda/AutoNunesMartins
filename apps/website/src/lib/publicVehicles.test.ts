@@ -103,7 +103,7 @@ describe('Public website projection', () => {
       stock,
     );
     expect(seo.heading).toBe('BMW Série 1 usados');
-    expect(seo.description).toContain('1 resultados publicados');
+    expect(seo.description).toContain('1 resultado publicado');
     expect(seo.noindex).toBe(false);
     expect(seo.canonical).toContain('pagina=2');
     expect(

@@ -5,6 +5,12 @@ import { emptyStock } from '../publicVehicles';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('Public BFF without CRM authentication', () => {
+  it('rejects a model without a brand before fetching', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    expect((await loadPublicStock(new URLSearchParams('modelo=A3'))).status).toBe('invalid');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
   it('requests only the public API with no forwarded cookies or authorization', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response('{}'));
     vi.stubGlobal('fetch', fetchMock);

@@ -12,6 +12,7 @@
     describedBy,
     hideLabel = false,
     subtle = false,
+    disabled = false,
   }: {
     id: string;
     label: string;
@@ -22,6 +23,7 @@
     describedBy?: string;
     hideLabel?: boolean;
     subtle?: boolean;
+    disabled?: boolean;
   } = $props();
   let root: HTMLDivElement;
   let trigger: HTMLButtonElement;
@@ -33,12 +35,13 @@
   let typed = '';
   let lastTyped = 0;
   const selected = $derived(options.findIndex((option) => option.value === value));
-  const text = $derived(options[selected]?.label ?? options[0]?.label ?? 'Selecionar');
+  const text = $derived(options[selected]?.label ?? (value || options[0]?.label) ?? 'Selecionar');
 
   // External resets and dependent option changes must not leave a stale popup open.
   $effect(() => {
     value;
     options;
+    disabled;
     open = false;
   });
 
@@ -53,7 +56,7 @@
     maxHeight = Math.max(44, Math.min(280, above ? over : below));
   }
   async function reveal(index = Math.max(0, selected)) {
-    if (!options.length) return;
+    if (disabled || !options.length) return;
     position();
     active = index;
     open = true;
@@ -73,12 +76,14 @@
     scrollActive();
   }
   function commit(index = active, focus = true) {
+    if (disabled) return;
     const option = options[index];
     open = false;
     if (focus) trigger.focus({ preventScroll: true });
     if (option && option.value !== value) onChange(option.value);
   }
   function keydown(event: KeyboardEvent) {
+    if (disabled || !options.length) return;
     if (event.key === 'Escape' && open) {
       event.preventDefault();
       event.stopPropagation();
@@ -157,7 +162,7 @@
 
 <div class="orbit-select" class:open class:subtle bind:this={root}>
   <label for={id} class:sr-only={hideLabel}>{label}</label>
-  {#if name}<input type="hidden" {name} {value} />{/if}
+  {#if name}<input type="hidden" {name} {value} {disabled} />{/if}
   <button
     {id}
     type="button"
@@ -165,12 +170,13 @@
     bind:this={trigger}
     class="select-trigger"
     aria-label={label}
+    title={text}
     aria-expanded={open}
     aria-controls={`${id}-list`}
     aria-haspopup="listbox"
     aria-activedescendant={open ? `${id}-option-${active}` : undefined}
     aria-describedby={describedBy}
-    disabled={!options.length}
+    disabled={disabled || !options.length}
     onclick={() => {
       if (open) open = false;
       else void reveal();
@@ -217,6 +223,7 @@
     min-width: 0;
     width: 100%;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
   .orbit-select.open {
@@ -242,6 +249,8 @@
     justify-content: space-between;
     gap: 12px;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     min-height: 44px;
     padding: 10px 11px;
     border: 1px solid var(--line);

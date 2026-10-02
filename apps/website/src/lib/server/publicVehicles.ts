@@ -18,6 +18,8 @@ export async function publicRequest(path: string) {
   });
 }
 export async function loadPublicStock(params: URLSearchParams): Promise<PublicStock> {
+  // Enforce the dependency even if the public API is deployed independently.
+  if (params.has('modelo') && !params.get('marca')?.trim()) return emptyStock('invalid');
   const query = new URLSearchParams(params);
   // Preserve unknown/repeated keys so the backend rejects them instead of silently broadening a search.
   try {
@@ -40,4 +42,13 @@ export async function loadPublicVehicle(slug: string) {
   } catch {
     return { status: 503 as const, vehicle: null };
   }
+}
+
+export async function loadRelatedVehicles(slug: string) {
+  if (!slugPattern.test(slug) || slug.length > 180) return [];
+  try {
+    const response = await publicRequest(`/${slug}/related`);
+    if (!response.ok) return [];
+    return publicVehicleSchema.array().max(3).parse(await response.json());
+  } catch { return []; }
 }

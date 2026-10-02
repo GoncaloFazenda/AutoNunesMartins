@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { tick } from 'svelte';
+  import { tick, onDestroy } from 'svelte';
   import { page, navigating } from '$app/stores';
-  import { goto } from '$app/navigation';
+  import { goto, beforeNavigate } from '$app/navigation';
   import { ArrowLeft, ArrowRight, SlidersHorizontal, X } from 'lucide-svelte';
   import {
     publicCard,
@@ -13,10 +13,21 @@
     type PublicStock,
   } from '$lib/publicVehicles';
   import OrbitSelect from './OrbitSelect.svelte';
+  import OrbitCatalogEditorial from './OrbitCatalogEditorial.svelte';
+  import { catalogSticky } from './catalogSticky';
+  import { catalogInputErrors, catalogModelOptions, numericCatalogFields } from './catalogFilters';
   import { filterLabels, sortOptions, catalogUrl, type FilterKey } from './catalog';
 
   let { card, stock }: { card: Snippet<[PublicCard, number]>; stock: PublicStock } = $props();
   const params = $derived($page.url.searchParams);
+  let draftQuery = $state<string | null>(null);
+  let updating = $state(false);
+  let navigationError = $state('');
+  let debounce: ReturnType<typeof setTimeout> | undefined;
+  let requestVersion = 0;
+  const formParams = $derived(new URLSearchParams(draftQuery ?? params.toString()));
+  const inputErrors = $derived(catalogInputErrors(formParams));
+  const busy = $derived(updating || !!$navigating);
   const results = $derived({
     ...stock.catalog,
     pages: stock.catalog.totalPages,
@@ -29,10 +40,12 @@
       label: fuelLabels[item.value as keyof typeof fuelLabels] ?? item.value,
     })),
   );
-  const brand = $derived(params.get('marca') ?? '');
-  const models = $derived([...new Set(stock.catalog.facets.models.map((item) => item.value))]);
+  const brand = $derived(formParams.get('marca') ?? '');
+  const modelSelection = $derived(catalogModelOptions(formParams, stock));
+  const models = $derived(modelSelection.models);
+  const modelDisabled = $derived(busy || !modelSelection.brand || !models.length);
   const active = $derived(
-    (Object.keys(filterLabels) as FilterKey[]).filter((key) => params.get(key)),
+    (Object.keys(filterLabels) as FilterKey[]).filter((key) => formParams.get(key)),
   );
   const seo = $derived(publicCatalogSeo(params, $page.url.origin, stock));
   const pageNumbers = $derived(
@@ -44,30 +57,58 @@
   let filtersOpen = $state(false);
   let resultsHeading: HTMLHeadingElement;
   let filterToggle: HTMLButtonElement;
-  const numericFields = [
-    ['preco_min', 'Preço mínimo (€)'],
-    ['preco_max', 'Preço máximo (€)'],
-    ['ano_min', 'Ano mínimo'],
-    ['ano_max', 'Ano máximo'],
-    ['km_max', 'Quilometragem máxima (km)'],
-  ];
-  const invalidRange = $derived(
-    (params.has('preco_min') &&
-      params.has('preco_max') &&
-      Number(params.get('preco_min')) > Number(params.get('preco_max'))) ||
-      (params.has('ano_min') &&
-        params.has('ano_max') &&
-        Number(params.get('ano_min')) > Number(params.get('ano_max'))),
-  );
-  function update(key: string, value: string) {
-    void goto(catalogUrl(params, key, value), {
-      replaceState: true,
-      noScroll: true,
-      keepFocus: true,
-    });
+  const numericFields = numericCatalogFields.filter(field => field.key !== 'km_min');
+  function filterValue(key: FilterKey) {
+    const value = formParams.get(key) ?? '';
+    if (key === 'combustivel') return fuelLabels[value as keyof typeof fuelLabels] ?? value;
+    if (key === 'transmissao') return transmissionLabels[value as keyof typeof transmissionLabels] ?? value;
+    return value;
+  }
+  function resetDraft() {
+    clearTimeout(debounce);
+    requestVersion += 1;
+    draftQuery = null;
+    updating = false;
+    navigationError = '';
+  }
+  beforeNavigate(navigation => {
+    // Back/forward and actual links win over unfinished typing; never replay a stale timer.
+    if (navigation.type !== 'goto') resetDraft();
+  });
+  onDestroy(() => { clearTimeout(debounce); requestVersion += 1; });
+  async function applyDraft() {
+    clearTimeout(debounce);
+    if (catalogInputErrors(formParams).length) { updating = false; return false; }
+    if (draftQuery === null) return true;
+    const query = draftQuery;
+    if (catalogInputErrors(new URLSearchParams(query)).length) { updating = false; return false; }
+    const version = ++requestVersion;
+    updating = true;
+    try {
+      // Push committed searches so browser history can restore a previous selection.
+      await goto(`/stand-orbit/viaturas${query ? `?${query}` : ''}`, { noScroll: true, keepFocus: true });
+      if (version === requestVersion && draftQuery === query) { draftQuery = null; updating = false; }
+      return version === requestVersion;
+    } catch {
+      if (version === requestVersion) { updating = false; navigationError = 'Não foi possível atualizar a pesquisa. Tente novamente.'; }
+      return false;
+    }
+  }
+  function update(key: string, value: string, delay = 0) {
+    clearTimeout(debounce);
+    requestVersion += 1;
+    navigationError = '';
+    const next = new URL(catalogUrl(formParams, key, value), $page.url.origin).searchParams;
+    draftQuery = next.toString();
+    updating = !catalogInputErrors(next).length;
+    if (!updating) return;
+    if (delay) debounce = setTimeout(() => { void applyDraft(); }, delay);
+    else void applyDraft();
   }
   function clear() {
-    void goto('/stand-orbit/viaturas', { replaceState: true, noScroll: true, keepFocus: true });
+    resetDraft();
+    draftQuery = '';
+    void applyDraft();
   }
   async function showResults() {
     filtersOpen = false;
@@ -85,16 +126,22 @@
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)
       return;
     event.preventDefault();
+    if (busy || inputErrors.length) return;
+    resetDraft();
     const href = (event.currentTarget as HTMLAnchorElement).href;
-    await goto(href, { noScroll: true, keepFocus: true });
-    await showResults();
+    try {
+      await goto(href, { noScroll: true, keepFocus: true });
+      await showResults();
+    } catch {
+      navigationError = 'Não foi possível mudar de página. Tente novamente.';
+    }
   }
 </script>
 
 <svelte:window onkeydown={closeFilters} />
 
 <svelte:head>
-  <title>{seo.heading} · {results.total} resultados — Stand Orbit</title>
+  <title>{seo.heading} — Auto Nunes Martins</title>
   <meta name="description" content={seo.description} />
   <link rel="canonical" href={seo.canonical} />
   <meta name="robots" content={seo.noindex ? 'noindex, follow' : 'index, follow'} />
@@ -106,18 +153,21 @@
       <p class="eyebrow">A SELEÇÃO · AO SEU RITMO</p>
       <h1>{seo.heading}<span aria-hidden="true">.</span></h1>
       <p class="intro-count">
+        {#if stock.status === 'unavailable'}Estamos a tentar recuperar a seleção.
+        {:else if stock.status === 'invalid'}Ajuste os filtros para explorar a seleção.
+        {:else}
         {results.total}
         {results.total === 1 ? 'possibilidade para descobrir' : 'possibilidades para descobrir'}.
+        {/if}
       </p>
     </div>
     <p>
-      Comece pelo que importa para si.<br />Compare os detalhes. Guarde os favoritos.<small
-        >Apenas viaturas e dados aprovados para publicação.</small
-      >
+      Comece pelo que importa para si.<br />Compare os detalhes. Guarde os favoritos.
     </p>
   </div>
   <div class="catalog-layout">
     <aside class="catalog-filters" aria-label="Filtros de viaturas">
+      <div class="filter-sticky" use:catalogSticky>
       <button
         class="filter-toggle"
         bind:this={filterToggle}
@@ -133,9 +183,9 @@
         <form
           action="/stand-orbit/viaturas"
           method="GET"
-          onsubmit={(event) => {
+          onsubmit={async (event) => {
             event.preventDefault();
-            void showResults();
+            if (await applyDraft()) await showResults();
           }}
         >
           <div class="filter-heading">
@@ -144,7 +194,7 @@
               type="button"
               class="clear"
               onclick={clear}
-              disabled={!active.length && !params.has('ordem')}>Limpar</button
+              disabled={!active.length && !formParams.size}>Limpar</button
             >
           </div>
           <label
@@ -152,8 +202,9 @@
               name="q"
               type="search"
               placeholder="Marca, modelo ou versão"
-              value={params.get('q') ?? ''}
-              oninput={(event) => update('q', event.currentTarget.value)}
+              maxlength="120"
+              value={formParams.get('q') ?? ''}
+              oninput={(event) => update('q', event.currentTarget.value, 300)}
             /></label
           >
           <OrbitSelect
@@ -161,8 +212,9 @@
             label="Marca"
             name="marca"
             value={brand}
+            disabled={busy}
             options={[
-              { value: '', label: 'Todas as marcas' },
+              { value: '', label: brands.length ? 'Todas as marcas' : 'Sem marcas para estes filtros' },
               ...brands.map((value) => ({ value, label: value })),
             ]}
             onChange={(value) => update('marca', value)}
@@ -171,35 +223,41 @@
             id="catalog-model"
             label="Modelo"
             name="modelo"
-            value={params.get('modelo') ?? ''}
+            value={modelSelection.brand ? formParams.get('modelo') ?? '' : ''}
+            disabled={modelDisabled}
             options={[
-              { value: '', label: brand ? 'Todos os modelos' : 'Escolha um modelo' },
+              { value: '', label: !modelSelection.brand ? 'Escolha primeiro uma marca' : !models.length ? 'Sem modelos para estes filtros' : 'Todos os modelos' },
               ...models.map((value) => ({ value, label: value })),
             ]}
             onChange={(value) => update('modelo', value)}
           />
           <div class="numeric-fields">
-            {#each numericFields as field}<label class:full={field[0] === 'km_max'}
-                >{field[1]}<input
-                  name={field[0]}
+            {#each numericFields as field}<label class:full={field.key === 'km_max'}
+                >{field.label}<input
+                  name={field.key}
                   type="number"
-                  inputmode="numeric"
-                  min="0"
-                  step="1"
+                  inputmode={field.step === '0.01' ? 'decimal' : 'numeric'}
+                  min={field.min}
+                  max={field.max}
+                  step={field.step}
                   placeholder="Sem limite"
-                  value={params.get(field[0]!) ?? ''}
-                  oninput={(event) => update(field[0]!, event.currentTarget.value)}
+                  value={formParams.get(field.key) ?? ''}
+                  aria-describedby={inputErrors.length ? 'catalog-input-errors' : undefined}
+                  oninput={(event) => update(field.key, event.currentTarget.value, 300)}
                 /></label
               >{/each}
           </div>
-          {#if invalidRange}<p class="range-note" role="alert">
-              O mínimo deve ser igual ou inferior ao máximo.
-            </p>{/if}
+          {#if inputErrors.length}<div id="catalog-input-errors" class="range-note" role="alert">
+              {#each inputErrors as error}<p>{error}</p>{/each}
+              <p>Corrija os campos para atualizar os resultados.</p>
+            </div>{/if}
+          {#if navigationError}<p class="range-note" role="alert">{navigationError}</p>{/if}
           <OrbitSelect
             id="catalog-fuel"
             label="Combustível"
             name="combustivel"
-            value={params.get('combustivel') ?? ''}
+            value={formParams.get('combustivel') ?? ''}
+            disabled={busy}
             options={[{ value: '', label: 'Todos' }, ...fuels]}
             onChange={(value) => update('combustivel', value)}
           />
@@ -208,7 +266,8 @@
             label="Transmissão"
             name="transmissao"
             describedBy="transmission-note"
-            value={params.get('transmissao') ?? ''}
+            value={formParams.get('transmissao') ?? ''}
+            disabled={busy}
             options={[
               { value: '', label: 'Todas' },
               ...stock.catalog.facets.transmissions.map((item) => ({
@@ -222,17 +281,17 @@
           <p id="transmission-note" class="filter-note">
             Compare a caixa indicada na ficha de cada viatura.
           </p>
-          <button class="apply-filters" type="submit"
-            >Ver {results.total}
-            {results.total === 1 ? 'viatura' : 'viaturas'}<ArrowRight size={16} /></button
+          <button class="apply-filters" type="submit" disabled={busy || inputErrors.length > 0}
+            >{busy ? 'A atualizar…' : `Ver ${results.total} ${results.total === 1 ? 'viatura' : 'viaturas'}`}<ArrowRight size={16} /></button
           >
         </form>
+      </div>
       </div>
     </aside>
     <section
       class="catalog-results"
       aria-labelledby="catalog-results-heading"
-      aria-busy={!!$navigating}
+      aria-busy={busy}
     >
       <div class="results-toolbar">
         <div>
@@ -240,14 +299,16 @@
             As suas possibilidades<span>.</span>
           </h2>
           <p role="status" aria-live="polite" aria-atomic="true">
+            {#if busy}A atualizar resultados…{:else if stock.status === 'unavailable'}Não foi possível consultar os resultados.{:else if stock.status === 'invalid'}Os filtros precisam de ser corrigidos.{:else}
             {results.total}
             {results.total === 1
               ? 'viatura encontrada'
               : 'viaturas encontradas'}{#if results.items.length}
-              · {(results.page - 1) * results.pageSize + 1}–{Math.min(
+              {' · '}{(results.page - 1) * results.pageSize + 1}–{Math.min(
                 results.page * results.pageSize,
                 results.total,
               )} de {results.total}{/if}
+            {/if}
           </p>
         </div>
         <div class="sort-label">
@@ -255,7 +316,8 @@
             id="catalog-sort"
             label="Ordenar por"
             name="ordem"
-            value={params.get('ordem') ?? 'relevancia'}
+            value={formParams.get('ordem') ?? 'relevancia'}
+            disabled={busy}
             options={Object.entries(sortOptions).map(([value, label]) => ({ value, label }))}
             onChange={(value) => update('ordem', value)}
             subtle
@@ -265,8 +327,8 @@
       {#if active.length}<div class="active-filters" aria-label="Filtros selecionados">
           {#each active as key}<button
               onclick={() => update(key, '')}
-              aria-label={`Remover filtro ${filterLabels[key]}: ${params.get(key)}`}
-              >{filterLabels[key]}: {params.get(key)}<X size={13} aria-hidden="true" /></button
+              aria-label={`Remover filtro ${filterLabels[key]}: ${filterValue(key)}`}
+              >{filterLabels[key]}: {filterValue(key)}<X size={13} aria-hidden="true" /></button
             >{/each}<button class="clear-all" onclick={clear}>Limpar filtros</button>
         </div>{/if}
       <div class="catalog-grid">
@@ -298,6 +360,8 @@
             <button onclick={clear}>Limpar filtros <ArrowRight size={16} /></button>
           </div>{/each}
       </div>
+    </section>
+    <div class="catalog-tail">
       {#if results.total}<nav class="pagination" aria-label="Paginação de viaturas">
           {#if results.page > 1}<a
               href={catalogUrl(params, 'pagina', String(results.page - 1))}
@@ -322,24 +386,8 @@
               ><span>Seguinte</span><ArrowRight size={16} /></span
             >{/if}
         </nav>{/if}
-      <section class="catalog-editorial" aria-labelledby="catalog-editorial-heading">
-        <p class="eyebrow">UMA ESCOLHA INFORMADA</p>
-        <h2 id="catalog-editorial-heading">
-          {seo.label ? `${seo.label} usados. Ao seu ritmo.` : 'Um usado. Novas possibilidades.'}
-        </h2>
-        <p>
-          {seo.contextual ||
-            'Escolher um carro usado começa por perceber o que faz sentido para os seus dias. Explore a seleção do Stand Orbit, compare os preços, os anos e os quilómetros e consulte os detalhes de cada viatura. Quando encontrar uma possibilidade, fale connosco sobre o histórico, o equipamento e as condições antes de decidir.'}
-        </p>
-        {#if params.get('modelo') && seo.label}<p>
-            Está a explorar {seo.label}. Use os filtros para comparar as versões apresentadas e abra
-            a ficha da que se aproxima dos seus planos.
-          </p>{/if}
-        <p class="editorial-note">
-          A disponibilidade e os dados de cada viatura devem ser confirmados com o stand.
-        </p>
-      </section>
-    </section>
+      <OrbitCatalogEditorial {params} {stock} />
+    </div>
   </div>
 </main>
 
@@ -348,7 +396,7 @@
     width: var(--orbit-frame);
     max-width: var(--orbit-frame-max);
     margin: auto;
-    padding: 52px 0 76px;
+    padding: var(--orbit-space-half) 0 var(--orbit-space-section);
   }
   * {
     box-sizing: border-box;
@@ -386,7 +434,7 @@
     cursor: default;
   }
   .eyebrow {
-    font-size: 10px;
+    font-size: var(--orbit-type-label);
     letter-spacing: 0.13em;
     color: var(--muted);
   }
@@ -395,14 +443,15 @@
     justify-content: space-between;
     align-items: end;
     gap: 32px;
-    padding-bottom: 44px;
+    padding-bottom: var(--orbit-space-heading);
     border-bottom: 1px solid var(--line);
   }
   h1 {
     font-family: inherit;
-    font-size: clamp(42px, 4.5vw, 68px);
-    font-weight: 600;
-    line-height: 1.02;
+    /* A page title keeps a continuous scale across the stacked-filter breakpoint. */
+    font-size: clamp(36px, 4.1vw, 64px);
+    font-weight: 500;
+    line-height: 1.12;
     letter-spacing: -0.045em;
     margin-top: 18px;
     max-width: 15ch;
@@ -417,21 +466,26 @@
   }
   .catalog-intro > p {
     color: var(--muted);
-    font-size: 14px;
-    line-height: 1.8;
-  }
-  .catalog-intro small {
-    display: block;
-    font-size: 11px;
-    margin-top: 16px;
+    font-size: var(--orbit-type-reading);
+    line-height: var(--orbit-leading-reading);
+    max-width: 35ch;
   }
   .catalog-layout {
     display: grid;
     grid-template-columns: 248px minmax(0, 1fr);
-    gap: 48px;
+    gap: 0 48px;
     padding-top: 36px;
   }
   .catalog-filters {
+    min-width: 0;
+    min-height: 0;
+  }
+  .filter-sticky {
+    min-width: 0;
+    transform: translateY(var(--catalog-filter-shift, 0px));
+  }
+  .catalog-tail {
+    grid-column: 2;
     min-width: 0;
   }
   .filter-toggle {
@@ -474,11 +528,15 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 3px;
-    font-size: 13px;
+    font-size: var(--orbit-type-control, 16px);
   }
   input::placeholder {
     color: var(--muted);
     opacity: 1;
+  }
+  .catalog-filters :global(.orbit-select .select-trigger),
+  .catalog-filters :global(.orbit-select .select-list button) {
+    font-size: var(--orbit-type-control);
   }
   .catalog input:focus,
   .catalog :global(.orbit-select .select-trigger:focus),
@@ -498,7 +556,7 @@
   .filter-note,
   .range-note {
     color: var(--muted);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.7;
   }
   .range-note {
@@ -516,7 +574,7 @@
     border: 0;
     border-radius: 3px;
     padding: 12px 16px;
-    font-size: 13px;
+    font-size: var(--orbit-type-body);
   }
   .results-toolbar {
     display: flex;
@@ -620,6 +678,9 @@
   }
   .pagination div {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-width: 0;
     gap: 8px;
   }
   .pagination a,
@@ -631,6 +692,7 @@
     justify-content: center;
     gap: 8px;
   }
+  .pagination > a, .pagination > span { flex-shrink: 0; }
   .pagination [aria-current] {
     background: var(--text);
     color: var(--bg);
@@ -640,28 +702,6 @@
     color: var(--muted);
     opacity: 0.5;
   }
-  .catalog-editorial {
-    border-top: 1px solid var(--line);
-    padding-top: 36px;
-    margin-top: 56px;
-  }
-  .catalog-editorial h2 {
-    font-size: clamp(26px, 2.5vw, 36px);
-    letter-spacing: -0.045em;
-    font-weight: 500;
-    line-height: 1.15;
-    margin: 16px 0;
-  }
-  .catalog-editorial > p:not(.eyebrow) {
-    max-width: 72ch;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.85;
-  }
-  .catalog-editorial .editorial-note {
-    font-size: 11px !important;
-    margin-top: 16px;
-  }
   @media (max-width: 1200px) {
     .catalog-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -669,7 +709,7 @@
   }
   @media (max-width: 1100px) {
     .catalog-layout {
-      gap: 28px;
+      column-gap: 28px;
       grid-template-columns: 218px minmax(0, 1fr);
     }
     .results-toolbar {
@@ -682,6 +722,8 @@
     }
   }
   @media (max-width: 800px) {
+    .filter-sticky { transform: none; }
+    .catalog-tail { grid-column: 1; margin-top: -28px; }
     .catalog {
       padding-top: 32px;
     }
@@ -690,9 +732,6 @@
       align-items: start;
       flex-direction: column;
       padding-bottom: 28px;
-    }
-    .catalog-intro > p {
-      font-size: 13px;
     }
     .catalog-layout {
       grid-template-columns: minmax(0, 1fr);
@@ -758,15 +797,9 @@
     .sort-label {
       width: 100%;
     }
-    h1 {
-      font-size: clamp(36px, 10.5vw, 52px);
-    }
     .pagination > a > span,
     .pagination > .disabled > span {
       display: none;
-    }
-    .catalog-editorial {
-      margin-top: 40px;
     }
   }
 </style>
