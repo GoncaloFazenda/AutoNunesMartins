@@ -4,12 +4,10 @@
   import { cubicOut } from 'svelte/easing';
   let { items, idPrefix }: { items: { question: string; answer: string }[]; idPrefix: string } =
     $props();
-  let expanded = $state<number[]>([]);
+  let expanded = $state<number | null>(null);
   let reducedMotion = $state(true);
   const toggle = (index: number) => {
-    expanded = expanded.includes(index)
-      ? expanded.filter((item) => item !== index)
-      : [...expanded, index];
+    expanded = expanded === index ? null : index;
   };
   onMount(() => {
     const preference = matchMedia('(prefers-reduced-motion: reduce)');
@@ -24,7 +22,7 @@
 
 <div class="faq-list">
   {#each items as item, index}
-    {@const isExpanded = expanded.includes(index)}
+    {@const isExpanded = expanded === index}
     <div class="faq-item" class:expanded={isExpanded}>
       <h3>
         <button
@@ -103,8 +101,8 @@
     background: none;
     color: var(--text);
     font: inherit;
-    font-size: clamp(20px, 1.85vw, 28px);
-    font-weight: 450;
+    font-size: var(--orbit-type-question, clamp(18px, 1.4vw, 21px));
+    font-weight: 400;
     letter-spacing: -0.03em;
     line-height: 1.35;
     text-align: left;
@@ -146,8 +144,8 @@
   }
   .answer > p {
     max-width: 64ch;
-    font-size: clamp(15px, 1.2vw, 18px);
-    line-height: 1.85;
+    font-size: var(--orbit-type-reading, 16px);
+    line-height: var(--orbit-leading-reading, 1.7);
     color: var(--muted);
   }
   @media (prefers-reduced-motion: no-preference) {
@@ -159,8 +157,8 @@
   }
   @media (max-width: 700px) {
     button {
-      font-size: 19px;
-      padding-block: 25px;
+      font-size: var(--orbit-type-question, 17px);
+      padding-block: 22px;
       gap: 24px;
     }
     .chevron {
@@ -172,8 +170,7 @@
       padding: 0 30px 28px 2px;
     }
     .answer > p {
-      font-size: 14px;
-      line-height: 1.8;
+      font-size: var(--orbit-type-reading, 15px);
     }
   }
 </style>

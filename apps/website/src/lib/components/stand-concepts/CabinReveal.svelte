@@ -363,7 +363,7 @@
     gap: 16px;
     align-items: center;
     font: inherit;
-    font-size: 14px;
+    font-size: clamp(14px, 1.05vw, 15px);
     line-height: 1.25;
     text-align: left;
     padding: 8px 0 8px 16px;
@@ -383,11 +383,13 @@
   }
   .cabin-tabs button > span {
     color: var(--muted);
-    font-size: 9px;
+    font-size: max(10px, 0.68em);
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 24px;
   }
   .cabin-tabs button.active {
     color: var(--text);
-    font-size: 22px;
+    font-size: clamp(18px, 1.5vw, 22px);
     font-weight: 600;
     letter-spacing: -0.025em;
   }
@@ -396,6 +398,7 @@
   }
   .cabin-tabs button.active > span {
     color: var(--red);
+    font-size: 0.72em;
   }
   .cabin-description {
     min-height: 100px;
@@ -549,10 +552,10 @@
     .cabin-tabs button {
       gap: 7px;
       min-height: 48px;
-      font-size: 13px;
+      font-size: 12px;
     }
     .cabin-tabs button.active {
-      font-size: 21px;
+      font-size: 17px;
     }
     .cabin-description {
       min-height: 90px;

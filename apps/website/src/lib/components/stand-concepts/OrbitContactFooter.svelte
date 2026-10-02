@@ -1,7 +1,9 @@
 <script lang="ts">
+  import OrbitVisitLabel from './OrbitVisitLabel.svelte';
   import { ArrowUpRight, Phone, Mail } from 'lucide-svelte';
   import { standContact } from './standContact';
   import OrbitCompactFooter from './OrbitCompactFooter.svelte';
+  import FormSelectField from './FormSelectField.svelte';
   let { includeFooter = true }: { includeFooter?: boolean } = $props();
   import { photo } from './data';
   import { responsivePhoto } from './images';
@@ -22,7 +24,7 @@
   <div class="contact-inner">
     <div class="visit-info">
       <div class="contact-heading">
-        <p class="eyebrow"><span aria-hidden="true"></span> VISITAR O STAND</p>
+        <OrbitVisitLabel />
         <h2 id="stand-contact-heading">Venha <span>conhecer-nos.</span></h2>
         <p class="contact-intro">Encontre-nos, fale connosco e planeie a sua visita.</p>
       </div>
@@ -130,7 +132,7 @@
             class="button primary"
             href={`tel:${standContact.phone.international}`}
             aria-describedby={demoDescription}
-            ><Phone size={16} aria-hidden="true" /> Telefonar agora</a
+            ><Phone size={16} aria-hidden="true" /> Ligar agora</a
           >
         {/if}
         {#if standContact.email}
@@ -185,11 +187,11 @@
         >
       </div>
       <label
-        >Assunto<select name="subject"
+        >Assunto<FormSelectField><select name="subject"
           ><option>Informações gerais</option><option>Conhecer uma viatura</option><option
             >Marcar uma visita</option
           ><option>Falar sobre uma retoma</option></select
-        ></label
+        ></FormSelectField></label
       >
       <label
         >Mensagem<textarea name="message" rows="3" placeholder="Como podemos ajudar?" required
@@ -318,7 +320,7 @@
     color: #f5f5f1;
     padding: 12px 14px;
     font: inherit;
-    font-size: 14px;
+    font-size: var(--orbit-type-control, 16px);
     line-height: 1.5;
   }
   .inline-contact input::placeholder,
@@ -490,11 +492,6 @@
     gap: 10px;
     color: var(--muted);
   }
-  .eyebrow > span {
-    width: 5px;
-    height: 5px;
-    background: var(--red);
-  }
   h2 {
     margin-top: 16px;
     font-size: clamp(38px, 4.6vw, 68px);
@@ -550,7 +547,7 @@
     gap: 16px;
   }
   dt {
-    color: var(--muted);
+    color: var(--text);
   }
   dd {
     font-variant-numeric: tabular-nums;
@@ -578,10 +575,11 @@
     font-weight: 500;
   }
   .button.primary {
-    background: #d90612;
-    border-color: #d90612;
-    color: #fff;
+    background: #fff;
+    border-color: #fff;
+    color: #17231e;
   }
+  .inline-contact .button.primary :global(svg) { color: #e30613; }
   .map-link {
     display: inline-flex;
     align-items: center;
@@ -623,9 +621,9 @@
       color: var(--text);
     }
     .button.primary:hover {
-      background: #b5050f;
-      border-color: #b5050f;
-      color: #fff;
+      background: #e9ede8;
+      border-color: #e9ede8;
+      color: #17231e;
     }
   }
   @media (prefers-reduced-motion: no-preference) {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { scrollAccent } from './scrollAccent';
   const CAR_ENTER_MS = 850;
   const LINE_ENTER_MS = 300;
   const EXIT_MS = 300;
@@ -8,9 +9,14 @@
   let timer: ReturnType<typeof setTimeout> | undefined;
   let element: HTMLAnchorElement;
   let sweep = $state(0);
+  let scrollDriven = $state(false);
+  let scrollLight = $state(scrollAccent(1, 1, 0));
+  const textSweep = $derived(sweep);
+  const lineSweep = $derived(scrollDriven && !reduced ? scrollLight.lineSweep : sweep);
   let sweepFrame = 0;
   function illuminate(target: number) {
     cancelAnimationFrame(sweepFrame);
+    if (scrollDriven && !reduced) return;
     if (reduced) { sweep = target; return; }
     if (target === 1 && sweep > 1) sweep = 0;
     const from = sweep;
@@ -37,9 +43,50 @@
   }
   onMount(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => { reduced = media.matches; if (reduced && phase === 'entering') { clearTimeout(timer); phase = 'parked'; } };
+    const scrollInput = matchMedia('(hover: none), (pointer: coarse)');
+    const heading = element.querySelector('strong')!;
+    const lineWindow = element.querySelector<HTMLElement>('.title-line')!;
+    let scrollFrame = 0;
+    let inView = true;
+    const drawScroll = () => {
+      scrollFrame = 0;
+      if (!scrollDriven || reduced) return;
+      // Same viewport journey and 25px text-light lag as “fazer sentido”.
+      scrollLight = scrollAccent(heading.getBoundingClientRect().top, innerHeight, lineWindow.getBoundingClientRect().width);
+    };
+    const schedule = () => {
+      if (scrollDriven && !reduced && inView && !scrollFrame) scrollFrame = requestAnimationFrame(drawScroll);
+    };
+    const update = () => {
+      reduced = media.matches;
+      scrollDriven = scrollInput.matches;
+      cancelAnimationFrame(sweepFrame);
+      sweep = phase === 'entering' || phase === 'parked' ? 1 : 0;
+      if (reduced && phase === 'entering') { clearTimeout(timer); phase = 'parked'; }
+      drawScroll();
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry?.isIntersecting ?? false;
+      if (inView) schedule();
+    });
+    observer.observe(element);
+    const resize = new ResizeObserver(schedule);
+    resize.observe(heading);
     update(); media.addEventListener('change', update);
-    return () => { clearTimeout(timer); cancelAnimationFrame(sweepFrame); media.removeEventListener('change', update); };
+    scrollInput.addEventListener('change', update);
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(sweepFrame);
+      cancelAnimationFrame(scrollFrame);
+      observer.disconnect();
+      resize.disconnect();
+      media.removeEventListener('change', update);
+      scrollInput.removeEventListener('change', update);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
   });
 </script>
 
@@ -49,7 +96,7 @@
   onpointerleave={(event) => { if (event.pointerType === 'mouse') leave(); }}
   onfocus={enter} onblur={leave}>
   <span class="eyebrow">Continue a descobrir</span>
-  <strong><span>Ver todas</span><span class="title-accent" style={`--sweep:${sweep};--start:${Math.max(0,sweep-1)*120-10}%;--end:${Math.min(1,sweep)*120-10}%;--light:${Math.min(1,Math.max(0,Math.min(sweep,2-sweep)*8))}`}>as viaturas<span class="title-line" aria-hidden="true"><i></i></span></span></strong>
+  <strong><span>Ver todas</span><span class="title-accent" class:scroll-light={scrollDriven && !reduced} style={`--sweep:${lineSweep};--start:${Math.max(0,textSweep-1)*120-10}%;--end:${Math.min(1,textSweep)*120-10}%;--light:${Math.min(1,Math.max(0,Math.min(textSweep,2-textSweep)*8))};--segment-start:${scrollLight.segmentStart}px;--segment-end:${scrollLight.segmentEnd}px;--light-inset:${scrollLight.lightInset}px;--accent-light:${scrollLight.accentLight}`}>as viaturas<span class="title-line" class:line-hidden={lineSweep <= 0 || lineSweep >= 2 || (scrollDriven && !reduced && !scrollLight.lineVisible)} aria-hidden="true"><i></i></span></span></strong>
   <div class="road" aria-hidden="true">
     <div class="car">
       <svg viewBox="0 0 240 100" fill="none" focusable="false">
@@ -79,8 +126,23 @@
   strong { display: block; margin-top: 12px; font-size: clamp(24px,2.2vw,34px); font-weight: 500; line-height: 1.08; letter-spacing: -.045em; }
   strong > span { display: table; position: relative; }
   .title-accent { color: transparent; background: linear-gradient(90deg, transparent var(--start), color-mix(in srgb,var(--red) calc(var(--light) * 70%),transparent) calc(var(--start) + 10%), color-mix(in srgb,var(--red) calc(var(--light) * 70%),transparent) calc(var(--end) - 10%), transparent var(--end)), linear-gradient(var(--text),var(--text)); background-clip: text; -webkit-background-clip: text; }
-  .title-line { position: absolute; left: 0; right: 0; bottom: -.18em; height: 2px; overflow: hidden; filter: var(--orbit-line-glow); opacity: .95; }
+  .title-line { position: absolute; left: 0; right: -10px; bottom: -.18em; height: 2px; overflow: hidden; filter: var(--orbit-line-glow); opacity: .95; }
   .title-line i { display: block; width: 100%; height: 100%; background: var(--red); transform: translateX(calc((var(--sweep) - 1) * 100%)); }
+  .title-line.line-hidden { visibility: hidden; }
+  .scroll-light {
+    background-image:
+      linear-gradient(90deg,
+        transparent calc(var(--segment-start) - 1.8em),
+        color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent) calc(var(--segment-start) - 1.2em),
+        color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent) calc(var(--segment-start) - 0.6em),
+        color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent) calc(var(--segment-start) + var(--light-inset)),
+        color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent) calc(var(--segment-end) - var(--light-inset) + 35px),
+        color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent) calc(var(--segment-end) - var(--light-inset) / 2 + 17.5px + 0.525em),
+        color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent) calc(var(--segment-end) - var(--light-inset) / 2 + 17.5px + 1.05em),
+        transparent calc(var(--segment-end) - var(--light-inset) / 2 + 17.5px + 1.575em)),
+      linear-gradient(var(--text), var(--text));
+  }
+  .scroll-light .title-line { bottom: -0.08em; }
   @media (prefers-reduced-motion: no-preference) {
     strong > span { transition: transform var(--exit-duration) cubic-bezier(.16,1,.3,1); }
     .active strong > span { transition-duration: var(--line-enter-duration); }

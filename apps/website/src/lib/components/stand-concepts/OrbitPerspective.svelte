@@ -1,5 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  // Defaults preserve the homepage; other editorial pages share its exact light treatment.
+  let {
+    id = 'perspective-message',
+    eyebrow = 'DA ESCOLHA AO CAMINHO',
+    lead = 'A escolha certa',
+    middle = 'começa por',
+    highlight = 'fazer sentido.',
+  }: {
+    id?: string;
+    eyebrow?: string;
+    lead?: string;
+    middle?: string;
+    highlight?: string;
+  } = $props();
   let section: HTMLElement;
   onMount(() => {
     const heading = section.querySelector('h2')!;
@@ -28,7 +42,10 @@
       const textLeft = underline.getBoundingClientRect().left;
       underline.style.setProperty('--segment-start', `${segmentStart - textLeft}px`);
       underline.style.setProperty('--segment-end', `${segmentEnd - textLeft}px`);
-      underline.style.setProperty('--light-inset', `${Math.min(24, (segmentEnd - segmentStart) / 2)}px`);
+      underline.style.setProperty(
+        '--light-inset',
+        `${Math.min(24, (segmentEnd - segmentStart) / 2)}px`,
+      );
       // The tip crosses the text at halfway, then keeps travelling beyond its
       // right edge. A fixed window clips the trailing segment; opacity stays 1.
       const x = line.left + line.width * lightProgress * 2;
@@ -67,17 +84,17 @@
   class="orbit-perspective"
   data-scene
   data-approach
-  aria-labelledby="perspective-message"
+  aria-labelledby={id}
 >
   <div class="perspective-inner">
-    <p class="eyebrow">DA ESCOLHA AO CAMINHO</p>
+    <p class="eyebrow">{eyebrow}</p>
     <div data-approach-target>
-      <h2 id="perspective-message">
-        <span class="read-a">A escolha certa</span>
-        <span class="read-b">começa por</span>
+      <h2 {id}>
+        <span class="read-a">{lead}</span>
+        <span class="read-b">{middle}</span>
         <span class="read-c"
           ><em
-            >fazer sentido.<span class="line-window" aria-hidden="true"
+            >{highlight}<span class="line-window" aria-hidden="true"
               ><span class="travelling-line"></span></span
             ></em
           ></span
@@ -139,8 +156,7 @@
     /* Apply the hero's aura after clipping the travelling segment. */
     opacity: 0.95;
     filter: drop-shadow(0 0 2.5px rgb(255 51 76 / 90%)) drop-shadow(0 0 5px #e3061366)
-      drop-shadow(0 0 12px #e3061399)
-      drop-shadow(0 0 26px #e3061359);
+      drop-shadow(0 0 12px #e3061399) drop-shadow(0 0 26px #e3061359);
   }
   .travelling-line {
     display: block;
@@ -169,12 +185,18 @@
         linear-gradient(
           90deg,
           transparent calc(var(--segment-start, 0px) - 1.8em),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent) calc(var(--segment-start, 0px) - 1.2em),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent) calc(var(--segment-start, 0px) - 0.6em),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent) calc(var(--segment-start, 0px) + var(--light-inset, 0px)),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent) calc(var(--segment-end, 0px) - var(--light-inset, 0px) + 35px),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent) calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 0.525em),
-          color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent) calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 1.05em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent)
+            calc(var(--segment-start, 0px) - 1.2em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent)
+            calc(var(--segment-start, 0px) - 0.6em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent)
+            calc(var(--segment-start, 0px) + var(--light-inset, 0px)),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 70%), transparent)
+            calc(var(--segment-end, 0px) - var(--light-inset, 0px) + 35px),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 42%), transparent)
+            calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 0.525em),
+          color-mix(in srgb, var(--red) calc(var(--accent-light) * 12%), transparent)
+            calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 1.05em),
           transparent calc(var(--segment-end, 0px) - var(--light-inset, 0px) / 2 + 17.5px + 1.575em)
         ),
         linear-gradient(var(--perspective-base), var(--perspective-base));

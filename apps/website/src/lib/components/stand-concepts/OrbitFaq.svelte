@@ -48,25 +48,25 @@
     align-items: end;
     justify-content: space-between;
     gap: 40px;
-    margin-bottom: clamp(40px, 4.5vw, 68px);
+    margin-bottom: var(--orbit-space-heading, 40px);
   }
   h2,
   p {
     margin: 0;
   }
   h2 {
-    font-size: clamp(38px, 4.2vw, 66px);
+    font-size: var(--orbit-title-section, clamp(38px, 4.1vw, 64px));
     font-weight: 500;
-    letter-spacing: -0.055em;
-    line-height: 1.1;
+    letter-spacing: -0.05em;
+    line-height: 1.12;
   }
   h2 > span {
     color: var(--red);
   }
   .faq-heading > p {
     color: var(--muted);
-    font-size: var(--orbit-type-body, 15px);
-    line-height: 1.75;
+    font-size: var(--orbit-type-reading, 16px);
+    line-height: var(--orbit-leading-reading, 1.7);
     flex-shrink: 0;
   }
   @media (max-width: 850px) {
@@ -80,7 +80,6 @@
   }
   @media (max-width: 700px) {
     h2 {
-      font-size: clamp(34px, 9vw, 46px);
       max-width: 13ch;
     }
   }

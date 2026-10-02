@@ -2,6 +2,7 @@
   import { ArrowLeft, ArrowUpRight, X } from 'lucide-svelte';
   import ArchivedOrbitCinema from '$lib/components/stand-concepts/ArchivedOrbitCinema.svelte';
   import OrbitDetails from '$lib/components/stand-concepts/OrbitDetails.svelte';
+  import OrbitPageEnding from '$lib/components/stand-concepts/OrbitPageEnding.svelte';
   import OrbitSpread from '$lib/components/stand-concepts/OrbitSpread.svelte';
   import { designMotion } from '$lib/components/stand-concepts/designMotion';
 
@@ -88,9 +89,9 @@
     </article>
   </main>
 
-  <footer>
-    <span>AUTO NUNES MARTINS</span><span>REFERÊNCIAS / 2026</span>
-  </footer>
+  <div class="reference-ending">
+    <OrbitPageEnding onContact={() => contact('Gostava de saber mais.')} />
+  </div>
 
   <dialog bind:this={contactDialog}>
     <button class="dialog-close" onclick={() => contactDialog.close()} aria-label="Fechar">
@@ -151,6 +152,11 @@
       sans-serif;
     color-scheme: dark;
   }
+  .reference-ending {
+    --orbit-frame: min(96%, calc(100% - 48px));
+    --orbit-frame-max: 1720px;
+    font-family: 'Orbit Inter', 'Inter', Arial, sans-serif;
+  }
   .references * {
     box-sizing: border-box;
   }
@@ -166,7 +172,6 @@
     outline-offset: 5px;
   }
   header,
-  footer,
   .collection-intro,
   .reference-heading {
     width: 95%;
@@ -206,8 +211,7 @@
   }
   .collection-intro > p,
   .reference-heading p,
-  .reference-heading small,
-  footer {
+  .reference-heading small {
     margin: 0;
     color: var(--muted);
     font-size: 10px;
@@ -283,13 +287,6 @@
     font-weight: 500;
     letter-spacing: -0.05em;
     line-height: 1.1;
-  }
-  footer {
-    padding-block: 32px;
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    border-top: 1px solid var(--line);
   }
   dialog {
     width: min(520px, calc(100% - 32px));
@@ -379,8 +376,8 @@
     margin-top: 4px;
   }
   @media (max-width: 700px) {
+    .reference-ending { --orbit-frame: 90%; }
     header,
-    footer,
     .collection-intro,
     .reference-heading,
     .archive-lead-space {

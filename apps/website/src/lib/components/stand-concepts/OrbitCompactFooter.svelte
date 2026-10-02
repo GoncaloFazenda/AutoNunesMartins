@@ -2,10 +2,15 @@
   import { ArrowUpRight } from 'lucide-svelte';
   import { standContact } from './standContact';
 
-  let { showContacts = true, onContact }: { showContacts?: boolean; onContact?: () => void } = $props();
+  let {
+    showContacts = true,
+    compact = false,
+    contactHref = '/stand-orbit#contactos',
+    onContact,
+  }: { showContacts?: boolean; compact?: boolean; contactHref?: string; onContact?: () => void } = $props();
 </script>
 
-<footer class="compact-footer">
+<footer class="compact-footer" class:condensed={compact}>
   <div class="inner">
     {#if onContact}
       <div class="invitation-wrap">
@@ -21,8 +26,8 @@
       </a>
       <nav aria-label="Navegação do rodapé">
         <a href="/stand-orbit/viaturas">Viaturas</a>
-        <a href="/stand-orbit#sobre">Sobre nós</a>
-        <a href="/stand-orbit#contactos">Morada e horário <ArrowUpRight size={14} aria-hidden="true" /></a>
+        <a href="/stand-orbit/quem-somos">Quem somos</a>
+        <a href={contactHref}>Morada e horário <ArrowUpRight size={14} aria-hidden="true" /></a>
       </nav>
     </div>
     {#if showContacts}
@@ -33,7 +38,7 @@
     {/if}
     <div class="baseline">
       <p>© {new Date().getFullYear()} {standContact.name}
-        {#if standContact.isDemo}<span id="compact-footer-demo">Demonstração · Dados fictícios</span>{/if}
+        {#if standContact.isDemo}<span id="compact-footer-demo" class:sr-only={compact}>Demonstração · Dados fictícios</span>{/if}
       </p>
       <a href="/stand-orbit/politica-de-privacidade">Política de privacidade</a>
     </div>
@@ -46,13 +51,32 @@
   .top { display: flex; align-items: center; justify-content: space-between; gap: 24px 48px; }
   .invitation-wrap { padding-block: clamp(16px, 3vw, 44px) clamp(36px, 5vw, 72px); margin-bottom: 32px; border-bottom: 1px solid #ffffff24; }
   .invitation { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 32px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; text-align: left; font: inherit; }
-  .invitation > span { font-size: clamp(48px, 7vw, 106px); line-height: 1.02; letter-spacing: -.065em; font-weight: 500; }
-  .invitation > span > span { color: #97979d; }
+  .invitation > span { position: relative; isolation: isolate; font-size: clamp(48px, 7vw, 106px); line-height: 1.02; letter-spacing: -.065em; font-weight: 500; }
+  /* Match the hero copy's quiet vertical rule, without crossing the lettering. */
+  .invitation > span::before {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    left: calc(-1 * clamp(12px, 1.2vw, 24px));
+    top: -.06em;
+    bottom: -.06em;
+    width: 2px;
+    background: color-mix(in srgb, var(--red, #e30613) 72%, transparent);
+    opacity: .92;
+  }
+  .invitation > span > span { position: relative; display: inline-block; color: #97979d; }
+  .invitation > span > span::after { content: ''; position: absolute; left: 0; right: 0; bottom: -.1em; height: 2px; background: var(--red); transform: scaleX(0); transform-origin: left; }
   .invitation :global(svg) { width: clamp(46px, 7vw, 96px); height: auto; flex-shrink: 0; color: var(--red); stroke-width: 1; }
   .invitation:focus-visible { outline: 2px solid #f5f5f1; outline-offset: 8px; }
-  @media (hover: hover) { .invitation:hover > span > span { color: #f5f5f1; } }
+  .invitation:focus-visible > span > span { color: #f5f5f1; }
+  .invitation:focus-visible > span > span::after { transform: scaleX(1); }
+  @media (hover: hover) {
+    .invitation:hover > span > span { color: #f5f5f1; }
+    .invitation:hover > span > span::after { transform: scaleX(1); }
+  }
   @media (prefers-reduced-motion: no-preference) {
     .invitation > span > span { transition: color 240ms ease; }
+    .invitation > span > span::after { transition: transform 240ms ease; }
     .invitation :global(svg) { transition: transform 300ms ease; }
     .invitation:hover :global(svg) { transform: translate(5px, -5px); }
   }
@@ -69,6 +93,29 @@
   .baseline a { display: inline-flex; align-items: center; min-height: 44px; }
   a:focus-visible { outline: 2px solid #f5f5f1; outline-offset: 5px; }
   @media (hover: hover) { a:hover { color: #fff; text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 6px; } }
+  /* Homepage density is opt-in; other pages keep their existing proportions. */
+  .condensed .inner { padding-block: 24px 16px; }
+  .condensed .invitation-wrap { padding-block: clamp(12px, 1.5vw, 24px) clamp(24px, 3vw, 40px); margin-bottom: 20px; }
+  .condensed .invitation > span { font-size: clamp(42px, 5.2vw, 80px); }
+  .condensed .invitation :global(svg) { width: clamp(40px, 5vw, 72px); }
+  .condensed .baseline { margin-top: 16px; padding-top: 12px; }
+  .condensed .top {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+  .condensed nav { justify-self: end; }
+  .baseline .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
   @media (max-width: 700px) {
     .invitation-wrap { padding-block: 16px 36px; margin-bottom: 28px; }
     .invitation { gap: 16px; }
@@ -80,5 +127,27 @@
     .contacts { flex-direction: column; gap: 0; margin-top: 12px; }
     .baseline { margin-top: 20px; }
     p span { display: block; margin-left: 0; }
+    .condensed .inner { padding-block: 20px 12px; }
+    .condensed .invitation-wrap { padding-block: 8px 24px; margin-bottom: 20px; }
+    .condensed .invitation > span { font-size: clamp(38px, 9vw, 54px); }
+    .condensed .invitation :global(svg) { width: 36px; }
+    .condensed .top { gap: 24px; align-items: start; }
+    .condensed .brand { padding-top: 8px; }
+    .condensed .brand img { width: clamp(108px, 26vw, 120px); }
+    .condensed nav {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      min-width: 0;
+    }
+    .condensed nav a { white-space: nowrap; }
+    .condensed .baseline { margin-top: 12px; }
+  }
+  @media (max-width: 480px) {
+    .condensed .baseline {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+    }
   }
 </style>

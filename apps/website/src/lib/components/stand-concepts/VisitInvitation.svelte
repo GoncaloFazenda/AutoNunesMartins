@@ -3,23 +3,33 @@
   let {
     onContact,
     logoSrc = '/logo.png',
-  }: { onContact: (message: string) => void; logoSrc?: string } = $props();
+    compactComparison = false,
+    headingId = 'visit-heading',
+  }: {
+    onContact: (message: string) => void;
+    logoSrc?: string;
+    compactComparison?: boolean;
+    headingId?: string;
+  } = $props();
   let choice = $state(0);
   const reasons = [
     {
       label: 'Conhecer uma viatura',
+      tab: 'Viatura',
       short: 'O próximo carro.',
       detail: 'Ver ao vivo. Sentar-se. Fazer perguntas.',
       message: 'Gostava de combinar uma visita para conhecer uma viatura.',
     },
     {
       label: 'Falar sobre uma retoma',
+      tab: 'Retoma',
       short: 'Uma nova companhia.',
       detail: 'Conte-nos o que conduz e o que procura.',
       message: 'Gostava de combinar uma visita para falar sobre a minha retoma.',
     },
     {
       label: 'Esclarecer as minhas dúvidas',
+      tab: 'Dúvidas',
       short: 'Tudo mais claro.',
       detail: 'Equipamento, documentação e próximos passos.',
       message: 'Gostava de esclarecer algumas dúvidas antes de visitar o stand.',
@@ -29,15 +39,17 @@
 </script>
 
 <section
+  id={compactComparison ? 'visita-compacta' : undefined}
   class="visit-invitation"
+  class:compact-comparison={compactComparison}
   data-scene
   data-approach
   data-scan-delay="0.05"
-  aria-labelledby="visit-heading"
+  aria-labelledby={headingId}
 >
   <div class="invitation-copy">
-    <p class="eyebrow">O DIGITAL É SÓ O COMEÇO</p>
-    <h2 id="visit-heading">Uma visita.<br /><span>À sua medida.</span></h2>
+    <p class="eyebrow">{compactComparison ? 'PROPOSTA · CONVITE COMPACTO' : 'VENHA CONHECER DE PERTO'}</p>
+    <h2 id={headingId}>Uma visita.<br /><span>À sua medida.</span></h2>
     <p class="invitation-intro">
       Uma boa escolha começa com uma boa conversa. Diga-nos o que o traz por cá.
     </p>
@@ -81,13 +93,27 @@
           >CONVITE<br />PARA CONVERSAR</span
         >
       </div>
-      <div class="ticket-main" aria-live="polite" aria-atomic="true">
+      {#if compactComparison}
+        <div class="compact-reasons" role="group" aria-label="Motivo da visita — proposta compacta">
+          {#each reasons as reason, index}
+            <button type="button" class:chosen={choice === index}
+              aria-pressed={choice === index} aria-controls={`${headingId}-response`}
+              onclick={() => (choice = index)}>{reason.tab}</button>
+          {/each}
+        </div>
+      {/if}
+      <div class="ticket-main" id={`${headingId}-response`} aria-live="polite" aria-atomic="true">
         {#key choice}<div class="ticket-message">
             <span class="ticket-kicker">É SOBRE ISTO.</span>
             <h3>{selected.short}</h3>
             <p>{selected.detail}</p>
           </div>{/key}
       </div>
+      {#if compactComparison}
+        <button type="button" class="compact-cta" onclick={() => onContact(selected.message)}>
+          Vamos combinar <ArrowUpRight size={19} aria-hidden="true" />
+        </button>
+      {/if}
       <div class="ticket-tear" aria-hidden="true">
         <i></i><span>O PRÓXIMO PASSO É SEU</span><i></i>
       </div>
@@ -104,6 +130,13 @@
 </section>
 
 <style>
+  .compact-reasons,
+  .compact-cta {
+    display: none;
+  }
+  :global(.design.orbit-home) .visit-invitation.compact-comparison {
+    padding-top: 10px;
+  }
   .visit-invitation {
     --approach: 1;
     --reveal-a: 1;
@@ -585,5 +618,96 @@
     .invitation-caption {
       font-size: 7px;
     }
+  }
+  /* An independent comparison: keep the original invitation's choreography intact.
+     Controls, response and CTA share one stable paper surface on small screens. */
+  @media (max-width: 850px) {
+    .compact-comparison {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .compact-comparison .invitation-copy > .visit-reasons,
+    .compact-comparison .invitation-copy > .visit-cta,
+    .compact-comparison .invitation-baseline,
+    .compact-comparison .invitation-sleeve,
+    .compact-comparison .invitation-caption,
+    .compact-comparison .ticket-tear,
+    .compact-comparison .ticket-bottom,
+    .compact-comparison .ticket-end {
+      display: none;
+    }
+    .compact-comparison .invitation-intro { margin-bottom: 0; }
+    .compact-comparison .invitation-scene {
+      height: auto;
+      min-width: 0;
+      perspective: none;
+    }
+    :global(.design.orbit-home) .compact-comparison .visit-ticket {
+      width: 100%;
+      max-width: 520px;
+      padding: 22px;
+      transform: none;
+    }
+    .compact-comparison .ticket-top img { width: 106px; }
+    .compact-reasons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 20px;
+      border-bottom: 1px solid #dedcd7;
+    }
+    .compact-reasons button {
+      min-width: 0;
+      min-height: 48px;
+      padding: 10px 4px;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      color: #65656a;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .compact-reasons button.chosen {
+      color: #c80714;
+      border-bottom-color: #c80714;
+    }
+    .compact-comparison .ticket-main {
+      min-height: 176px;
+      padding-top: 22px;
+    }
+    .compact-comparison .ticket-main h3 {
+      font-size: 28px;
+      max-width: 15ch;
+    }
+    .compact-comparison .ticket-main p {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .compact-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      border: 1px solid #171719;
+      border-radius: 4px;
+      background: #171719;
+      color: #f6f4ef;
+      font-size: 14px;
+    }
+    .compact-cta:hover { background: #303033; }
+    .compact-reasons button:not(.chosen):hover { color: #171719; }
+  }
+  @media (max-width: 360px) {
+    :global(.design.orbit-home) .compact-comparison .visit-ticket { padding: 18px; }
+    .compact-comparison .ticket-main { min-height: 198px; }
+    .compact-reasons button { font-size: 13px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .compact-comparison .ticket-message { animation-duration: 220ms; }
   }
 </style>

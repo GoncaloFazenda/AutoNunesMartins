@@ -2,6 +2,7 @@
   import { ArrowUpRight } from 'lucide-svelte';
   import { photo } from './data';
   import { responsivePhoto } from './images';
+  import OrbitVisitLabel from './OrbitVisitLabel.svelte';
   let { onContact }: { onContact: (message: string) => void } = $props();
 </script>
 
@@ -9,8 +10,8 @@
   <img src={photo('photo-1576212767334-9e289e294c77', 2200)} srcset={responsivePhoto('photo-1576212767334-9e289e294c77')} sizes="100vw" alt="" loading="lazy" decoding="async" />
   <div class="pause-inner">
     <div>
-      <p class="eyebrow">VISITAR O STAND</p>
-      <h2 id="editorial-pause-title">O próximo passo começa aqui.</h2>
+      <OrbitVisitLabel spaceBelow={15} />
+      <h2 id="editorial-pause-title">O próximo passo começa aqui<span class="red-stop">.</span></h2>
       <p class="pause-note">Consulte a morada, os contactos e o horário do stand.</p>
     </div>
     <div class="pause-actions">
@@ -73,18 +74,13 @@
   h2 {
     margin: 0;
   }
-  .eyebrow {
-    margin-bottom: 15px;
-    color: var(--muted);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-  }
   h2 {
     font-size: clamp(30px, 3.1vw, 46px);
     font-weight: 500;
     letter-spacing: -0.045em;
     line-height: 1.15;
   }
+  .red-stop { color: var(--red); }
   .pause-note {
     margin-top: 12px;
     color: var(--muted);

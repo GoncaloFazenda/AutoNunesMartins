@@ -895,7 +895,7 @@
 
       <div class="visit-ctas">
         <a href="tel:+351210000000" class="btn btn-red big">
-          Telefonar agora
+          Ligar agora
           <span class="arrow">→</span>
         </a>
         <a href="mailto:geral@autonunesmartins.pt" class="btn btn-outline big">

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1728" height="684" viewBox="-544 -232 1728 684" preserveAspectRatio="xMidYMid slice">
+  <!-- Original map centre and marker, with the surrounding streets extended for a wider view.
+       The filled canvas keeps cover cropping edge-to-edge at desktop and mobile aspect ratios. -->
+  <defs>
+    <pattern id="neighbourhood" width="144" height="112" patternUnits="userSpaceOnUse">
+      <g fill="#cbd2c7" stroke="#bfc8bc" stroke-width="1">
+        <path d="M12 12H65V48H12ZM82 12H132V47H82ZM12 68H60V101H12ZM79 68H131V101H79Z" />
+      </g>
+      <path d="M0 57H144M72 0V112" fill="none" stroke="#f9f8f1" stroke-width="7" />
+    </pattern>
+  </defs>
+  <rect x="-544" y="-232" width="1728" height="684" fill="#dce2d8" />
+  <g fill="url(#neighbourhood)">
+    <rect x="-544" y="-232" width="1728" height="152" />
+    <rect x="-544" y="300" width="1728" height="152" />
+    <rect x="-544" y="-80" width="384" height="380" />
+    <rect x="800" y="-80" width="384" height="380" />
+  </g>
+  <path d="M-544-232H-343L-305-167-344-95-544-117ZM864 300L1002 315 1049 452H842ZM-375 302L-275 279-179 377-201 452H-401Z" fill="#bacbb5" />
+  <path d="M-160-80H160L140 65 65 91-160 73ZM470-80H800V92L570 75 528 38ZM-160 166L115 148 181 300H-160ZM433 166L492 135 559 159 608 300H451Z" fill="#bacbb5" />
+  <path d="M640-252C603-211 598-148 584-100C580-65 575-42 564-20C512 53 597 123 543 240C519 280 570 300 545 320C520 351 486 403 505 472" fill="none" stroke="#a9c7cc" stroke-width="36" />
+  <g fill="#cbd2c7" stroke="#bfc8bc" stroke-width="1">
+    <path d="M182 14H244V56H173ZM275 9H340V55H275ZM373 9H445V57H373ZM161 102H226V140H150ZM255 100H303V144H255ZM347 103H406V139H347ZM438 104H490V137H438ZM177 177H236V214H189ZM270 180H332V220H270ZM359 176H416V215H359Z" />
+    <path d="M-136-52H-70V52H-136ZM-12-53H67V43H-12ZM175-62H237V-28H175ZM279-61H335V-27H279ZM380-62H448V-25H380ZM614-52H696V53H614ZM747-51H809V60H747ZM-138 96H-74V144H-138ZM-9 113L65 101 77 148-9 153ZM610 135L695 143V184L610 170ZM746 140H809V189H746ZM-131 200H-68V272H-131ZM-11 199H71V270H-11ZM188 261H232V307H188ZM273 261H333V310H273ZM378 260H443V308H378ZM626 228H695V291H626ZM747 231H809V290H747Z" />
+  </g>
+  <g fill="none" stroke="#f9f8f1" stroke-width="12">
+    <path d="M-564 207L-180 142-20 112 165 78 386 80 660 113 820 132 1204 178M42-252L91-100 117-20 147 83 119 150 164 240 205 320 283 472M256-252V79L238 163 249 240 263 320 290 472M409-252L373-100 354-20 331 78 328 163 351 240 374 320 417 472M549-252L492-100 462-20 425 80 432 167 476 240 524 320 615 472M-564 218L-180 191-20 180 235 163 442 163 660 201 820 229 1204 295" />
+    <path d="M-44-252V100L-38 187-45 320-56 472M721-252V100L721 220 718 320 714 472M151-12H515M152 245H453M-240-252V100L-198 216-228 472M913-252L877 88 922 249 901 472M-564-127H577M636-127H1204M-564 364H475M555 364H1204" stroke-width="9" />
+  </g>
+  <path d="M-564 207L-180 142-20 112 165 78 386 80 660 113 820 132 1204 178" fill="none" stroke="#e9d6a5" stroke-width="5" />
+  <!-- Keep the location marker readable while the street network is 44% smaller. -->
+  <g transform="translate(329 109) scale(1.45) translate(-329 -109)">
+  <circle cx="329" cy="109" r="38" fill="#e30613" opacity=".09" />
+  <circle cx="329" cy="109" r="23" fill="#e30613" opacity=".13" />
+  <path d="M329 65c-13 0-23 10-23 23 0 17 23 36 23 36s23-19 23-36c0-13-10-23-23-23Z" fill="#e30613" stroke="#fff" stroke-width="3" />
+  <circle cx="329" cy="88" r="7" fill="#fff" />
+  </g>
+</svg>
