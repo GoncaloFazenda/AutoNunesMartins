@@ -19,7 +19,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 html {
-  scroll-behavior: smooth;
+  /* Router navigation and history restoration must happen before paint, without animation. */
+  scroll-behavior: auto;
   scrollbar-gutter: stable;
 }
 body {

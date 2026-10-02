@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  const accentId = $props.id();
   let reveal = $state(0);
+  const narrowStart = $derived(0.69 + reveal * 0.12);
+  const portraitStart = $derived(0.365 - reveal * 0.135);
   let backdrop = $state<HTMLDivElement>();
   onMount(() => {
     let frame = 0;
@@ -66,15 +69,34 @@
   });
 </script>
 
-<div class="stage-backdrop" bind:this={backdrop} aria-hidden="true" style:--accent-reveal={reveal}>
+<div class="stage-backdrop" bind:this={backdrop} aria-hidden="true" style:--accent-reveal={reveal}
+  style:--accent-narrow-paint={`url(#${accentId}-narrow)`}
+  style:--accent-portrait-paint={`url(#${accentId}-portrait)`}>
   <div class="stage-atmosphere">
     <div class="studio-light"></div>
     <div class="light-plane"></div>
     <div class="photo-ground"></div>
   </div>
-  <svg viewBox="0 0 1440 720" preserveAspectRatio="none" focusable="false">
-    <path class="direction-accent" pathLength="1" d="M-160 700 1510 218" />
-  </svg>
+  <div class="accent-track">
+    <svg viewBox="0 0 1440 720" preserveAspectRatio="none" focusable="false">
+      <defs>
+        {#each [{ name: 'narrow', start: narrowStart, length: 0.13 }, { name: 'portrait', start: portraitStart, length: 0.16 }] as beam}
+          <!-- Taper the moving dash itself; its existing shadow then fades beyond both tips. -->
+          <linearGradient id={`${accentId}-${beam.name}`} gradientUnits="userSpaceOnUse"
+            x1={-160 + 1670 * beam.start} y1={700 - 482 * beam.start}
+            x2={-160 + 1670 * (beam.start + beam.length)} y2={700 - 482 * (beam.start + beam.length)}>
+            <stop offset="0" stop-color="var(--red)" stop-opacity="0" />
+            <stop offset="0.06" stop-color="var(--red)" stop-opacity="0.25" />
+            <stop offset="0.2" stop-color="var(--red)" />
+            <stop offset="0.8" stop-color="var(--red)" />
+            <stop offset="0.94" stop-color="var(--red)" stop-opacity="0.25" />
+            <stop offset="1" stop-color="var(--red)" stop-opacity="0" />
+          </linearGradient>
+        {/each}
+      </defs>
+      <path class="direction-accent" pathLength="1" d="M-160 700 1510 218" />
+    </svg>
+  </div>
 </div>
 
 <style>
@@ -82,13 +104,14 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    overflow: hidden;
+    overflow: visible;
     isolation: isolate;
     z-index: 0;
   }
   .stage-atmosphere {
     position: absolute;
     inset: 0;
+    overflow: hidden;
     /* Fade the atmosphere without suppressing the line's local red aura. */
     mask-image:
       linear-gradient(
@@ -128,6 +151,11 @@
     );
     filter: blur(28px);
     mask-image: linear-gradient(transparent, #000 24%, #000 76%, transparent);
+  }
+  .accent-track {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
   }
   svg {
     position: absolute;
@@ -172,8 +200,11 @@
     :global(.motion-on) .light-plane {
       transform: translateX(calc(var(--p, 0) * -22px + var(--mx, 0) * 12px)) skewX(-22deg);
     }
+    .accent-track {
+      transform: translateY(var(--accent-stage-shift, 0px));
+    }
     svg {
-      transform: translateY(calc(var(--p, 0) * -12px));
+      transform: translateY(calc(var(--accent-progress, var(--p, 0)) * -12px));
     }
     :global(.motion-on) .direction-accent {
       /* The photo occludes the right end; scrolling draws the whole segment out to the left. */
@@ -187,6 +218,7 @@
   }
   @media (max-width: 700px) {
     .direction-accent {
+      stroke: var(--accent-narrow-paint);
       stroke-dasharray: 0.13 1;
       stroke-dashoffset: calc(-0.69px - var(--accent-reveal, 0) * 0.12px);
       stroke-width: 4;
@@ -207,6 +239,11 @@
       width: 90%;
       left: 5%;
       bottom: 15%;
+    }
+  }
+  @media (min-width: 701px) and (max-width: 1050px) and (orientation: portrait) {
+    .direction-accent {
+      stroke: var(--accent-portrait-paint);
     }
   }
   @media (max-width: 700px) and (prefers-reduced-motion: no-preference) {

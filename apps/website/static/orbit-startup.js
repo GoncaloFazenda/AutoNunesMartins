@@ -62,11 +62,22 @@ window.initializeOrbitDocument = function () {
     } catch (_) {
       /* Fall back to SvelteKit/browser scroll restoration. */
     }
-    var orbitRoot = document.querySelector('.orbit-home');
+    var orbitRoot = document.querySelector('.orbit-home, .orbit-company');
     var orbitHero = orbitRoot && orbitRoot.querySelector('.orbit-intro');
-    if (orbitHero && orbitHero.getBoundingClientRect().bottom <= 0) {
-      orbitRoot.classList.add('nav-pinned');
-      if (matchMedia('(max-width:700px)').matches) orbitRoot.classList.add('nav-hidden');
+    if (orbitHero && orbitRoot.classList.contains('orbit-home')) {
+      // Same distance-based arrival as compactNavProgress; no first-paint flash on reload.
+      var navDistance = Math.max(100, Math.min(180, innerHeight * .18));
+      var navStart = Math.max(100, orbitHero.getBoundingClientRect().bottom + scrollY - navDistance);
+      var navProgress = Math.max(0, Math.min(1, (scrollY - navStart) / navDistance));
+      var navPinned = scrollY >= navStart;
+      orbitRoot.classList.toggle('nav-pinned', navPinned);
+      orbitRoot.classList.remove('nav-hidden');
+      orbitRoot.style.setProperty('--nav-progress', String(navProgress));
+      var orbitHeader = orbitRoot.querySelector('.stand-header');
+      if (orbitHeader && navPinned && navProgress <= 0) {
+        orbitHeader.inert = true;
+        orbitHeader.setAttribute('aria-hidden', 'true');
+      }
     }
     if (orbitRoot && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       // Pre-paint equivalents of scrollTiming.ts; hydration continues from this pose.
@@ -88,6 +99,29 @@ window.initializeOrbitDocument = function () {
           range > 1
             ? clampOrbit(((parseFloat(getComputedStyle(pin).top) || 0) - bounds.top) / range)
             : 0;
+        var heroStage = scene.hasAttribute('data-scroll-hero')
+          ? scene.querySelector(':scope > [data-hero-stage]')
+          : null;
+        if (heroStage) {
+          // Equivalent to heroScrollProgress: natural scrolling, no sticky range.
+          var heroBounds = heroStage.getBoundingClientRect();
+          var heroHeight = heroBounds.height;
+          // Stable wide-hero track; preserve the existing tablet/mobile frame.
+          var accentRange = Math.max(0, bounds.height - heroHeight);
+          var accentPinTop = Math.max(0, (innerHeight - heroHeight) / 2);
+          var accentTop = bounds.top + (innerWidth > 1050 ? scrollY : 0);
+          var accentTravel = Math.min(accentRange, Math.max(0, accentPinTop - accentTop));
+          scene.style.setProperty('--accent-stage-shift', (bounds.top + accentTravel - heroBounds.top) + 'px');
+          scene.style.setProperty('--accent-progress', accentRange > 1
+            ? clampOrbit((accentPinTop - accentTop) / accentRange) : 0);
+          var documentTop = bounds.top + scrollY;
+          var resting = clampOrbit(
+            (Math.max(0, (innerHeight - heroHeight) / 2) - documentTop) /
+              Math.max(1, innerHeight * 0.04),
+          );
+          var travel = Math.max(1, Math.min(heroHeight * 0.75, innerHeight * 0.6));
+          progress = resting + (1 - resting) * clampOrbit((documentTop - bounds.top) / travel);
+        }
         scene.style.setProperty('--p', progress);
         scene.style.setProperty(
           '--through',

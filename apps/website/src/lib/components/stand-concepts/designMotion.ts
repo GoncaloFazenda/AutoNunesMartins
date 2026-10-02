@@ -1,4 +1,4 @@
-import { sceneProgress, chapterProgress, approachProgress } from './scrollTiming';
+import { sceneProgress, chapterProgress, approachProgress, heroScrollProgress, heroAccentFrame } from './scrollTiming';
 
 /** Scroll choreography that observes native browser scrolling without intercepting input. */
 export function designMotion(root: HTMLElement) {
@@ -28,6 +28,9 @@ export function designMotion(root: HTMLElement) {
       .map(({ node, bounds }) => {
         const pin = node.querySelector<HTMLElement>(':scope > [data-pin]');
         const sticky = pin && getComputedStyle(pin).position === 'sticky';
+        const heroStage = node.hasAttribute('data-scroll-hero')
+          ? node.querySelector<HTMLElement>(':scope > [data-hero-stage]')
+          : null;
         return {
           node,
           bounds,
@@ -36,15 +39,31 @@ export function designMotion(root: HTMLElement) {
             ?.getBoundingClientRect(),
           pinHeight: sticky && pin ? pin.offsetHeight : null,
           pinTop: sticky && pin ? Number.parseFloat(getComputedStyle(pin).top) || 0 : 0,
+          heroBounds: heroStage?.getBoundingClientRect() ?? null,
         };
       });
-    for (const { node, bounds, approachBounds, pinHeight, pinTop } of rows) {
+    for (const { node, bounds, approachBounds, pinHeight, pinTop, heroBounds } of rows) {
       if (bounds.bottom < -50 || bounds.top > height + 50) continue;
       const {
         through,
         enter,
-        pinned: targetProgress,
+        pinned: pinnedProgress,
       } = sceneProgress(bounds.top, bounds.height, height, pinHeight, pinTop);
+      const targetProgress = heroBounds === null
+        ? pinnedProgress
+        : heroScrollProgress(bounds.top, bounds.top + window.scrollY, heroBounds.height, height);
+      if (heroBounds) {
+        // Only the wide hero uses the stable track; keep tablet/mobile choreography intact.
+        const stableAccent = window.innerWidth > 1050;
+        const accent = heroAccentFrame(bounds.top, bounds.height, heroBounds.top, heroBounds.height, height, stableAccent ? window.scrollY : 0);
+        const prior = Number.parseFloat(node.style.getPropertyValue('--accent-progress'));
+        const delta = accent.progress - prior;
+        const value = stableAccent || !Number.isFinite(prior) || Math.abs(delta) > 0.65 || Math.abs(delta) < 0.0005
+          ? accent.progress : prior + delta * damping;
+        node.style.setProperty('--accent-stage-shift', `${accent.shift}px`);
+        node.style.setProperty('--accent-progress', String(value));
+        if (Math.abs(accent.progress - value) > 0.0005) settling = true;
+      }
       const previous = progress.get(node) ?? targetProgress;
       // Restore/jump navigation lands immediately; normal scrolling gets a short scrub.
       const difference = targetProgress - previous;
