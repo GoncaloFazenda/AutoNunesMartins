@@ -34,7 +34,7 @@
   <label for={`${id}-message`}>Mensagem<textarea id={`${id}-message`} name="message" rows="3" placeholder="Como podemos ajudar?" required></textarea></label>
   <div class="form-bottom" class:without-note={!showDemoNote}>
     <p id={`${id}-note`} class:sr-only={!showDemoNote}>Demonstração. Não envia mensagens nem guarda dados.</p>
-    <button type="submit" class="button primary">Experimentar pedido <ArrowUpRight size={17} aria-hidden="true" /></button>
+    <button type="submit" class="button primary"><span class="action-text">Experimentar pedido</span> <span class="action-arrow"><ArrowUpRight size={17} aria-hidden="true" /></span></button>
   </div>
   <p class="form-status" role="status" aria-atomic="true">{tested ? 'Pedido experimentado. Nenhuma mensagem foi enviada.' : ''}</p>
 </form>
@@ -133,7 +133,21 @@
     cursor: pointer;
   }
   .form-status { margin-top: 12px; color: #f5f5f1; font-size: 12px; line-height: 1.6; }
+  .button.primary { position: relative; isolation: isolate; }
+  .button.primary::before { content: ''; position: absolute; inset: -1px; z-index: -1; pointer-events: none; background: inherit; border: inherit; border-radius: inherit; box-shadow: 0 3px 10px #00000000; }
+  .action-arrow { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; flex: 0 0 17px; }
   .button.primary :global(svg) { color: #e30613; }
+  .button.primary:focus-visible :global(svg) { rotate: 45deg; }
+  .button.primary:focus-visible::before { box-shadow: 0 3px 10px #00000026; }
+  @media (hover: hover) {
+    .button.primary:hover :global(svg) { rotate: 45deg; }
+    .button.primary:hover::before { box-shadow: 0 3px 10px #00000026; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .button.primary { transition: background-color 300ms ease, border-color 300ms ease; }
+    .button.primary :global(svg) { transition: rotate 300ms ease; }
+    .button.primary::before { transition: box-shadow 300ms ease; }
+  }
   .form-status:empty { display: none; }
   @media (max-width: 700px) {
     .form-row { grid-template-columns: 1fr; }
@@ -142,4 +156,5 @@
     .button { padding-inline: 12px; font-size: 14px; line-height: 1.4; }
   }
   @media (max-width: 360px) { .button { width: 100%; } }
+
 </style>

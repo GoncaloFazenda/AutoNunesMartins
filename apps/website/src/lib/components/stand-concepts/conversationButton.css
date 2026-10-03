@@ -1,0 +1,33 @@
+/* Shared presentation of the homepage's two conversation actions. */
+.design .conversation-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font: inherit;
+  font-size: 13px;
+  min-height: 46px;
+  padding: 13px 22px;
+  border: 0;
+  border-radius: 50px;
+  background: var(--text);
+  color: var(--bg);
+  cursor: pointer;
+}
+.design .conversation-pill:hover,
+.design .conversation-pill:focus-visible {
+  background: var(--red);
+  color: white;
+}
+.design .conversation-pill:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 5px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .design .conversation-pill { transition: transform 250ms ease, background 250ms ease; }
+  .design .conversation-pill:hover,
+  .design .conversation-pill:focus-visible { transform: translateY(-3px); }
+}
+@media (max-width: 700px) {
+  .design .conversation-pill { font-size: 12px; padding: 12px 18px; }
+}

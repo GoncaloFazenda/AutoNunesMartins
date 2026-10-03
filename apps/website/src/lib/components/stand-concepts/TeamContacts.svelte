@@ -20,7 +20,7 @@
       <article class="person" aria-label={person.name}>
         <div class="identity">
           <p class="role">{person.role}</p>
-          <h3>{person.name}</h3>
+          <h3><span class="first-name">{person.name.split(' ')[0]}</span>{' '}<span class="remaining-name">{person.name.split(' ').slice(1).join(' ')}</span></h3>
         </div>
         <div class="conversation">
           <p class="description">{person.text}</p>
@@ -62,6 +62,8 @@
 </section>
 
 <style>
+  .first-name { color: var(--red); }
+  .remaining-name { color: var(--text); }
   .team {
     width: var(--orbit-frame);
     max-width: var(--orbit-frame-max);

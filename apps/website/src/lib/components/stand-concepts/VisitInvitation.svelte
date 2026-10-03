@@ -1,8 +1,9 @@
 <script lang="ts">
   import { ArrowUpRight, ArrowRight, Check, CalendarDays } from 'lucide-svelte';
+  import './conversationButton.css';
   let {
     onContact,
-    logoSrc = '/logo.png',
+    logoSrc = '/logo-transparent.png',
     compactComparison = false,
     headingId = 'visit-heading',
   }: {
@@ -65,8 +66,8 @@
         >
       {/each}
     </div>
-    <button class="visit-cta" onclick={() => onContact(selected.message)}
-      >Vamos combinar <ArrowUpRight size={19} /></button
+    <button class="visit-cta conversation-pill" onclick={() => onContact(selected.message)}
+      >Vamos combinar <ArrowUpRight size={18} /></button
     >
   </div>
   <div class="invitation-scene" data-approach-target>
@@ -224,17 +225,7 @@
     background: var(--red);
   }
   .visit-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 32px;
-    font-size: 13px;
-    min-height: 48px;
-    margin-top: 28px;
-    padding: 13px 23px;
-    border: 1px solid var(--text);
-    border-radius: 30px;
-    background: var(--text);
-    color: var(--bg);
+    margin-top: 40px;
   }
   button:focus-visible {
     outline: 2px solid var(--red);

@@ -20,7 +20,7 @@
   let {
     questions = defaultQuestions,
     heading = 'Perguntas frequentes',
-    showIntro = true,
+    showIntro = false,
   }: {
     questions?: { question: string; answer: string }[];
     heading?: string;

@@ -99,16 +99,13 @@
 
   <TeamContacts people={content.team} introduction={content.teamIntroduction} />
 
-  <aside class="demo frame">
-    Conceito de apresentação: história, equipa e processos fictícios; fotografias ilustrativas.
-    Informação a confirmar antes da publicação.
-  </aside>
 </main>
 
 <style>
   .company {
     color: var(--text);
     overflow: clip;
+    padding-bottom: 104px;
   }
   .frame {
     width: var(--orbit-frame);
@@ -331,12 +328,6 @@
   .approach-copy .text-link {
     margin-top: 23px;
   }
-  .demo {
-    padding-block: 26px 30px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
   @media (prefers-reduced-motion: no-preference) {
     :global(.motion-on) .timeline-track span {
       transform: scaleX(var(--approach, 1));
@@ -452,10 +443,7 @@
     .approach-copy .text-link {
       margin-top: 16px;
     }
-    .demo {
-      font-size: 11px;
-      padding-block: 20px 25px;
-    }
+    .company { padding-bottom: 120px; }
   }
   @media (max-width: 600px) {
     .timeline ol {

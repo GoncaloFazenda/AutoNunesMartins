@@ -51,11 +51,13 @@
   .top { display: flex; align-items: center; justify-content: space-between; gap: 24px 48px; }
   .invitation-wrap { padding-block: clamp(16px, 3vw, 44px) clamp(36px, 5vw, 72px); margin-bottom: 32px; border-bottom: 1px solid #ffffff24; }
   .invitation { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 32px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; text-align: left; font: inherit; }
-  .invitation > span { position: relative; isolation: isolate; font-size: clamp(48px, 7vw, 106px); line-height: 1.02; letter-spacing: -.065em; font-weight: 500; }
-  /* Match the hero copy's quiet vertical rule, without crossing the lettering. */
-  .invitation > span::before {
+  .invitation > span { position: relative; isolation: isolate; font-family: 'Orbit Barlow', 'Orbit Inter', Arial, sans-serif; font-style: normal; font-size: clamp(48px, 7vw, 106px); line-height: 1.02; letter-spacing: -.065em; font-weight: 600; }
+  /* Keep the content on the page grid, with both rules just behind its left edge. */
+  .invitation > span::before,
+  .brand::before {
     content: '';
     position: absolute;
+    z-index: -1;
     pointer-events: none;
     left: calc(-1 * clamp(12px, 1.2vw, 24px));
     top: -.06em;
@@ -80,7 +82,7 @@
     .invitation :global(svg) { transition: transform 300ms ease; }
     .invitation:hover :global(svg) { transform: translate(5px, -5px); }
   }
-  .brand { flex-shrink: 0; }
+  .brand { position: relative; isolation: isolate; flex-shrink: 0; }
   .brand img { display: block; width: 132px; height: auto; }
   a { color: inherit; text-decoration: none; }
   nav { display: flex; flex-wrap: wrap; gap: 8px 28px; }

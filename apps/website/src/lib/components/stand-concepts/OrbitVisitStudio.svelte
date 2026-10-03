@@ -211,12 +211,12 @@
             class="call-action"
             href={`tel:${contact.phone.international}`}
             aria-describedby={demoId}
-            ><span class="call-label">{#if showCallIcon}<Phone class="call-phone-icon" size={15} strokeWidth={1.7} aria-hidden="true" />{/if}Ligar agora</span><ArrowUpRight size={18} aria-hidden="true" /></a
+            ><span class="call-label">{#if showCallIcon}<Phone class="call-phone-icon" size={15} strokeWidth={1.7} aria-hidden="true" />{/if}<span class="action-text">Ligar agora</span></span><span class="action-arrow"><ArrowUpRight size={18} aria-hidden="true" /></span></a
           >{/if}
         {#if contact.email}<a
             class="email-action"
             href={`mailto:${contact.email}`}
-            aria-describedby={demoId}>Enviar email <ArrowUpRight size={16} aria-hidden="true" /></a
+            aria-describedby={demoId}><span class="email-label">Enviar email</span> <ArrowUpRight size={16} aria-hidden="true" /></a
           >{/if}
       </div>
       {#if contact.isDemo}<p class="demo-note" class:sr-only={!showDemoNote} id={demoId}>
@@ -622,6 +622,9 @@
     border-radius: 4px;
     background: var(--studio-panel);
   }
+  .call-action { position: relative; isolation: isolate; }
+  .call-action::before { content: ''; position: absolute; inset: -1px; z-index: -1; pointer-events: none; background: inherit; border: inherit; border-radius: inherit; box-shadow: 0 3px 10px #00000000; }
+  .action-arrow { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: 0 0 18px; }
   .call-label {
     display: inline-flex;
     align-items: center;
@@ -638,6 +641,20 @@
   }
   .original-tone .call-action :global(svg) { color: #e30613; }
   .original-tone .call-action :global(svg.call-phone-icon) { color: #111; }
+  .call-action:focus-visible .action-arrow :global(svg) { rotate: 45deg; }
+  .call-action:focus-visible::before { box-shadow: 0 3px 10px #00000026; }
+  .email-action:focus-visible .email-label::after { opacity: 1; transform: scaleX(1); }
+  .email-action:focus-visible > :global(svg) { rotate: 45deg; color: #e30613; }
+  @media (hover: hover) {
+    .call-action:hover .action-arrow :global(svg) { rotate: 45deg; }
+    .call-action:hover::before { box-shadow: 0 3px 10px #00000026; }
+    .email-action:hover .email-label::after { opacity: 1; transform: scaleX(1); }
+    .email-action:hover > :global(svg) { rotate: 45deg; color: #e30613; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .call-action .action-arrow :global(svg), .email-action > :global(svg) { transition: rotate 300ms ease, color 300ms ease; }
+    .call-action::before { transition: box-shadow 300ms ease; }
+  }
   .demo-note {
     font-size: 11px;
     line-height: 1.65;
@@ -1102,4 +1119,15 @@
   /* Original map artwork and tint, without changing the approved card geometry. */
   .location.original-map .location-map { width: 100%; opacity: 1; object-fit: cover; object-position: center; }
   .location.original-map::before { background: linear-gradient(90deg, #101913f2 0%, #101913df 48%, #10191373 100%); }
+
+  .email-action { text-decoration: none; }
+  .email-label { position: relative; }
+  .email-label::after { content: ''; position: absolute; left: 0; bottom: -5px; width: 100%; height: 1px; background: #e30613; opacity: 0; transform: scaleX(0); transform-origin: left; }
+  @media (prefers-reduced-motion: no-preference) {
+    .email-label::after { transition: transform 300ms ease, opacity 300ms ease; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .call-action { transition: background-color 300ms ease, border-color 300ms ease, color 180ms ease; }
+  }
 </style>
