@@ -22,12 +22,15 @@
   const params = $derived($page.url.searchParams);
   let draftQuery = $state<string | null>(null);
   let updating = $state(false);
+  let paging = $state(false);
+  let resultsGrid: HTMLDivElement;
+  let pageAnimation: Animation | undefined;
   let navigationError = $state('');
   let debounce: ReturnType<typeof setTimeout> | undefined;
   let requestVersion = 0;
   const formParams = $derived(new URLSearchParams(draftQuery ?? params.toString()));
   const inputErrors = $derived(catalogInputErrors(formParams));
-  const busy = $derived(updating || !!$navigating);
+  const busy = $derived(updating || paging || !!$navigating);
   const results = $derived({
     ...stock.catalog,
     pages: stock.catalog.totalPages,
@@ -65,6 +68,8 @@
     return value;
   }
   function resetDraft() {
+    pageAnimation?.cancel();
+    paging = false;
     clearTimeout(debounce);
     requestVersion += 1;
     draftQuery = null;
@@ -73,9 +78,9 @@
   }
   beforeNavigate(navigation => {
     // Back/forward and actual links win over unfinished typing; never replay a stale timer.
-    if (navigation.type !== 'goto') resetDraft();
+    if (navigation.type !== 'goto' || navigation.to?.url.pathname !== $page.url.pathname) resetDraft();
   });
-  onDestroy(() => { clearTimeout(debounce); requestVersion += 1; });
+  onDestroy(() => { clearTimeout(debounce); pageAnimation?.cancel(); requestVersion += 1; });
   async function applyDraft() {
     clearTimeout(debounce);
     if (catalogInputErrors(formParams).length) { updating = false; return false; }
@@ -95,6 +100,8 @@
     }
   }
   function update(key: string, value: string, delay = 0) {
+    pageAnimation?.cancel();
+    paging = false;
     clearTimeout(debounce);
     requestVersion += 1;
     navigationError = '';
@@ -110,11 +117,11 @@
     draftQuery = '';
     void applyDraft();
   }
-  async function showResults() {
+  async function showResults(smooth = false) {
     filtersOpen = false;
     await tick();
     resultsHeading.focus({ preventScroll: true });
-    resultsHeading.scrollIntoView({ block: 'start' });
+    resultsHeading.scrollIntoView({ block: 'start', behavior: smooth ? 'smooth' : 'instant' });
   }
   function closeFilters(event: KeyboardEvent) {
     if (event.key === 'Escape' && filtersOpen) {
@@ -129,11 +136,29 @@
     if (busy || inputErrors.length) return;
     resetDraft();
     const href = (event.currentTarget as HTMLAnchorElement).href;
+    if (href === $page.url.href) return;
+    const version = requestVersion;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    paging = true;
     try {
+      if (!reduced) {
+        pageAnimation = resultsGrid.animate([{ opacity: 1 }, { opacity: 0.25 }], { duration: 140, easing: 'ease-out', fill: 'forwards' });
+        await pageAnimation.finished;
+      }
+      if (version !== requestVersion) return;
       await goto(href, { noScroll: true, keepFocus: true });
-      await showResults();
+      if (version !== requestVersion) return;
+      await showResults(!reduced);
+      if (version !== requestVersion) return;
+      pageAnimation?.cancel();
+      if (!reduced) {
+        pageAnimation = resultsGrid.animate([{ opacity: 0.25 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+        await pageAnimation.finished;
+      }
     } catch {
-      navigationError = 'Não foi possível mudar de página. Tente novamente.';
+      if (version === requestVersion) navigationError = 'Não foi possível mudar de página. Tente novamente.';
+    } finally {
+      if (version === requestVersion) { pageAnimation?.cancel(); paging = false; }
     }
   }
 </script>
@@ -331,7 +356,7 @@
               >{filterLabels[key]}: {filterValue(key)}<X size={13} aria-hidden="true" /></button
             >{/each}<button class="clear-all" onclick={clear}>Limpar filtros</button>
         </div>{/if}
-      <div class="catalog-grid">
+      <div class="catalog-grid" bind:this={resultsGrid}>
         {#each results.items as vehicle, index (vehicle.id)}{@render card(
             vehicle,
             index,
@@ -386,9 +411,9 @@
               ><span>Seguinte</span><ArrowRight size={16} /></span
             >{/if}
         </nav>{/if}
-      <OrbitCatalogEditorial {params} {stock} />
     </div>
   </div>
+  <OrbitCatalogEditorial {params} {stock} />
 </main>
 
 <style>

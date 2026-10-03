@@ -24,9 +24,9 @@ export function catalogEditorial(params: URLSearchParams, stock: PublicStock) {
         ? 'Não há viaturas para esta combinação de filtros. Isso não significa que a marca ou o modelo estejam indisponíveis em todo o catálogo: experimente alargar a pesquisa.'
         : 'Neste momento não há viaturas publicadas no catálogo. Fale connosco sobre o que procura e confirme as opções antes de planear a visita.'
       : `${label ? `A seleção de ${label}` : 'A seleção atual'} reúne ${count}${years}. ${model
-        ? 'Mesmo dentro do mesmo modelo, o ano, a versão e o equipamento podem mudar a experiência. Compare cada ficha, não apenas o nome.'
-        : brand ? 'Comece pelos modelos apresentados abaixo e depois compare a versão, o espaço e o equipamento de cada exemplar.'
-          : 'Defina primeiro o espaço, os percursos e o orçamento de que precisa. A marca e o modelo ajudam a afinar essa escolha.'}`;
+        ? 'O ano, a versão e o equipamento variam entre exemplares. Compare os detalhes de cada ficha.'
+        : brand ? 'Explore os modelos desta pesquisa. Compare a versão, o espaço e o equipamento de cada viatura.'
+          : 'Pense no espaço de que precisa, nos seus percursos e no orçamento. Depois, explore as marcas e os modelos.'}`;
 
   const fuel = params.get('combustivel');
   const allElectric = fuel === 'ELECTRIC' || (items.length === total && items.length > 0 && items.every(v => v.fuel === 'ELECTRIC'));
@@ -35,18 +35,18 @@ export function catalogEditorial(params: URLSearchParams, stock: PublicStock) {
     {
       title: model ? 'A mesma designação, versões diferentes.' : 'Compare mais do que o preço.',
       text: model
-        ? `Ao comparar ${label}, confirme a motorização, a caixa e o equipamento efetivamente indicado em cada ficha. Não assuma que dois exemplares do mesmo ano têm os mesmos extras.`
-        : 'Leia o preço em conjunto com o ano, os quilómetros e o equipamento. Peça os registos de manutenção e esclareça que intervenções foram realizadas em cada viatura.',
+        ? `Ao comparar ${label}, veja o motor, a caixa e o equipamento de cada ficha. Dois exemplares do mesmo ano podem ter extras diferentes.`
+        : 'Compare o preço, o ano, os quilómetros e o equipamento. Peça os registos de manutenção e confirme os trabalhos feitos na viatura.',
     },
     {
       title: allElectric || plugin ? 'Pense também no carregamento.' : 'Traga os seus percursos para a escolha.',
       text: allElectric || plugin
-        ? 'Pergunte pelo estado da bateria, pelos cabos incluídos e pela compatibilidade de carregamento. Considere onde poderá carregar no dia a dia e confirme os dados do exemplar, sem assumir uma autonomia genérica.'
-        : 'Conduz sobretudo em cidade ou faz viagens longas? Compare o combustível e a caixa com essa utilização. Numa visita, confirme a posição de condução, o acesso aos lugares e o espaço de bagagem.',
+        ? 'Confirme o estado da bateria, os cabos e os carregadores compatíveis. Pense onde vai carregar no dia a dia, sem assumir uma autonomia igual para todos os exemplares.'
+        : 'Cidade ou viagens longas? Escolha o combustível e a caixa a pensar nos seus percursos. Na visita, experimente a posição de condução, o acesso aos lugares e a bagageira.',
     },
     {
       title: 'Antes de dar o próximo passo.',
-      text: 'Confirme a disponibilidade, a documentação e as condições de venda com o stand. Se pondera uma retoma ou financiamento, peça uma proposta para a viatura concreta antes de decidir.',
+      text: 'Confirme a disponibilidade, os documentos e as condições de venda. Para retoma ou financiamento, peça uma proposta para a viatura que escolheu.',
     },
   ];
   // Facet counts exclude the facet being selected, but retain the remaining filters.
