@@ -1,4 +1,4 @@
 import { redirect } from '@sveltejs/kit';
 
-// Preserve all existing concept URLs; the public app has no CRM sign-in page.
+// Orbit is the official website; discarded concepts live in the independent design archive.
 export const load = () => redirect(307, '/stand-orbit');

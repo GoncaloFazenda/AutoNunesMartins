@@ -2,4 +2,4 @@
   import DesignEdition from '$lib/components/stand-concepts/DesignEdition.svelte';
 </script>
 
-<DesignEdition edition="orbit" about />
+<DesignEdition about />

@@ -3,4 +3,4 @@
   import DesignEdition from '$lib/components/stand-concepts/DesignEdition.svelte';
 </script>
 
-<DesignEdition edition="orbit" id={$page.params.id} />
+<DesignEdition id={$page.params.id} />

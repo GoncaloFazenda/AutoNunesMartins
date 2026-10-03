@@ -4,4 +4,4 @@
   let { data }: { data: PageData } = $props();
 </script>
 
-<DesignEdition edition="orbit" catalog stock={data.stock} />
+<DesignEdition catalog stock={data.stock} />

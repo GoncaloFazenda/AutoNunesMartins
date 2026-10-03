@@ -6,4 +6,4 @@
   <title>{$page.status === 404 ? 'Viatura não disponível' : 'Temporariamente indisponível'} — Auto Nunes Martins</title>
   <meta name="robots" content="noindex, follow" />
 </svelte:head>
-<DesignEdition edition="orbit" id="unavailable" errorStatus={$page.status} />
+<DesignEdition id="unavailable" errorStatus={$page.status} />

@@ -8,7 +8,7 @@
 | CRM | `@anm/crm` | http://localhost:5174/ |
 | Backend | `@anm/backend` | http://localhost:4000 |
 
-Run `yarn dev` for all three, or `yarn dev:website` / `yarn dev:crm` individually. The public references remain at `/stand-orbit/referencias`. All existing stand concepts were moved, not deleted. The website root redirects temporarily to Orbit; concept routes remain non-production previews.
+Run `yarn dev` for all three, or `yarn dev:website` / `yarn dev:crm` individually. Orbit is the official website and the root redirects to `/stand-orbit`. Alternative designs, card comparisons and `/stand-orbit/referencias` were extracted to the independent sibling project `AutoNunesMartins-DesignArchive` (local port 5180). Porsche demo/reference routes remain in Orbit, with `noindex`; they are not real offers. See `design-archive-audit.md` for scope and validation.
 
 ## Configuration and security boundaries
 
