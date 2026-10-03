@@ -209,6 +209,20 @@ export function designMotion(root: HTMLElement) {
   };
 }
 
+/** Cancels any pending reveal when a reused page switches to a static context. */
+export function conditionalEntrance(node: HTMLElement, delay: number | false) {
+  let active = delay === false ? undefined : entrance(node, delay);
+  return {
+    update(nextDelay: number | false) {
+      active?.destroy();
+      active = nextDelay === false ? undefined : entrance(node, nextDelay);
+    },
+    destroy() {
+      active?.destroy();
+    },
+  };
+}
+
 export function entrance(node: HTMLElement, delay = 0) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   // Never hide content already visible on load, restoration or a filter change.
