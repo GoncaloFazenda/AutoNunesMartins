@@ -40,10 +40,10 @@
     background: transparent;
     color: var(--text);
     text-align: left;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 17px;
+    font-weight: 600;
     line-height: 1.2;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
     text-decoration: none;
     transform: translateY(-8px);
     transition:
@@ -56,10 +56,32 @@
   .design .stand-header #stand-navigation > :is(a, button)::before,
   .design .stand-header #stand-navigation > a::after { content: none; }
   .design .stand-header #stand-navigation > :is(a, button):is(:hover, [aria-current='page']) {
-    color: var(--red);
+    color: var(--text);
+  }
+  .design .stand-header #stand-navigation .nav-label { position: relative; }
+  .design .stand-header #stand-navigation .nav-label::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: auto;
+    bottom: -9px;
+    width: 100%;
+    height: 2px;
+    background: var(--red);
+    transform: scaleX(0);
+    transform-origin: left;
+    opacity: 1;
+  }
+  .design .stand-header #stand-navigation > a[aria-current='page'] .nav-label::after {
+    opacity: .7;
+    transform: scaleX(1);
+  }
+  .design .stand-header #stand-navigation > a:is(:hover, :focus-visible) .nav-label::after {
+    opacity: 1;
+    transform: scaleX(1);
   }
   .design .stand-header #stand-navigation > :is(a, button):focus-visible {
-    outline: 2px solid var(--red);
+    outline: 2px solid var(--text);
     outline-offset: 4px;
     border-radius: 2px;
   }
@@ -78,4 +100,8 @@
     transition: none;
     transform: none;
   }
+}
+
+@media (max-width: 700px) and (prefers-reduced-motion: no-preference) {
+  .design .stand-header #stand-navigation .nav-label::after { transition: transform 180ms ease-out; }
 }

@@ -39,6 +39,14 @@
 .design.orbit .nav-phone:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
 .design.orbit .nav-phone { gap: 8px; }
 .design.orbit .nav-phone svg { flex-shrink: 0; }
+.design.orbit .nav-phone { box-shadow: inset 0 0 0 1px #ffffff00, 0 3px 12px #e3061300; }
+.design.orbit .nav-phone:focus-visible { box-shadow: inset 0 0 0 1px #ffffff40, 0 3px 12px #e3061333; }
+@media (hover: hover) {
+  .design.orbit .nav-phone:hover { background: color-mix(in srgb, var(--red) 90%, #000); box-shadow: inset 0 0 0 1px #ffffff40, 0 3px 12px #e3061333; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .design.orbit .nav-phone { transition: background-color 300ms ease, box-shadow 300ms ease; }
+}
 @media (max-width: 700px) {
   .design.orbit .stand-header { gap: 12px; }
   .design.orbit header .logo { width: 120px; min-width: 0; flex: 0 0 120px; }
