@@ -1,5 +1,7 @@
 # Auto Nunes Martins · Painel Interno
 
+> **Website público: publicação pendente.** Consultar a [checklist de publicação](docs/publication-readiness.md) antes de avaliar prontidão. Os dados legais/contactos ainda incluem placeholders e demonstrações. Verificação manual: `node scripts/check-publication-readiness.mjs`.
+
 Internal admin web app for a Portuguese used-car dealership. Phase 1 — single role
 (ADMIN), pt-PT locale, EUR currency.
 

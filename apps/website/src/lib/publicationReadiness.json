@@ -1,0 +1,34 @@
+{
+  "operator": [
+    { "id": "legalName", "label": "Nome legal / firma", "value": null },
+    { "id": "legalForm", "label": "Forma jurídica", "value": null },
+    { "id": "taxId", "label": "NIF / NIPC", "value": null },
+    { "id": "registeredAddress", "label": "Sede / morada do operador", "value": null },
+    { "id": "registration", "label": "Registo comercial e conservatória — confirmar aplicabilidade", "value": null },
+    { "id": "capital", "label": "Capital social — confirmar aplicabilidade", "value": null }
+  ],
+  "disputes": [
+    { "id": "ralEntity", "label": "Entidade RAL competente e contactos", "value": null },
+    { "id": "ralUrl", "label": "Endereço oficial da entidade RAL", "value": null },
+    { "id": "ralMembership", "label": "Eventual adesão a entidade RAL", "value": null }
+  ],
+  "complaints": [
+    { "id": "complaintsRegistration", "label": "Registo do operador no Livro de Reclamações Eletrónico", "value": null },
+    { "id": "complaintsUrl", "label": "Ligação aplicável ao operador", "value": null }
+  ],
+  "privacy": [
+    { "id": "controller", "label": "Responsável pelo tratamento e morada", "value": null },
+    { "id": "privacyContact", "label": "Contacto para assuntos de privacidade", "value": null },
+    { "id": "purposes", "label": "Finalidades e fundamentos dos tratamentos efetivamente ativos", "value": null },
+    { "id": "providers", "label": "Prestadores, destinatários e transferências de dados", "value": null },
+    { "id": "retention", "label": "Prazos ou critérios de conservação dos pedidos e registos técnicos", "value": null }
+  ],
+  "checks": [
+    { "id": "contacts", "label": "Substituir e verificar contactos, mapa, horário e WhatsApp de demonstração", "status": "pending" },
+    { "id": "forms", "label": "Decidir e validar o funcionamento final dos formulários demonstrativos", "status": "pending" },
+    { "id": "hosting", "label": "Verificar alojamento, cookies, armazenamento, logs e serviços externos em produção", "status": "pending" },
+    { "id": "legalReview", "label": "Rever informação legal aplicável com os dados e atividade confirmados", "status": "pending" },
+    { "id": "build", "label": "Validar build Vercel no ambiente de publicação; EPERM de symlink observado no Windows", "status": "pending" },
+    { "id": "release", "label": "Validar domínio, indexação, conteúdo, acessibilidade e percursos finais antes da publicação", "status": "pending" }
+  ]
+}

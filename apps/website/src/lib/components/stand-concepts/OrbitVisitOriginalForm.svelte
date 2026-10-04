@@ -20,7 +20,6 @@
 >
   <p class="eyebrow">COMECE A CONVERSA</p>
   <h3 id={`${id}-heading`}>O que tem em mente?</h3>
-  <p class="form-intro">Uma dúvida, uma viatura ou uma visita. Conte-nos.</p>
   <div class="form-row">
     <label for={`${id}-name`}>Nome<input id={`${id}-name`} name="name" autocomplete="name" placeholder="O seu nome" required /></label>
     <label for={`${id}-email`}>Email<input id={`${id}-email`} name="email" type="email" autocomplete="email" placeholder="nome@exemplo.pt" required /></label>
@@ -70,7 +69,6 @@
     line-height: 1.15;
     letter-spacing: -.04em;
   }
-  .form-intro { margin-top: 10px; color: #d0d6d1; font-size: 13px; line-height: 1.65; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   label { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; min-width: 0; font-size: 12px; color: #ececef; }
   input, select, textarea {

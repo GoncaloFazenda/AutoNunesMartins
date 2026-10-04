@@ -1,0 +1,3 @@
+# Public website publication reviews
+
+When reviewing publication readiness or answering whether the public website is ready to launch, first read `docs/publication-readiness.md` and `apps/website/src/lib/publicationReadiness.json`. The owner explicitly requested visible placeholders until official information is supplied. Do not treat legal-page existence, passing tests or completed UI work as publication approval. Preserve pending items until confirmed, record the evidence when resolving them, and distinguish legal/data readiness from technical build verification. This is a review checklist, not an additional permission policy.

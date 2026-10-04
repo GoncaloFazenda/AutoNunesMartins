@@ -5,7 +5,7 @@
   let {
     showContacts = true,
     compact = false,
-    contactHref = '/stand-orbit#contactos',
+    contactHref = '/#contactos',
     onContact,
   }: { showContacts?: boolean; compact?: boolean; contactHref?: string; onContact?: () => void } = $props();
 </script>
@@ -21,12 +21,12 @@
       </div>
     {/if}
     <div class="top">
-      <a class="brand" href="/stand-orbit" aria-label="Auto Nunes Martins — início">
+      <a class="brand" href="/" aria-label="Auto Nunes Martins — início">
         <img src="/logo-transparent-white-v3.png" alt={standContact.name} width="180" height="80" />
       </a>
       <nav aria-label="Navegação do rodapé">
-        <a href="/stand-orbit/viaturas">Viaturas</a>
-        <a href="/stand-orbit/quem-somos">Quem somos</a>
+        <a href="/viaturas">Viaturas</a>
+        <a href="/quem-somos">Quem somos</a>
         <a href={contactHref}>Morada e horário <ArrowUpRight size={14} aria-hidden="true" /></a>
       </nav>
     </div>
@@ -40,7 +40,8 @@
       <p>© {new Date().getFullYear()} {standContact.name}
         {#if standContact.isDemo}<span id="compact-footer-demo" class:sr-only={compact}>Demonstração · Dados fictícios</span>{/if}
       </p>
-      <a href="/stand-orbit/politica-de-privacidade">Política de privacidade</a>
+      <a href="/informacao-legal">Informação legal</a>
+      <a href="/politica-de-privacidade">Política de privacidade</a>
     </div>
   </div>
 </footer>

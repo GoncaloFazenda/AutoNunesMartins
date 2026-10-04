@@ -1,27 +1,28 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { standContact } from './standContact';
-  const confirmedEmail = !standContact.isDemo ? standContact.email : null;
-  const confirmedAddress = !standContact.isDemo ? standContact.address : null;
+  import readiness from '$lib/publicationReadiness.json';
+  import LegalFields from '../LegalFields.svelte';
   const sections = [
     ['responsavel', 'Quem é responsável'],
     ['pedidos', 'Dados e pedidos'],
     ['finalidades', 'Finalidades e fundamento'],
     ['conservacao', 'Conservação e acesso'],
     ['navegacao', 'Navegação e preferências'],
+    ['escolhas', 'Favoritos e comparação'],
     ['direitos', 'Os seus direitos'],
     ['contactar', 'Contactar e reclamar'],
   ];
 </script>
 
 <svelte:head>
-  <title>Política de privacidade — Stand Orbit · Auto Nunes Martins</title>
+  <title>Política de privacidade — Auto Nunes Martins</title>
   <meta
     name="description"
-    content="Saiba como são tratados os pedidos de contacto, quais os seus direitos e o que falta confirmar antes da publicação do Stand Orbit."
+    content="Informação de privacidade em preparação, funcionamento das preferências locais e dados por confirmar antes da publicação."
   />
   <meta name="robots" content="noindex, follow" />
-  <link rel="canonical" href={`${$page.url.origin}/stand-orbit/politica-de-privacidade`} />
+  <link rel="canonical" href={`${$page.url.origin}/politica-de-privacidade`} />
+  <meta property="og:url" content={`${$page.url.origin}/politica-de-privacidade`} />
 </svelte:head>
 
 <main class="privacy" id="inicio">
@@ -29,7 +30,7 @@
     <p class="eyebrow">INFORMAÇÃO CLARA</p>
     <h1>Política de<br /><em>privacidade.</em></h1>
     <p>O que partilha connosco.<br />E o que precisa de saber.</p>
-    <small>Última atualização: 19 de setembro de 2026</small>
+    <small>Última atualização: 4 de outubro de 2026</small>
   </div>
   <div class="privacy-layout">
     <nav aria-label="Nesta política">
@@ -53,23 +54,12 @@
       </aside>
       <section id="responsavel">
         <h2>01 <span>Quem é responsável</span></h2>
+        <p>Preparação incompleta. Consulte também a <a href="/informacao-legal">identificação do operador e informação legal</a>. Os campos seguintes precisam de confirmação antes da publicação.</p>
+        <LegalFields fields={readiness.privacy} />
         <p>
           O site apresenta-se sob o nome Auto Nunes Martins. A identificação jurídica do responsável
           pelo tratamento está <strong>a confirmar antes da publicação</strong>.
         </p>
-        <dl>
-          <div>
-            <dt>Morada do responsável</dt>
-            <dd>{confirmedAddress ?? 'A confirmar antes da publicação.'}</dd>
-          </div>
-          <div>
-            <dt>Contacto de privacidade</dt>
-            <dd>
-              {#if confirmedEmail}<a href={`mailto:${confirmedEmail}`}>{confirmedEmail}</a>{:else}A
-                confirmar antes da publicação.{/if}
-            </dd>
-          </div>
-        </dl>
         <p>
           Os contactos fictícios do protótipo não devem ser usados para enviar pedidos ou exercer
           direitos.
@@ -129,10 +119,11 @@
       </section>
       <section id="navegacao">
         <h2>05 <span>Navegação e preferências</span></h2>
+        <p>Para repor a posição após recarregar a página, o site guarda no armazenamento de sessão deste separador o endereço completo da página, a posição de scroll e a hora. Só usa esse registo para reposição quando tem menos de um minuto; esse limite de utilização não é um apagamento automático. O registo acompanha a sessão do separador.</p>
         <p>
-          A interface guarda neste navegador a preferência de tema e os identificadores das viaturas
-          marcadas como favoritas, através de armazenamento local. Pode retirar os favoritos na
-          interface ou apagar estes dados nas definições do navegador.
+          A interface guarda neste navegador a preferência de tema através de armazenamento local.
+          Pode apagar esta preferência nas definições do navegador. O funcionamento dos favoritos
+          e da comparação é explicado na secção seguinte.
         </p>
         <p>
           Os filtros do catálogo são representados no endereço da página para permitir partilhar a
@@ -146,8 +137,17 @@
           efetivamente ativo.
         </p>
       </section>
+      <section id="escolhas">
+        <h2>06 <span>Favoritos e comparação</span></h2>
+        <p>Quando guarda uma viatura ou a adiciona à comparação, os identificadores das viaturas publicadas ficam no armazenamento local deste navegador (<code>localStorage</code>). A comparação permite até três viaturas; os favoritos não têm esse limite.</p>
+        <p>Estes identificadores servem exclusivamente para manter e apresentar as suas listas. Esta funcionalidade não cria conta nem perfil de utilizador e não utiliza a seleção para análise de utilização ou marketing. As listas não são guardadas como preferências no backend.</p>
+        <p>Ao abrir as listas, o navegador pede à API pública os dados atuais das viaturas selecionadas, incluindo as fotografias disponíveis. O armazenamento local não significa que o site funcione sem comunicações de rede. Uma viatura retirada da publicação pode aparecer como indisponível.</p>
+        <p>Não existe um prazo de expiração automático: as escolhas mantêm-se até as remover, limpar a lista ou apagar os dados do site no navegador. Pode usar o coração para retirar um favorito, o botão “Na comparação” para retirar uma viatura da comparação, ou as opções “Limpar favoritos” e “Limpar seleção” nas páginas respetivas.</p>
+        <p>A seleção pode atualizar-se entre separadores deste site no mesmo navegador. Não é sincronizada entre dispositivos ou navegadores diferentes. Se o armazenamento estiver bloqueado ou indisponível, as listas podem funcionar apenas durante a navegação atual.</p>
+        <p><a href="/favoritos">Gerir favoritos</a> · <a href="/comparar">Gerir comparação</a></p>
+      </section>
       <section id="direitos">
-        <h2>06 <span>Os seus direitos</span></h2>
+        <h2>07 <span>Os seus direitos</span></h2>
         <p>
           Nos termos e condições do RGPD, pode pedir acesso aos seus dados, corrigir dados inexatos,
           solicitar o apagamento ou limitar o tratamento. Pode também opor-se ao tratamento quando
@@ -166,7 +166,7 @@
         </p>
       </section>
       <section id="contactar">
-        <h2>07 <span>Contactar e reclamar</span></h2>
+        <h2>08 <span>Contactar e reclamar</span></h2>
         <p>
           Dirija o pedido ao responsável pelo tratamento, através do contacto de privacidade
           indicado acima, quando confirmado. Identifique o direito que pretende exercer e forneça
@@ -202,9 +202,7 @@
   }
   h1,
   h2,
-  p,
-  dl,
-  dd {
+  p {
     margin: 0;
   }
   .eyebrow {
@@ -304,19 +302,6 @@
   strong {
     color: var(--text);
     font-weight: 500;
-  }
-  dl {
-    display: grid;
-    gap: 18px;
-    padding: 22px 0;
-    font-size: 13px;
-  }
-  dt {
-    color: var(--muted);
-    font-size: 11px;
-    margin-bottom: 6px;
-  }
-  dd {
   }
   .privacy-content a {
     color: var(--text);

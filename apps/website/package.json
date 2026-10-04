@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "publication:check": "node ../../scripts/check-publication-readiness.mjs",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
