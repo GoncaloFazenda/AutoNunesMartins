@@ -12,9 +12,8 @@
   <title>Quem somos — Auto Nunes Martins</title>
   <meta
     name="description"
-    content="Conheça a Auto Nunes Martins, as nossas origens e as pessoas que acompanham a escolha do seu próximo automóvel. Protótipo editorial."
+    content="Conheça a Auto Nunes Martins e encontre os contactos para esclarecer dúvidas sobre a escolha do seu próximo automóvel."
   />
-  <meta name="robots" content="noindex, follow" />
 </svelte:head>
 
 <main class="company">
@@ -36,8 +35,8 @@
         srcset={content.heroImage.srcset}
         sizes="(max-width: 760px) 90vw, 78vw"
         alt={content.heroImage.alt}
-        width="1536"
-        height="1024"
+        width="1024"
+        height="768"
         fetchpriority="high"
         decoding="async"
       />
@@ -76,12 +75,12 @@
         srcset={content.approach.srcset}
         sizes="(max-width: 760px) 90vw, 46vw"
         alt={content.approach.alt}
-        width="1600"
-        height="1067"
+        width="1024"
+        height="768"
         loading="lazy"
         decoding="async"
       />
-      <figcaption>Conhecer ao detalhe.</figcaption>
+      <figcaption>O nosso segundo stand</figcaption>
     </figure>
     <div class="approach-copy" use:entrance>
       <p class="eyebrow">A nossa forma de trabalhar</p>
@@ -89,7 +88,7 @@
       <div class="prose">
         {#each content.approach.paragraphs as paragraph}<p>{paragraph}</p>{/each}
       </div>
-      <a class="text-link" href="/stand-orbit/viaturas"
+      <a class="text-link" href="/viaturas"
         >Conheça a nossa seleção <ArrowUpRight size={19} /></a
       >
     </div>
@@ -320,6 +319,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: 50% 60%;
   }
 
   .approach-copy .prose {
@@ -527,7 +527,7 @@
     );
   }
   .hero-photo img {
-    object-position: 60% center;
+    object-position: 65% center;
   }
   .hero-intro {
     max-width: 36ch;

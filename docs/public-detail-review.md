@@ -8,7 +8,7 @@ O catálogo público fornece até três sugestões, ordenadas exclusivamente pel
 
 ## Auditoria do Jogger Extreme
 
-Ficha: `/stand-orbit/viaturas/dacia-jogger-extreme-2023-cf06e4d3ad62`.
+Ficha: `/viaturas/dacia-jogger-extreme-2023-cf06e4d3ad62`.
 
 - API/CRM: ano 2023, 83 491 km, Gasolina, preço público 17 141,78 €.
 - Descrição pública existente: «Dacia Jogger Extreme, de 2023.».
@@ -56,8 +56,8 @@ O contrato partilhado valida os campos permitidos e limites numéricos, rejeitan
 - `apps/website/src/lib/components/stand-concepts/porscheDetailLab.css`
 - `apps/website/src/lib/publicVehicles.ts`
 - `apps/website/src/lib/server/publicVehicles.ts`
-- `apps/website/src/routes/stand-orbit/viaturas/[slug]/+page.server.ts`
-- `apps/website/src/routes/stand-orbit/viaturas/[slug]/+page.svelte`
+- `apps/website/src/routes/viaturas/[slug]/+page.server.ts`
+- `apps/website/src/routes/viaturas/[slug]/+page.svelte`
 - `backend/prisma/schema.prisma`
 - `backend/prisma/migrations/20261002233000_add_public_specifications/migration.sql`
 - `backend/src/lib/data/publicVehicle.ts`

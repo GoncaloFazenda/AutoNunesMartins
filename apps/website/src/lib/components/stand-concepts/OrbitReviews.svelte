@@ -1,16 +1,42 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { reviewExcerpt } from './reviewExcerpt';
+  import { reviewExpansion } from './reviewExpansion';
+  import { reviewRevealOffset } from './reviewPosition';
 
   let section: HTMLElement;
   let visible = false;
   let pageVisible = true;
   let expandedReviews: number[] = [];
+  let activeCopies: number[] = [];
+  let track: HTMLDivElement;
+  let viewport: HTMLDivElement;
+  let interaction = 0;
+  let readingCard: HTMLElement | null = null;
 
-  function toggleReview(index: number) {
+  function revealCard(card: HTMLElement) {
+    const bounds = viewport.getBoundingClientRect();
+    const selected = card.getBoundingClientRect();
+    const inset = Math.max(20, Math.min(52, innerWidth * .05));
+    const shift = reviewRevealOffset(selected.left, selected.right, bounds.left, bounds.right, inset);
+    const current = parseFloat(getComputedStyle(track).translate) || 0;
+    track.style.translate = `${current + shift}px`;
+  }
+
+  async function toggleReview(index: number, duplicate: boolean, event: MouseEvent) {
+    const card = (event.currentTarget as HTMLElement).closest('article')!;
+    const opening = !expandedReviews.includes(index);
+    activeCopies = duplicate ? [...activeCopies.filter(value => value !== index), index] : activeCopies.filter(value => value !== index);
     expandedReviews = expandedReviews.includes(index)
       ? expandedReviews.filter(value => value !== index)
       : [...expandedReviews, index];
+    const version = ++interaction;
+    await tick();
+    if (version !== interaction || !matchMedia('(max-width: 1100px)').matches) return;
+    if (!expandedReviews.length) { readingCard = null; track.style.translate = '0px'; return; }
+    if (!opening) return;
+    readingCard = card;
+    revealCard(card);
   }
 
   onMount(() => {
@@ -21,9 +47,17 @@
     const updateVisibility = () => { pageVisible = !document.hidden; };
     updateVisibility();
     document.addEventListener('visibilitychange', updateVisibility);
+    const resize = () => {
+      ++interaction;
+      if (innerWidth > 1100) { track.style.translate = '0px'; activeCopies = []; readingCard = null; }
+      else if (readingCard && expandedReviews.length) revealCard(readingCard);
+      else track.style.translate = '0px';
+    };
+    window.addEventListener('resize', resize);
     return () => {
       observer.disconnect();
       document.removeEventListener('visibilitychange', updateVisibility);
+      window.removeEventListener('resize', resize);
     };
   });
 
@@ -35,14 +69,18 @@
 </script>
 <section class="reviews" bind:this={section} aria-labelledby="reviews-heading">
   <div class="heading"><h2 id="reviews-heading">Quem veio, conta.</h2></div>
-  <div class="review-viewport">
-  <div id="reviews-track" class="review-track" class:paused={!visible || !pageVisible || expandedReviews.length > 0}>
+  <div class="review-viewport" bind:this={viewport}>
+  <div id="reviews-track" class="review-track" bind:this={track} use:reviewExpansion class:paused={!visible || !pageVisible || expandedReviews.length > 0}>
   {#each [false, true] as duplicate}
-  <div class="review-grid" class:duplicate aria-hidden={duplicate ? 'true' : undefined}>
+  <div class="review-grid" class:duplicate>
     {#each examples as review, index}
       {@const preview = reviewExcerpt(review.text)}
       {@const expanded = expandedReviews.includes(index)}
-      <article>
+      {@const text = expanded ? review.text : preview.text}
+      {@const lastSpace = text.lastIndexOf(' ')}
+      {@const previewSpace = preview.text.lastIndexOf(' ')}
+      <article data-review-card aria-hidden={duplicate !== activeCopies.includes(index) ? 'true' : undefined}>
+        <div class="review-content">
         <div class="review-header">
           <div class="review-top">
             <span class="stars" aria-label={`Avaliação fictícia: ${review.rating} de 5 estrelas`}>{'★'.repeat(review.rating)}<span class="empty">{'☆'.repeat(5 - review.rating)}</span></span>
@@ -58,19 +96,23 @@
             </div>
           </div>
         </div>
-        <p><span id={`review-text-${duplicate ? 'copy' : 'original'}-${index}`}>{expanded ? review.text : preview.text}</span>{' '}
-        {#if preview.truncated}
+        <div class="review-copy" id={`review-text-${duplicate ? 'copy' : 'original'}-${index}`}>
+          <p>{#if preview.truncated}{text.slice(0, lastSpace + 1)}<span class="review-ending">{text.slice(lastSpace + 1)}{' '}
           <button
             type="button"
             class="review-more"
             aria-expanded={expanded}
             aria-controls={`review-text-${duplicate ? 'copy' : 'original'}-${index}`}
             aria-label={`${expanded ? 'Ver menos' : 'Ver mais'} da avaliação de ${review.name}`}
-            tabindex={duplicate ? -1 : 0}
-            on:click={() => toggleReview(index)}
+            tabindex={duplicate !== activeCopies.includes(index) ? -1 : 0}
+            on:click={(event) => toggleReview(index, duplicate, event)}
           >{expanded ? 'Ver menos' : 'Ver mais'}</button>
-        {/if}
-        </p>
+          </span>{:else}{text}{/if}</p>
+        </div>
+        <div class="review-copy review-baseline" aria-hidden="true">
+          <p>{#if preview.truncated}{preview.text.slice(0, previewSpace + 1)}<span class="review-ending">{preview.text.slice(previewSpace + 1)}{' '}<span class="review-more">Ver mais</span></span>{:else}{preview.text}{/if}</p>
+        </div>
+        </div>
       </article>
     {/each}
   </div>
@@ -86,7 +128,9 @@
   h2 { max-width: 21ch; font-size: max(32px, calc(var(--orbit-title-section, 48px) * .9)); line-height: 1.12; letter-spacing: -.05em; font-weight: 500; text-wrap: balance; }
   .review-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; align-items: start; }
   .duplicate { display: none; }
-  article { min-width: 0; padding: clamp(24px, 2.5vw, 38px); background: var(--orbit-panel-bg); border: 1px solid var(--line); border-radius: 12px; }
+  article { min-width: 0; box-sizing: border-box; padding: clamp(24px, 2.5vw, 38px); background: var(--orbit-panel-bg); border: 1px solid var(--line); border-radius: 12px; }
+  .review-content { position: relative; display: flow-root; }
+  .review-baseline { position: absolute; inset: 0 0 auto; visibility: hidden; pointer-events: none; }
   .stars { display: block; color: #b8860b; font-size: 15px; letter-spacing: .15em; margin-bottom: 20px; }
   :global(.dark) .stars { color: #e8b94f; }
   .empty { color: inherit; }
@@ -101,7 +145,8 @@
   .verification svg { width: 14px; height: 14px; flex-shrink: 0; }
   :global(.dark) .verification { color: #899e91; }
   h3 { font-size: 16px; letter-spacing: -.02em; font-weight: 500; margin-bottom: 10px; }
-  article > p { font-size: var(--orbit-type-body); line-height: 1.8; color: var(--muted); }
+  .review-copy { font-size: var(--orbit-type-body); line-height: 1.8; color: var(--muted); }
+  .review-ending { white-space: nowrap; }
   .review-more {
     display: inline; margin: 0; padding: 0; background: none; border: 0;
     color: var(--text); font: inherit; font-size: .9em; font-weight: 500;
@@ -148,15 +193,20 @@
       -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--edge-fade), #000 calc(100% - var(--edge-fade)), transparent);
     }
     .review-track { display: flex; width: max-content; animation: reviews-pass 42s linear infinite; }
-    .review-track.paused, .review-viewport:active .review-track, .review-viewport:focus-within .review-track { animation-play-state: paused; }
+    .review-track.paused, .review-viewport:active .review-track, .review-viewport:has(:focus-visible) .review-track { animation-play-state: paused; }
     .review-grid, .duplicate { display: flex; flex: none; gap: 16px; padding-right: 16px; }
     article { flex: 0 0 auto; width: clamp(270px, 42vw, 360px); box-sizing: border-box; }
+  }
+  @media (max-width: 1100px) and (prefers-reduced-motion: no-preference) {
+    .review-track { transition: translate 320ms cubic-bezier(.215, .61, .355, 1); }
   }
   @media (max-width: 1100px) and (hover: hover) {
     .review-viewport:hover .review-track { animation-play-state: paused; }
   }
   @media (max-width: 700px) {
     article { width: min(82vw, 340px); }
+    .review-ending { white-space: normal; }
+    .review-more { display: block; width: max-content; min-height: 44px; margin-top: 4px; text-align: left; }
   }
   @media (max-width: 1100px) and (prefers-reduced-motion: reduce) {
     .review-track { animation: none; }

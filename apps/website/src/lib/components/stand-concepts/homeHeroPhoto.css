@@ -1,0 +1,56 @@
+/* Version 1 uses the original hero unchanged; all photographic overrides belong to version 2. */
+.design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop { position: absolute; z-index: -1; inset: 0 0 6% 32%; overflow: hidden; pointer-events: none; }
+.design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop img { width: 100%; height: 100%; object-fit: cover; object-position: 55% 48%; }
+.design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, var(--bg), transparent 42%), linear-gradient(0deg, var(--bg), transparent 24%), linear-gradient(180deg, color-mix(in srgb, var(--bg) 80%, transparent), transparent 19%); }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-object { left: 43%; top: 43%; width: 52%; height: 52%; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-side { top: 65%; right: 0; }
+.design.orbit.orbit-home[data-hero-version='2'] .object-coordinate { display: none; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-main-photo > div { padding: 0; bottom: 14px; left: 16px; right: 16px; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-main-photo::after { background: linear-gradient(0deg, #000d, transparent 65%); }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-main-photo > div > span { font-size: 14px; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-main-photo > div small { font-size: 11px; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-copy::before { background: linear-gradient(90deg, var(--bg) 12%, color-mix(in srgb, var(--bg) 88%, transparent) 65%, transparent); }
+
+/* Immersive photograph: a protected white title at left, a clear facade at right. */
+.design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop { inset: 0; }
+.design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop img { object-position: 50% 54%; }
+.design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop::after { background: linear-gradient(90deg, #080a0ce8, #080a0cb3 31%, #080a0c19 67%), linear-gradient(0deg, #080a0c80, transparent 40%); }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-copy::before { background: none; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-copy .orbit-title,
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-copy .orbit-title > span,
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-title-note,
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-topline .kicker,
+.design.orbit.orbit-home[data-hero-version='2'] .hero-kicker-complement { color: #fff; -webkit-text-fill-color: #fff; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-copy { left: 3%; }
+.design.orbit.orbit-home[data-hero-version='2'] .orbit-topline { left: 3%; right: 3%; }
+
+.design.orbit.orbit-home .hero-versions { position: fixed; z-index: 45; left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); display: flex; gap: 6px; padding: 5px; border: 1px solid var(--line); border-radius: 30px; background: color-mix(in srgb, var(--bg) 94%, transparent); box-shadow: 0 4px 20px #0002; backdrop-filter: blur(8px); }
+.design.orbit.orbit-home .hero-versions button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.design.orbit.orbit-home .hero-versions button[aria-pressed='true'] { color: white; background: var(--red); border-color: var(--red); }
+.design.orbit.orbit-home .hero-versions button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+
+@media (min-width: 701px) and (max-width: 1050px) {
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-copy { top: 17%; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-object { width: 52%; left: 43%; }
+}
+@media (max-width: 700px) {
+  .design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop { inset: 31% 0 42%; }
+  .design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop img { object-position: 54% 50%; }
+  .design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop::after { background: linear-gradient(180deg, var(--bg), transparent 27%), linear-gradient(0deg, var(--bg), transparent 18%); }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-copy { top: 40px; left: 5%; width: 90%; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-copy::before { min-height: 0; inset: -20px -12px -20px; background: linear-gradient(180deg, var(--bg) 60%, transparent); }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-copy::after { display: none; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-hero-signature { width: 160px; margin-bottom: 12px; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-title { font-size: clamp(40px, 11vw, 52px); }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-title-note { margin-top: 14px; font-size: 12px; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-object { left: 4%; top: 59%; width: 92%; height: 32%; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-main-photo > div { left: 68px; right: 16px; bottom: 18px; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-main-photo > div > span { font-size: 12px; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-main-photo > div small { font-size: 10px; }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-side { top: 94%; left: 24%; right: 6%; width: 70%; }
+
+  .design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop { inset: 0; background: #0c0f12; }
+  .design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop img { position: absolute; top: 22%; height: 43%; object-position: 60% 50%; mask-image: linear-gradient(transparent, #000 22%, #000 88%, transparent); }
+  .design.orbit.orbit-home[data-hero-version='2'] .home-stand-backdrop::after { background: linear-gradient(180deg, #080a0cee, #080a0cba 32%, #080a0c0a 58%, #080a0c99); }
+  .design.orbit.orbit-home[data-hero-version='2'] .orbit-copy::before { background: none; }
+}
