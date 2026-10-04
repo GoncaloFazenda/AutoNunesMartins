@@ -2,7 +2,9 @@
   import { ArrowUpRight } from 'lucide-svelte';
   import { catalogEditorial } from '$lib/catalogEditorial';
   import type { PublicStock } from '$lib/publicVehicles';
-  let { params, stock }: { params: URLSearchParams; stock: PublicStock } = $props();
+  import type { PublicBrandDirectory } from '$lib/catalogBrandLinks';
+  import PublicStockBrands from './PublicStockBrands.svelte';
+  let { params, stock, brandDirectory }: { params: URLSearchParams; stock: PublicStock; brandDirectory: PublicBrandDirectory } = $props();
   const guide = $derived(catalogEditorial(params, stock));
 </script>
 
@@ -23,18 +25,22 @@
       </div>
     {/each}
   </div>
-  {#if guide.vehicles.length}
-    <div class="reading-list">
-      <h3>{guide.pageLabel}</h3>
-      <div>{#each guide.vehicles as vehicle}
-        <a href={vehicle.href}><span><span class="vehicle-label">{vehicle.label}</span><small>{vehicle.detail}</small></span><ArrowUpRight size={16} aria-hidden="true" /></a>
-      {/each}</div>
-    </div>
-  {/if}
   <p class="editorial-note">Informação baseada nas fichas publicadas. Confirme a disponibilidade e os detalhes com o stand antes da visita.</p>
 </section>
 
+<div class="catalog-brands"><PublicStockBrands directory={brandDirectory} context="catalog" /></div>
+
+{#if guide.vehicles.length}
+  <div class="reading-list">
+    <h3>{guide.pageLabel}</h3>
+    <div>{#each guide.vehicles as vehicle}
+      <a href={vehicle.href}><span><span class="vehicle-label">{vehicle.label}</span><small>{vehicle.detail}</small></span><ArrowUpRight size={16} aria-hidden="true" /></a>
+    {/each}</div>
+  </div>
+{/if}
+
 <style>
+  .catalog-brands, .reading-list { margin-top: 56px; }
   .catalog-editorial { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 48px 64px; border-top: 1px solid var(--line); padding-top: 40px; margin-top: 56px; }
   p, h2, h3 { margin: 0; }
   .eyebrow { color: var(--muted); font-size: 10px; letter-spacing: .12em; }
@@ -53,8 +59,8 @@
   h3 { font-size: 18px; line-height: 1.5; font-weight: 500; letter-spacing: -.02em; }
   .guide-item p { margin-top: 12px; }
   .reading-list, .editorial-note { grid-column: 1 / -1; }
-  .reading-list { padding-top: 24px; border-top: 1px solid var(--line); }
-  .reading-list h3 { font-size: 13px; margin-bottom: 14px; }
+  .reading-list { padding-top: 24px; }
+  .reading-list h3 { font-size: 18px; margin-bottom: var(--catalog-heading-gap, 14px); }
   .reading-list > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
   .reading-list a { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 76px; box-sizing: border-box; padding: 18px 20px; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; line-height: 1.6; }
   .reading-list a > span { min-width: 0; overflow-wrap: anywhere; }
@@ -88,7 +94,7 @@
   @media (hover: hover) { a:hover { text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 5px; } }
   .eyebrow { font-size: 12px; }
   .price-note, .editorial-note, small { font-size: 14px; }
-  .visit, .reset, .reading-list h3, .reading-list a { font-size: 15px; }
+  .visit, .reset, .reading-list a { font-size: 15px; }
   @media (max-width: 1200px) { .catalog-editorial { grid-template-columns: 1fr; gap: 40px; } h2 { max-width: 30ch; } }
-  @media (max-width: 700px) { .catalog-editorial { margin-top: 36px; padding-top: 28px; } .reading-list > div { grid-template-columns: 1fr; gap: 18px; } }
+  @media (max-width: 700px) { .catalog-brands, .reading-list { margin-top: 36px; } .catalog-editorial { margin-top: 36px; padding-top: 28px; } .reading-list > div { grid-template-columns: 1fr; gap: 18px; } }
 </style>

@@ -13,7 +13,6 @@
   } from '$lib/publicVehicles';
   import OrbitSelect from './OrbitSelect.svelte';
   import OrbitCatalogEditorial from './OrbitCatalogEditorial.svelte';
-  import PublicStockBrands from './PublicStockBrands.svelte';
   import type { PublicBrandDirectory } from '$lib/catalogBrandLinks';
   import { catalogSticky } from './catalogSticky';
   import { catalogInputErrors } from './catalogFilters';
@@ -368,14 +367,12 @@
         </nav>{/if}
     </div>
   </div>
-  <div class="catalog-brands"><PublicStockBrands directory={brandDirectory} /></div>
-  <OrbitCatalogEditorial {params} {stock} />
+  <OrbitCatalogEditorial {params} {stock} {brandDirectory} />
 </main>
 
 <style>
-  .catalog-brands { margin-top: 56px; }
-  @media (max-width: 700px) { .catalog-brands { margin-top: 36px; } }
   .catalog {
+    --catalog-heading-gap: 14px;
     width: var(--orbit-frame);
     max-width: var(--orbit-frame-max);
     margin: auto;

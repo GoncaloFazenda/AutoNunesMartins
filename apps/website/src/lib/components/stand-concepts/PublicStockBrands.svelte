@@ -2,14 +2,14 @@
   import { ArrowUpRight } from 'lucide-svelte';
   import { catalogBrandLinks, type PublicBrandDirectory } from '$lib/catalogBrandLinks';
   import { brandLogo } from '$lib/brandLogos';
-  let { directory }: { directory: PublicBrandDirectory } = $props();
+  let { directory, context = 'home' }: { directory: PublicBrandDirectory; context?: 'home' | 'catalog' } = $props();
   const links = $derived(directory.status === 'ready' ? catalogBrandLinks(directory.brands) : []);
 </script>
 
-<section class="stock-brands" aria-label="Explorar por marca">
+<section class="stock-brands" class:catalog-context={context === 'catalog'} aria-label="Explorar por marca">
   <div class="brands-heading">
     <h2>Explorar por marca.</h2>
-    <p>Marcas com viaturas disponíveis.</p>
+    {#if context === 'home'}<p>Marcas com viaturas disponíveis.</p>{/if}
   </div>
   {#if links.length}
     <nav aria-label="Marcas do catálogo">
@@ -75,4 +75,7 @@
     .empty a { display: flex; width: fit-content; margin: 8px 0 0; }
   }
   @media (max-width: 380px) { ul { column-gap: 16px; } li a { font-size: 14px; column-gap: 6px; } }
+  .catalog-context { padding-top: 24px; }
+  .catalog-context .brands-heading { margin-bottom: var(--catalog-heading-gap, 14px); }
+  .catalog-context h2 { font-size: 18px; font-weight: 500; line-height: 1.5; letter-spacing: -.02em; }
 </style>
