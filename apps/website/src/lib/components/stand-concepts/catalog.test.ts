@@ -63,7 +63,7 @@ describe('Orbit demonstration catalogue', () => {
   });
   it('resets pagination on filter/sort changes and model on brand changes', () => {
     const url = catalogUrl(params('marca=BMW&modelo=Série+1&pagina=2'), 'marca', 'Toyota');
-    expect(url).toBe('/stand-orbit/viaturas?marca=Toyota');
+    expect(url).toBe('/viaturas?marca=Toyota');
     expect(catalogUrl(params('marca=BMW&pagina=2'), 'ordem', 'ano')).not.toContain('pagina');
     expect(catalogUrl(params('marca=BMW'), 'pagina', '2')).toContain('marca=BMW&pagina=2');
   });
@@ -90,7 +90,7 @@ describe('Orbit demonstration catalogue', () => {
         params('marca=BMW&utm_source=test&pagina=1&ordem=relevancia'),
         'https://example.test',
       ).canonical,
-    ).toBe('https://example.test/stand-orbit/viaturas?marca=BMW');
+    ).toBe('https://example.test/viaturas?marca=BMW');
     expect(catalogSeo(params('pagina=2'), 'https://example.test').canonical).toContain('pagina=2');
     expect(catalogSeo(params(), 'https://example.test').noindex).toBe(true);
     expect(catalogSeo(params('q=nothing'), 'https://example.test').noindex).toBe(true);

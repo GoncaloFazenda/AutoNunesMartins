@@ -1,0 +1,45 @@
+{
+  "collection": "Simple Icons",
+  "repository": "https://github.com/simple-icons/simple-icons",
+  "revision": "9f1c11219a45e1440271e98a143490594a4aba6d",
+  "license": "CC0-1.0 (collection); brand trademarks remain with their owners",
+  "modified": false,
+  "assets": [
+    {
+      "title": "Audi",
+      "hex": "BB0A30",
+      "source": "https://www.audi.com/ci/en/intro/basics/rings.html",
+      "guidelines": "https://www.audi.com/ci/en/intro/basics/rings.html"
+    },
+    {
+      "title": "BMW",
+      "hex": "0066B1",
+      "source": "https://bmw.com"
+    },
+    {
+      "title": "Dacia",
+      "hex": "646B52",
+      "source": "https://commons.wikimedia.org/wiki/File:Dacia-Logo-2021.svg"
+    },
+    {
+      "title": "Peugeot",
+      "hex": "000000",
+      "source": "https://www.peugeot.co.uk"
+    },
+    {
+      "title": "Renault",
+      "hex": "FFCC33",
+      "source": "https://media.renaultgroup.com"
+    },
+    {
+      "title": "Tesla",
+      "hex": "CC0000",
+      "source": "https://www.tesla.com/tesla-gallery"
+    },
+    {
+      "title": "Volkswagen",
+      "hex": "151F5D",
+      "source": "https://www.vw.com"
+    }
+  ]
+}

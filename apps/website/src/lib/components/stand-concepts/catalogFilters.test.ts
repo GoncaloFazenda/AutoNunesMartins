@@ -33,6 +33,6 @@ describe('catalogue filter contract', () => {
   });
   it('trims text and omits the default sort and orphan models', () => {
     expect(catalogUrl(new URLSearchParams(), 'q', '  Audi  ')).toContain('q=Audi');
-    expect(catalogUrl(new URLSearchParams('modelo=A3'), 'ordem', 'relevancia')).toBe('/stand-orbit/viaturas');
+    expect(catalogUrl(new URLSearchParams('modelo=A3'), 'ordem', 'relevancia')).toBe('/viaturas');
   });
 });

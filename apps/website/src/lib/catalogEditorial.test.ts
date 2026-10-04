@@ -18,12 +18,10 @@ function fixture(): PublicStock {
 }
 
 describe('catalogue editorial guide', () => {
-  it('uses actual filtered totals, dates and model links, preserving other filters', () => {
-    const guide = catalogEditorial(new URLSearchParams('marca=Audi&ano_min=2020&pagina=2'), fixture());
+  it('uses actual filtered totals, dates and vehicle details', () => {
+    const guide = catalogEditorial(new URLSearchParams('marca=Audi&ano_min=2020&ano_max=2020&pagina=2'), fixture());
     expect(guide.heading).toContain('Audi');
     expect(guide.intro).toContain('2 viaturas publicadas de 2022 a 2023');
-    expect(guide.links).toHaveLength(2);
-    expect(guide.links[0]?.href).toBe('/stand-orbit/viaturas?marca=Audi&ano_min=2020&modelo=A3');
     expect(guide.vehicles[1]?.detail).toContain('Preço sob consulta · Reservada');
   });
   it('changes automatically between brand, model and general views without retaining stale copy', () => {
@@ -31,7 +29,6 @@ describe('catalogue editorial guide', () => {
     expect(catalogEditorial(new URLSearchParams('marca=Audi&modelo=A3'), stock).guides[0]?.text).toContain('Audi A3');
     const general = catalogEditorial(new URLSearchParams(), stock);
     expect(general.heading).not.toContain('Audi');
-    expect(general.linkHeading).toBe('Explorar por marca');
   });
   it('does not promote an unrecognised brand or an incompatible model', () => {
     const seo = publicCatalogSeo(new URLSearchParams('marca=Inventada&modelo=A3'), 'https://stand.example', fixture());
@@ -41,7 +38,6 @@ describe('catalogue editorial guide', () => {
   it.each(['ready', 'invalid', 'unavailable'] as const)('has an honest %s empty state without phantom links or prices', status => {
     const guide = catalogEditorial(new URLSearchParams('marca=Audi'), emptyStock(status));
     expect(guide.hasResults).toBe(false);
-    expect(guide.links).toEqual([]);
     expect(guide.vehicles).toEqual([]);
     expect(guide.price).toBe('');
     expect(guide.intro).not.toContain('0 viaturas publicadas');
@@ -58,6 +54,6 @@ describe('catalogue editorial guide', () => {
   it('preserves established brand/model indexability and canonical pagination without broadening prototype policy', () => {
     const seo = publicCatalogSeo(new URLSearchParams('marca=Audi&modelo=A3&pagina=2'), 'https://stand.example', fixture());
     expect(seo.noindex).toBe(false);
-    expect(seo.canonical).toBe('https://stand.example/stand-orbit/viaturas?marca=Audi&modelo=A3&pagina=2');
+    expect(seo.canonical).toBe('https://stand.example/viaturas?marca=Audi&modelo=A3&pagina=2');
   });
 });

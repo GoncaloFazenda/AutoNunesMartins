@@ -1,6 +1,6 @@
 import { publicCatalogSeo, publicHref, publicPrice, type PublicStock } from './publicVehicles';
 
-const base = '/stand-orbit/viaturas';
+const base = '/viaturas';
 
 /** Uses the filtered API projection only, never the prototype catalogue. SSR-safe. */
 export function catalogEditorial(params: URLSearchParams, stock: PublicStock) {
@@ -49,20 +49,10 @@ export function catalogEditorial(params: URLSearchParams, stock: PublicStock) {
       text: 'Confirme a disponibilidade, os documentos e as condições de venda. Para retoma ou financiamento, peça uma proposta para a viatura que escolheu.',
     },
   ];
-  // Facet counts exclude the facet being selected, but retain the remaining filters.
-  const links = hasResults ? (brand ? facets.models.filter(v => v.brand === brand && v.count > 0) : facets.brands.filter(v => v.count > 0))
-    .map(v => {
-      const next = new URLSearchParams(params);
-      next.delete('pagina');
-      if (brand) next.set('modelo', v.value);
-      else { next.set('marca', v.value); next.delete('modelo'); }
-      return { label: brand ? v.value : `${v.value} usados`, count: v.count, href: `${base}?${next}`, current: brand ? model === v.value : false };
-    }) : [];
   const price = hasResults && facets.price.min !== null
     ? `Preços publicados desde ${publicPrice(facets.price.min)}. Confirme o preço na ficha de cada viatura.` : '';
   return {
-    heading, intro, guides, links, price, hasResults,
-    linkHeading: brand ? `Modelos ${brand} nesta pesquisa` : 'Explorar por marca',
+    heading, intro, guides, price, hasResults,
     vehicles: hasResults ? items.slice(0, 3).map(v => ({ label: `${v.brand} ${v.model}`, detail: `${v.year} · ${publicPrice(v.price)}${v.availability === 'RESERVED' ? ' · Reservada' : ''}`, href: publicHref(v.slug) })) : [],
     pageLabel: `Algumas viaturas nesta página${page > 1 ? ` · ${page}` : ''}`,
     resetHref: base,

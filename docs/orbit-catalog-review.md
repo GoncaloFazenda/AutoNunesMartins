@@ -1,6 +1,8 @@
 # Revisão do catálogo Orbit — 23 setembro 2026
 
-Âmbito: filtros e coerência visual da listagem `/stand-orbit/viaturas`. A homepage aprovada foi usada como referência, não redesenhada. Sem builds, publicação ou alterações ao stock.
+Âmbito: filtros e coerência visual da listagem `/viaturas`. A homepage aprovada foi usada como referência, não redesenhada. Sem builds, publicação ou alterações ao stock.
+
+Atualização de 4 outubro 2026: a interface foi simplificada para pesquisa, marca, preço máximo, ano exato e combustível. As regras históricas de modelo, preço mínimo, quilometragem e transmissão abaixo já não se aplicam à interface pública; a API mantém essas capacidades. URLs antigas limpam esses filtros e repõem a primeira página. O ano usa `ano_min=ano_max`, um único chip e “Todos os anos”; as opções percorrem o intervalo devolvido pela API, sem afirmar disponibilidade em todos os anos intermédios. Quando há ano selecionado, uma consulta pública sem esse limite preserva as restantes opções do dropdown. Os links editoriais exploram marcas, sem reintroduzir modelos invisíveis. Validação: 255 testes aprovados e Svelte com 0 erros/1 aviso existente.
 
 ## Alterações por zona
 

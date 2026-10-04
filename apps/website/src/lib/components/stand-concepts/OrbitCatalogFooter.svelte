@@ -18,13 +18,13 @@
     </div>
   </div>
   <div class="practical">
-    <a class="brand" href="/stand-orbit"><img src="/logo-transparent-white-v3.png" alt="Auto Nunes Martins — início" width="180" height="80" /></a>
+    <a class="brand" href="/"><img src="/logo-transparent-white-v3.png" alt="Auto Nunes Martins — início" width="180" height="80" /></a>
     <div class="visit"><p class="eyebrow">MORADA</p><address>{standContact.address ?? 'Morada por confirmar.'}</address></div>
     <div class="hours"><p class="eyebrow">HORÁRIO</p><dl>{#each standContact.hours as item}<div><dt>{item.days}</dt><dd>{item.time}</dd></div>{/each}</dl></div>
   </div>
   <div class="baseline">
     <p>© {new Date().getFullYear()} {standContact.name}{#if standContact.isDemo}<span>Demonstração · Dados fictícios</span>{/if}</p>
-    <nav aria-label="Navegação do rodapé"><a href="/stand-orbit">Início</a><a href="/stand-orbit#sobre">Sobre nós</a><a href="/stand-orbit/politica-de-privacidade">Privacidade</a></nav>
+    <nav aria-label="Navegação do rodapé"><a href="/">Início</a><a href="/#sobre">Sobre nós</a><a href="/informacao-legal">Informação legal</a><a href="/politica-de-privacidade">Privacidade</a></nav>
   </div>
 </footer>
 

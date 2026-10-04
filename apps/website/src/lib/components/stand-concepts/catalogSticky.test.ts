@@ -5,6 +5,18 @@ const base: CatalogSidebarFrame = { width: 1366, viewportHeight: 720, scrollY: 0
 const at = (scrollY: number, previous?: ReturnType<typeof catalogSidebarPosition>, overrides: Partial<CatalogSidebarFrame> = {}) => catalogSidebarPosition({ ...base, scrollY, ...overrides }, previous);
 
 describe('directional catalogue sidebar without nested scrolling', () => {
+  it('keeps a fitting panel below the visible navigation and its breathing room', () => {
+    const state = at(600, undefined, { panelHeight: 500, navigationHeight: 80 });
+    expect(base.start + state.offset - 600).toBe(104);
+    const expanded = at(600, state, { panelHeight: 500, navigationHeight: 94 });
+    expect(base.start + expanded.offset - 600).toBe(118);
+  });
+  it('uses the remaining viewport when deciding whether a panel fits', () => {
+    const state = at(600, undefined, { panelHeight: 620, navigationHeight: 80 });
+    expect(base.start + state.offset - 600 + 620).toBe(696);
+    const visibleTop = at(500, state, { panelHeight: 620, navigationHeight: 80 });
+    expect(base.start + visibleTop.offset - 500).toBe(104);
+  });
   it('lets tall fields scroll naturally before following the lower viewport edge', () => {
     let state = at(0);
     expect(state.offset).toBe(0);

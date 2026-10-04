@@ -83,7 +83,7 @@ export function catalogUrl(params: URLSearchParams, key: string, value: string) 
   if (key !== 'pagina') next.delete('pagina');
   if (key === 'marca' || !next.get('marca')) next.delete('modelo');
   const query = next.toString();
-  return `/stand-orbit/viaturas${query ? `?${query}` : ''}`;
+  return `/viaturas${query ? `?${query}` : ''}`;
 }
 
 export const brandCopy: Record<string, string> = {
@@ -113,7 +113,7 @@ export function catalogSeo(params: URLSearchParams, origin: string) {
       ? `Viaturas ${validBrand} usadas`
       : 'Viaturas usadas disponíveis';
   const description = `${heading}. ${results.total} ${results.total === 1 ? 'resultado' : 'resultados'} nesta seleção de demonstração. Compare preço, ano e quilometragem e explore cada ficha ao seu ritmo.`;
-  const canonical = new URL('/stand-orbit/viaturas', origin);
+  const canonical = new URL('/viaturas', origin);
   for (const key of Object.keys(filterLabels)) {
     const value = params.get(key)?.trim();
     if (value) canonical.searchParams.set(key, value);

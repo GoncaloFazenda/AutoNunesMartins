@@ -8,17 +8,20 @@
     publicCard,
     publicCatalogSeo,
     fuelLabels,
-    transmissionLabels,
     type PublicCard,
     type PublicStock,
   } from '$lib/publicVehicles';
   import OrbitSelect from './OrbitSelect.svelte';
   import OrbitCatalogEditorial from './OrbitCatalogEditorial.svelte';
+  import PublicStockBrands from './PublicStockBrands.svelte';
+  import type { PublicBrandDirectory } from '$lib/catalogBrandLinks';
   import { catalogSticky } from './catalogSticky';
-  import { catalogInputErrors, catalogModelOptions, numericCatalogFields } from './catalogFilters';
-  import { filterLabels, sortOptions, catalogUrl, type FilterKey } from './catalog';
+  import { catalogInputErrors } from './catalogFilters';
+  import { sortOptions, catalogUrl } from './catalog';
+  import { catalogUiLabels as filterLabels, catalogUiParams, catalogYearOptions } from '$lib/catalogUiFilters';
+  type FilterKey = keyof typeof filterLabels;
 
-  let { card, stock }: { card: Snippet<[PublicCard, number]>; stock: PublicStock } = $props();
+  let { card, stock, brandDirectory = { status: 'unavailable', brands: [] } }: { card: Snippet<[PublicCard, number]>; stock: PublicStock; brandDirectory?: PublicBrandDirectory } = $props();
   const params = $derived($page.url.searchParams);
   let draftQuery = $state<string | null>(null);
   let updating = $state(false);
@@ -44,9 +47,7 @@
     })),
   );
   const brand = $derived(formParams.get('marca') ?? '');
-  const modelSelection = $derived(catalogModelOptions(formParams, stock));
-  const models = $derived(modelSelection.models);
-  const modelDisabled = $derived(busy || !modelSelection.brand || !models.length);
+  const years = $derived(catalogYearOptions($page.data.catalogYearRange ?? stock.catalog.facets.year, formParams.get('ano_min') ?? ''));
   const active = $derived(
     (Object.keys(filterLabels) as FilterKey[]).filter((key) => formParams.get(key)),
   );
@@ -60,11 +61,9 @@
   let filtersOpen = $state(false);
   let resultsHeading: HTMLHeadingElement;
   let filterToggle: HTMLButtonElement;
-  const numericFields = numericCatalogFields.filter(field => field.key !== 'km_min');
   function filterValue(key: FilterKey) {
     const value = formParams.get(key) ?? '';
     if (key === 'combustivel') return fuelLabels[value as keyof typeof fuelLabels] ?? value;
-    if (key === 'transmissao') return transmissionLabels[value as keyof typeof transmissionLabels] ?? value;
     return value;
   }
   function resetDraft() {
@@ -91,7 +90,7 @@
     updating = true;
     try {
       // Push committed searches so browser history can restore a previous selection.
-      await goto(`/stand-orbit/viaturas${query ? `?${query}` : ''}`, { noScroll: true, keepFocus: true });
+      await goto(`/viaturas${query ? `?${query}` : ''}`, { noScroll: true, keepFocus: true });
       if (version === requestVersion && draftQuery === query) { draftQuery = null; updating = false; }
       return version === requestVersion;
     } catch {
@@ -105,7 +104,7 @@
     clearTimeout(debounce);
     requestVersion += 1;
     navigationError = '';
-    const next = new URL(catalogUrl(formParams, key, value), $page.url.origin).searchParams;
+    const next = catalogUiParams(formParams, key, value);
     draftQuery = next.toString();
     updating = !catalogInputErrors(next).length;
     if (!updating) return;
@@ -169,6 +168,7 @@
   <title>{seo.heading} — Auto Nunes Martins</title>
   <meta name="description" content={seo.description} />
   <link rel="canonical" href={seo.canonical} />
+  <meta property="og:url" content={seo.canonical} />
   <meta name="robots" content={seo.noindex ? 'noindex, follow' : 'index, follow'} />
 </svelte:head>
 
@@ -206,7 +206,7 @@
       </button>
       <div id="catalog-filter-panel" class:expanded={filtersOpen}>
         <form
-          action="/stand-orbit/viaturas"
+          action="/viaturas"
           method="GET"
           onsubmit={async (event) => {
             event.preventDefault();
@@ -244,34 +244,9 @@
             ]}
             onChange={(value) => update('marca', value)}
           />
-          <OrbitSelect
-            id="catalog-model"
-            label="Modelo"
-            name="modelo"
-            value={modelSelection.brand ? formParams.get('modelo') ?? '' : ''}
-            disabled={modelDisabled}
-            options={[
-              { value: '', label: !modelSelection.brand ? 'Escolha primeiro uma marca' : !models.length ? 'Sem modelos para estes filtros' : 'Todos os modelos' },
-              ...models.map((value) => ({ value, label: value })),
-            ]}
-            onChange={(value) => update('modelo', value)}
-          />
-          <div class="numeric-fields">
-            {#each numericFields as field}<label class:full={field.key === 'km_max'}
-                >{field.label}<input
-                  name={field.key}
-                  type="number"
-                  inputmode={field.step === '0.01' ? 'decimal' : 'numeric'}
-                  min={field.min}
-                  max={field.max}
-                  step={field.step}
-                  placeholder="Sem limite"
-                  value={formParams.get(field.key) ?? ''}
-                  aria-describedby={inputErrors.length ? 'catalog-input-errors' : undefined}
-                  oninput={(event) => update(field.key, event.currentTarget.value, 300)}
-                /></label
-              >{/each}
-          </div>
+          <label>Preço máximo (€)<input name="preco_max" type="number" inputmode="decimal" min="0" max="9999999999.99" step="0.01" placeholder="Sem limite" value={formParams.get('preco_max') ?? ''} aria-describedby={inputErrors.length ? 'catalog-input-errors' : undefined} oninput={(event) => update('preco_max', event.currentTarget.value, 300)} /></label>
+          <OrbitSelect id="catalog-year" label="Ano" name="ano_min" value={formParams.get('ano_min') ?? ''} disabled={busy} options={[{ value: '', label: 'Todos os anos' }, ...years]} onChange={(value) => update('ano_min', value)} />
+          {#if formParams.get('ano_min')}<input type="hidden" name="ano_max" value={formParams.get('ano_min')} />{/if}
           {#if inputErrors.length}<div id="catalog-input-errors" class="range-note" role="alert">
               {#each inputErrors as error}<p>{error}</p>{/each}
               <p>Corrija os campos para atualizar os resultados.</p>
@@ -286,26 +261,6 @@
             options={[{ value: '', label: 'Todos' }, ...fuels]}
             onChange={(value) => update('combustivel', value)}
           />
-          <OrbitSelect
-            id="catalog-transmission"
-            label="Transmissão"
-            name="transmissao"
-            describedBy="transmission-note"
-            value={formParams.get('transmissao') ?? ''}
-            disabled={busy}
-            options={[
-              { value: '', label: 'Todas' },
-              ...stock.catalog.facets.transmissions.map((item) => ({
-                value: item.value,
-                label:
-                  transmissionLabels[item.value as keyof typeof transmissionLabels] ?? item.value,
-              })),
-            ]}
-            onChange={(value) => update('transmissao', value)}
-          />
-          <p id="transmission-note" class="filter-note">
-            Compare a caixa indicada na ficha de cada viatura.
-          </p>
           <button class="apply-filters" type="submit" disabled={busy || inputErrors.length > 0}
             >{busy ? 'A atualizar…' : `Ver ${results.total} ${results.total === 1 ? 'viatura' : 'viaturas'}`}<ArrowRight size={16} /></button
           >
@@ -413,10 +368,13 @@
         </nav>{/if}
     </div>
   </div>
+  <div class="catalog-brands"><PublicStockBrands directory={brandDirectory} /></div>
   <OrbitCatalogEditorial {params} {stock} />
 </main>
 
 <style>
+  .catalog-brands { margin-top: 56px; }
+  @media (max-width: 700px) { .catalog-brands { margin-top: 36px; } }
   .catalog {
     width: var(--orbit-frame);
     max-width: var(--orbit-frame-max);
@@ -507,7 +465,14 @@
   }
   .filter-sticky {
     min-width: 0;
-    transform: translateY(var(--catalog-filter-shift, 0px));
+    position: relative;
+    top: var(--catalog-filter-shift, 0px);
+    transition: none;
+  }
+  .filter-sticky:global(.native-sticky) {
+    position: sticky;
+    top: calc(var(--nav-visible-height, 0px) + 24px);
+    transform: none;
   }
   .catalog-tail {
     grid-column: 2;
@@ -570,15 +535,6 @@
     border-color: var(--red);
     box-shadow: inset 0 0 0 .35px var(--red);
   }
-  .numeric-fields {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px 12px;
-  }
-  .full {
-    grid-column: 1/-1;
-  }
-  .filter-note,
   .range-note {
     color: var(--muted);
     font-size: 12px;
@@ -793,8 +749,6 @@
       column-gap: 20px;
     }
     .filter-heading,
-    .numeric-fields,
-    .filter-note,
     .range-note,
     .apply-filters {
       grid-column: 1/-1;
