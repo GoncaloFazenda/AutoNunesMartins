@@ -1,4 +1,7 @@
-import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { loadPublicBrands } from '$lib/server/publicBrands';
 
-// Orbit is the official website; discarded concepts live in the independent design archive.
-export const load = () => redirect(307, '/stand-orbit');
+export const load: PageServerLoad = async ({ setHeaders }) => {
+  setHeaders({ 'cache-control': 'no-store' });
+  return { brandDirectory: await loadPublicBrands() };
+};

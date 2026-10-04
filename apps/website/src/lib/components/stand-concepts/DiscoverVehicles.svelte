@@ -10,6 +10,7 @@
   let element: HTMLAnchorElement;
   let sweep = $state(0);
   let scrollDriven = $state(false);
+  let driftPaused = $state(true);
   let scrollLight = $state(scrollAccent(1, 1, 0));
   const textSweep = $derived(sweep);
   const lineSweep = $derived(scrollDriven && !reduced ? scrollLight.lineSweep : sweep);
@@ -48,6 +49,7 @@
     const lineWindow = element.querySelector<HTMLElement>('.title-line')!;
     let scrollFrame = 0;
     let inView = true;
+    const updateDrift = () => { driftPaused = !inView || document.hidden; };
     const drawScroll = () => {
       scrollFrame = 0;
       if (!scrollDriven || reduced) return;
@@ -67,6 +69,7 @@
     };
     const observer = new IntersectionObserver(([entry]) => {
       inView = entry?.isIntersecting ?? false;
+      updateDrift();
       if (inView) schedule();
     });
     observer.observe(element);
@@ -74,6 +77,7 @@
     resize.observe(heading);
     update(); media.addEventListener('change', update);
     scrollInput.addEventListener('change', update);
+    document.addEventListener('visibilitychange', updateDrift);
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
     return () => {
@@ -84,13 +88,14 @@
       resize.disconnect();
       media.removeEventListener('change', update);
       scrollInput.removeEventListener('change', update);
+      document.removeEventListener('visibilitychange', updateDrift);
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
     };
   });
 </script>
 
-<a bind:this={element} class="discover" class:active={phase === 'entering' || phase === 'parked'} data-phase={phase} href="/stand-orbit/viaturas"
+<a bind:this={element} class="discover" class:drift-paused={driftPaused} class:active={phase === 'entering' || phase === 'parked'} data-phase={phase} href="/viaturas"
   style={`--enter-duration:${CAR_ENTER_MS}ms;--line-enter-duration:${LINE_ENTER_MS}ms;--exit-duration:${EXIT_MS}ms;--wheel-enter-duration:${CAR_ENTER_MS / 2}ms`}
   onpointerenter={(event) => { if (event.pointerType === 'mouse') enter(); }}
   onpointerleave={(event) => { if (event.pointerType === 'mouse') leave(); }}
@@ -158,7 +163,7 @@
   .active .arrow { color: var(--red); transform: rotate(45deg); filter: var(--orbit-line-glow); opacity: .95; }
   .discover:focus-visible { outline: 2px solid var(--text); outline-offset: 5px; }
   .active { --edge-light: color-mix(in srgb,var(--line) 55%,var(--text)); border-color: var(--edge-light); box-shadow: 0 0 12px 1px color-mix(in srgb,var(--edge-light) 24%,transparent), 0 0 36px 3px color-mix(in srgb,var(--edge-light) 12%,transparent); }
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  @media (min-width: 701px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     .discover { transition: border-color 300ms, box-shadow 300ms; }
     .arrow { transition: transform 300ms, filter 300ms, opacity 300ms; }
     [data-phase='entering'] .car { animation: arrive var(--enter-duration) both; }
@@ -177,5 +182,17 @@
   @keyframes eager { from { transform: translateY(0); } to { transform: translate(0.5px,-0.7px) rotate(-.2deg); } }
   @keyframes smoke { 0% { opacity: 0; transform: translate(0,0) scale(.4); } 15% { opacity: .4; } 100% { opacity: 0; transform: translate(-65px,-8px) scale(2); } }
   @media (hover: none) { .car { opacity: 1; transform: none; } }
+  @media (max-width: 700px) {
+    .car { opacity: 1; transform: none; }
+    .arrow { transform: rotate(45deg); filter: var(--orbit-line-glow); opacity: .95; }
+  }
+  @media (max-width: 700px) and (prefers-reduced-motion: no-preference) {
+    .rear { animation: roll 360ms linear infinite; }
+    .body { animation: eager 140ms infinite alternate; }
+    .puff { animation: smoke 1050ms linear infinite; }
+    .two { animation-delay: 350ms; }
+    .three { animation-delay: 700ms; }
+    .drift-paused .rear, .drift-paused .body, .drift-paused .puff { animation-play-state: paused; }
+  }
   @media (prefers-reduced-motion: reduce) { .car { opacity: 1; transform: none; } }
 </style>

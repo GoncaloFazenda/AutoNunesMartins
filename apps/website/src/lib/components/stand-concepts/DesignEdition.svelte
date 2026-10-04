@@ -14,14 +14,17 @@
   } from '$lib/publicVehicles';
   import { page } from '$app/stores';
   import { publicVehicleCanonical, vehicleJsonLdScript } from '$lib/vehicleStructuredData';
+  import { vehicleSeo } from '$lib/vehicleSeo';
   import { publicPhoto, publicHref, fuelLabels, transmissionLabels } from '$lib/publicVehicles';
   import DiscoverVehicles from './DiscoverVehicles.svelte';
   import { hybridNav } from './hybridNav';
+  import { catalogNavigation } from './catalogNavigation';
+  import './catalogNavigation.css';
   import { mobileNavigation } from './mobileNavigation';
   import { phoneAttention, ringPhone } from './phoneAttention';
   import './mobileNavigation.css';
   import ThemeToggle from './ThemeToggle.svelte';
-  import { ArrowUpRight, ArrowLeft, ArrowRight, Plus, X, Heart, Menu, Phone } from 'lucide-svelte';
+  import { ArrowUpRight, ArrowLeft, ArrowRight, Plus, X, Heart, Menu, Phone, MapPin, Clock3, Mail } from 'lucide-svelte';
   import { cars, photo, eur, number } from './data';
   import { responsivePhoto, cardImageSizes, heroImageSizes } from './images';
   import { designMotion, entrance, conditionalEntrance } from './designMotion';
@@ -33,6 +36,8 @@
   import CabinReveal from './CabinReveal.svelte';
   import OrbitTrust from './OrbitTrust.svelte';
   import OrbitStats from './OrbitStats.svelte';
+  import PublicStockBrands from './PublicStockBrands.svelte';
+  import type { PublicBrandDirectory } from '$lib/catalogBrandLinks';
   import OrbitEditorialPause from './OrbitEditorialPause.svelte';
   import OrbitRedDot from './OrbitRedDot.svelte';
   import VisitInvitation from './VisitInvitation.svelte';
@@ -42,21 +47,56 @@
   import OrbitReviews from './OrbitReviews.svelte';
   import { standContact } from './standContact';
   import OrbitCatalog from './OrbitCatalog.svelte';
+  import RelatedCarousel from './RelatedCarousel.svelte';
   import OrbitSelect from './OrbitSelect.svelte';
   import OrbitPrivacy from './OrbitPrivacy.svelte';
+  import LegalInformation from '../LegalInformation.svelte';
   import OrbitAbout from './OrbitAbout.svelte';
+  import OrbitComparison from './OrbitComparison.svelte';
+  import OrbitFavorites from './OrbitFavorites.svelte';
+  import FavoriteButton from '../FavoriteButton.svelte';
+  import { useFavorites } from '$lib/favorites';
+  const { ids: favoriteIds } = useFavorites();
+  import CompareButton from '../CompareButton.svelte';
+  import { useComparison } from '$lib/comparison';
+  import { publicCard } from '$lib/publicVehicles';
+  const { ids: comparisonIds, additions: comparisonAdditions } = useComparison();
+  function comparisonAttention(node: HTMLElement, initial: number) {
+    let previous = initial;
+    let animation: Animation | undefined;
+    return {
+      update(value: number) {
+        if (value > previous && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          animation?.cancel();
+          animation = node.querySelector('.comparison-count')?.animate(
+            [{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }],
+            { duration: 420, easing: 'ease-out' },
+          );
+        }
+        previous = value;
+      },
+      destroy() { animation?.cancel(); },
+    };
+  }
   import { catalogCars, transmissionFor } from './catalogDemo';
   import type { CatalogCar } from './catalog';
   import { catalogResults, sortOptions } from './catalog';
   import './orbitRhythm.css';
   import './orbitInitialLight.css';
   import './orbitDetail.css';
+  import './navAddress.css';
+  import './homeHeroPhoto.css';
+  import { aboutContent } from './aboutContent';
   let {
     id,
     catalog = false,
     privacy = false,
+    legalInformation = false,
     about = false,
+    compare = false,
+    favorites = false,
     stock = emptyStock('unavailable'),
+    brandDirectory = { status: 'unavailable', brands: [] },
     publicVehicle,
     relatedVehicles = [],
     errorStatus,
@@ -64,13 +104,16 @@
     id?: string;
     catalog?: boolean;
     privacy?: boolean;
+    legalInformation?: boolean;
     about?: boolean;
+    compare?: boolean;
+    favorites?: boolean;
     stock?: PublicStock;
+    brandDirectory?: PublicBrandDirectory;
     publicVehicle?: PublicVehicle;
     relatedVehicles?: PublicVehicle[];
     errorStatus?: number;
   } = $props();
-  const base = '/stand-orbit';
   const car = $derived(
     publicVehicle
       ? {
@@ -169,6 +212,7 @@
   let reason = $state('Gostava de saber mais.');
   let zoom = $state(0);
   let heroIndex = $state(0);
+  let heroVersion = $state(1);
   const heroCar = $derived(cars[heroIndex]!);
   const equipmentItems = [
     {
@@ -280,14 +324,19 @@
 
 <svelte:head>
   {#if publicVehicle}
-    <title>{publicVehicle.brand} {publicVehicle.model} — Auto Nunes Martins</title>
-    <meta
-      name="description"
-      content={publicVehicle.description?.slice(0, 160) ||
-        publicVehicle.brand + ' ' + publicVehicle.model}
-    />
+    {@const seo = vehicleSeo(publicVehicle)}
+    <title>{seo.title}</title>
+    <meta name="description" content={seo.description} />
+    <meta property="og:title" content={seo.title} />
+    <meta property="og:description" content={seo.description} />
+    {#if publicVehicle.photos.length}<meta property="og:image" content={new URL(publicPhoto(publicVehicle.slug, 0), $page.url.origin).href} />{/if}
     <link rel="canonical" href={publicVehicleCanonical(publicVehicle, $page.url.origin)} />
+    <meta property="og:url" content={publicVehicleCanonical(publicVehicle, $page.url.origin)} />
     {@html vehicleJsonLdScript(publicVehicle, $page.url.origin)}
+  {/if}
+  {#if !favorites && !compare && !id && !catalog && !privacy && !publicVehicle && !errorStatus}
+    <link rel="canonical" href={new URL(about ? '/quem-somos' : '/', $page.url.origin).href} />
+    <meta property="og:url" content={new URL(about ? '/quem-somos' : '/', $page.url.origin).href} />
   {/if}
 
   <link rel="preload" href={orbitFont400} as="font" type="font/woff2" crossorigin="anonymous" />
@@ -295,40 +344,60 @@
   <link rel="preload" href={orbitFont600} as="font" type="font/woff2" crossorigin="anonymous" />
   <link rel="preload" href={orbitTitleFont} as="font" type="font/woff2" crossorigin="anonymous" />
   <link rel="preload" href={orbitTitleItalic} as="font" type="font/woff2" crossorigin="anonymous" />
-  {#if !about && !catalog && !privacy && !publicVehicle && !errorStatus}<title
-      >{car ? `${car.brand} ${car.model}` : 'O caminho é seu.'} — Auto Nunes Martins</title
+  {#if !favorites && !compare && !about && !catalog && !privacy && !publicVehicle && !errorStatus}<title
+      >{car ? `${car.brand} ${car.model} — Auto Nunes Martins` : 'Auto Nunes Martins — Automóveis usados'}</title
     ><meta
       name="description"
-      content="Descubra uma nova perspetiva sobre o seu próximo carro. Seleção automóvel Auto Nunes Martins — conceito visual."
+      content="Conheça a Auto Nunes Martins e consulte as viaturas publicadas. Compare preço, ano e quilometragem e contacte-nos para saber mais."
     />{/if}
-  {#if !about && !catalog && !privacy && !publicVehicle}<meta
+  {#if id && !favorites && !compare && !about && !catalog && !privacy && !publicVehicle}<meta
       name="robots"
       content="noindex, follow"
     />{/if}</svelte:head
 >
 
 <div
-  id={!about && !id && !catalog && !privacy && !publicVehicle ? 'inicio' : undefined}
+  id={!favorites && !compare && !about && !id && !catalog && !privacy && !publicVehicle ? 'inicio' : undefined}
   class="design orbit"
-  class:orbit-home={!about && !id && !catalog && !privacy && !publicVehicle}
+  class:orbit-home={!favorites && !compare && !about && !id && !catalog && !privacy && !publicVehicle}
   class:orbit-catalog={catalog}
-  class:orbit-privacy={privacy || about}
+  class:orbit-inner={!!(favorites || compare || about || id || catalog || privacy || publicVehicle || errorStatus)}
+  class:orbit-privacy={privacy || about || compare || favorites}
   class:orbit-company={about}
   class:orbit-detail={!!car || !!publicVehicle}
+  class:public-detail={!!publicVehicle}
   class:dark={isDark}
+  data-hero-version={heroVersion}
+  class:has-address={!!standContact.address || !!standContact.email || standContact.hours.length > 0}
   use:designMotion
 >
   <div class="read-line" aria-hidden="true"></div>
+  {#if standContact.address || standContact.email || standContact.hours.length}
+    <div class="nav-contact-strip">
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users must be able to scroll the contact strip.) -->
+      <div class="nav-contact-inner" role="region" tabindex="0" aria-label="Contactos e horário — deslize para ver mais">
+      <div class="nav-contact-left">
+      {#if standContact.address}<address class="nav-address"><MapPin size={13} strokeWidth={1.6} aria-hidden="true" /><span>{standContact.address.replace(/\n/g, ' · ')}</span></address>{/if}
+      {#if standContact.hours.length}<div class="nav-hours" aria-label="Horário">
+        <Clock3 size={13} strokeWidth={1.6} aria-hidden="true" />
+        {#each standContact.hours.filter(hours => hours.days !== 'Domingo e feriados') as hours}<span><span>{hours.days}</span><span>{hours.time}</span></span>{/each}
+      </div>{/if}
+      </div>
+      {#if standContact.email}<span class="nav-email"><a href={`mailto:${standContact.email}`}><Mail size={13} strokeWidth={1.6} aria-hidden="true" />{standContact.email}</a></span>{/if}
+      </div>
+    </div>
+  {/if}
   <div class="nav-reserve" aria-hidden="true"></div>
   <header
     class="stand-header"
+    use:catalogNavigation={{ enabled: !!(favorites || compare || about || id || catalog || privacy || publicVehicle || errorStatus), directional: catalog, open: navOpen }}
     use:hybridNav={{
-      enabled: !about && !id && !catalog && !privacy && !publicVehicle,
+      enabled: !favorites && !compare && !about && !id && !catalog && !privacy && !publicVehicle,
       open: navOpen,
       close: () => (navOpen = false),
     }}
   >
-    <a class="logo" href={base}
+    <a class="logo" href="/"
       ><img
         src={isDark ? '/logo-transparent-white-v3.png' : '/logo-transparent.png'}
         alt="Auto Nunes Martins — início"
@@ -343,24 +412,32 @@
       use:mobileNavigation={{ open: navOpen, close: () => (navOpen = false) }}
     >
       <a
-        href={base}
-        aria-current={!id && !catalog && !privacy && !about && !publicVehicle && !errorStatus
+        href="/"
+        aria-current={!favorites && !compare && !id && !catalog && !privacy && !about && !publicVehicle && !errorStatus
           ? 'page'
           : undefined}
         onclick={() => (navOpen = false)}><span class="nav-label">Início</span></a
       >
       <a
-        href={`${base}/viaturas`}
+        href="/viaturas"
         aria-current={catalog ? 'page' : undefined}
         onclick={() => (navOpen = false)}
         ><span class="nav-label">Viaturas</span>
       </a><a
-        href={`${base}/quem-somos`}
+        href="/quem-somos"
         aria-current={about ? 'page' : undefined}
         onclick={() => (navOpen = false)}><span class="nav-label">Quem somos</span></a
       >
+      <a href="/comparar" class:has-comparison={$comparisonIds.length > 0} use:comparisonAttention={$comparisonAdditions} aria-current={compare ? 'page' : undefined}
+        aria-label={`Comparar, ${$comparisonIds.length} viaturas selecionadas`}
+        onclick={() => (navOpen = false)}><span class="nav-label">Comparar</span><span class="comparison-count" aria-hidden="true">{$comparisonIds.length}</span></a>
+      <div class="mobile-theme"><ThemeToggle dark={isDark} onchange={toggleTheme} /></div>
     </nav>
     <div class="header-actions">
+      <div class="desktop-theme"><ThemeToggle dark={isDark} onchange={toggleTheme} /></div>
+      <a class="nav-favorites" class:filled={$favoriteIds.length > 0} href="/favoritos"
+        aria-current={favorites ? 'page' : undefined} aria-label={`Guardados, ${$favoriteIds.length} viaturas nos favoritos`}
+        onclick={() => (navOpen = false)}><Heart size={19} strokeWidth={1.5} fill={$favoriteIds.length ? 'currentColor' : 'none'} aria-hidden="true" /><span class="favorite-label">Guardados</span><span class="favorite-count" class:empty={!$favoriteIds.length} aria-hidden="true">{$favoriteIds.length > 99 ? '99+' : $favoriteIds.length}</span></a>
       {#if standContact.phone}<a
           class="nav-phone"
           use:phoneAttention
@@ -368,16 +445,17 @@
           onfocus={ringNavPhone}
           href={`tel:${standContact.phone.international}`}
           onclick={() => (navOpen = false)}
-          ><Phone size={16} strokeWidth={1.7} aria-hidden="true" />Ligar agora</a
+          ><Phone size={16} strokeWidth={1.7} aria-hidden="true" /><span class="nav-phone-copy"><span>Ligar agora</span><span class="nav-phone-number">{standContact.phone.display}</span></span></a
         >{/if}
-      <ThemeToggle dark={isDark} onchange={toggleTheme} /><button
+      <button
         class="mobile-menu icon-button"
         aria-label={navOpen ? 'Fechar menu' : 'Abrir menu'}
         aria-controls="stand-navigation"
         aria-expanded={navOpen}
         onclick={() => (navOpen = !navOpen)}
         >{#if navOpen}<X size={21} />{:else}<Menu size={21} />{/if}</button
-      ><span class="edition-label orbit-edition-label">{'seleção'} / 0{'1'}</span>
+      >
+      <span class="edition-label orbit-edition-label">{'seleção'} / 0{'1'}</span>
     </div>
   </header>
 
@@ -394,26 +472,30 @@
           ? 'Consulte a seleção atual de viaturas aprovadas para o website.'
           : 'Tente novamente mais tarde.'}
       </p>
-      <a class="pill" href="/stand-orbit/viaturas">Voltar às viaturas <ArrowUpRight size={18} /></a>
+      <a class="pill" href="/viaturas">Voltar às viaturas <ArrowUpRight size={18} /></a>
     </main>
+  {:else if favorites}
+    <OrbitFavorites card={vehicleCard} />
+  {:else if compare}
+    <OrbitComparison />
   {:else if catalog}
-    <OrbitCatalog card={vehicleCard} {stock} />
+    <OrbitCatalog card={vehicleCard} {stock} {brandDirectory} />
   {:else if privacy}
-    <OrbitPrivacy />
+    {#if legalInformation}<LegalInformation />{:else}<OrbitPrivacy />{/if}
   {:else if about}
     <OrbitAbout onContact={() => contact()} />
   {:else if id && !car}
     <main class="not-found">
       <p class="kicker">DESVIO DE PERCURSO</p>
       <h1>Esta viatura<br />não está por aqui.</h1>
-      <a class="pill" href={base}>Voltar à seleção <ArrowUpRight size={18} /></a>
+      <a class="pill" href="/">Voltar à seleção <ArrowUpRight size={18} /></a>
     </main>
   {:else if car}
     <main class="vehicle-page">
       <div class="breadcrumbs">
-        <a href={`${base}/viaturas`}><ArrowLeft size={14} /> Voltar às viaturas</a><span
+        <a href="/viaturas"><ArrowLeft size={14} /> Voltar às viaturas</a><span
           >{car.brand} / {car.model}</span
-        ><button
+        >{#if publicVehicle}<span class="detail-favorite-desktop"><FavoriteButton id={publicVehicle.slug} name={`${publicVehicle.brand} ${publicVehicle.model}`} text /></span>{:else}<button
           onclick={() => toggleSave(car.id)}
           class:saved={saved.includes(car.id)}
           aria-pressed={saved.includes(car.id)}
@@ -421,7 +503,7 @@
             size={16}
             fill={saved.includes(car.id) ? 'currentColor' : 'none'}
           />{saved.includes(car.id) ? 'Guardada' : 'Guardar'}</button
-        >
+        >{/if}
       </div>
 
       <section class="vehicle-layout" data-scene>
@@ -528,6 +610,7 @@
             onclick={() => contact('Gostava de apresentar a minha viatura para retoma.')}
             >Tem uma viatura para retoma? <Plus size={15} /></button
           >
+          {#if publicVehicle}<div class="detail-compare" role="group" aria-label="Guardar e comparar viatura"><CompareButton id={publicVehicle.slug} name={`${publicVehicle.brand} ${publicVehicle.model}`} /><span class="detail-favorite-mobile"><FavoriteButton id={publicVehicle.slug} name={`${publicVehicle.brand} ${publicVehicle.model}`} text /></span></div>{/if}
           <p class="fine-print">
             {publicVehicle
               ? 'Confirme a disponibilidade, o histórico e as condições com o stand.'
@@ -563,7 +646,7 @@
             <span class="band-index" aria-hidden="true">↗</span>
           </section>
         {/if}
-        {#if publicVehicle}<PublicVehicleStory vehicle={publicVehicle} />{/if}
+        {#if publicVehicle}<PublicVehicleStory vehicle={publicVehicle} onContact={() => contact()} />{/if}
         {#if !publicVehicle}
           <section class="equipment" use:entrance>
             <h2>Bom por fora.<br />Melhor de perto.</h2>
@@ -581,9 +664,11 @@
             {publicVehicle ? 'PREÇOS PRÓXIMOS DO SEU' : 'PREÇOS PRÓXIMOS · DEMONSTRAÇÃO'}
           </p>
           <h2>Continue a explorar.</h2>
-          <div class="related-grid">
+          {#if publicVehicle}
+            {#key publicVehicle.slug}<RelatedCarousel vehicles={relatedVehicles} card={vehicleCard} />{/key}
+          {:else}<div class="related-grid">
             {#each suggestions as item}<a
-                href={publicVehicle ? publicHref(item.id) : `${base}/${item.id}`}
+                href={publicVehicle ? publicHref(item.id) : `/demo/${item.id}`}
                 ><div class="related-image">
                   <img
                     src={photo(item.image, 900)}
@@ -598,7 +683,7 @@
                   <strong class="related-price">{publicPrice(item.price)}</strong>
                 </div></a
               >{/each}
-          </div>
+          </div>{/if}
         </section>{/if}
     </main>
   {:else}
@@ -611,6 +696,9 @@
         aria-roledescription="carrossel"
       >
         <div class="orbit-stage" data-hero-stage>
+          {#if heroVersion === 2}<div class="home-stand-backdrop" aria-hidden="true">
+            <img src={aboutContent.heroImage.id} srcset={aboutContent.heroImage.srcset} sizes="(max-width: 700px) 100vw, (max-width: 1050px) 80vw, 100vw" width="1024" height="768" alt="" loading="eager" fetchpriority="high" decoding="async" />
+          </div>{/if}
           <StageBackdrop />
           <div class="orbit-topline">
             <span class="kicker hero-kicker"
@@ -623,7 +711,7 @@
           <div class="orbit-copy">
             <img
               class="orbit-hero-signature"
-              src={isDark ? '/logo-transparent-white-v3.png' : '/logo-transparent.png'}
+              src={isDark || heroVersion === 2 ? '/logo-transparent-white-v3.png' : '/logo-transparent.png'}
               alt="Auto Nunes Martins"
               width="1881"
               height="836"
@@ -640,7 +728,7 @@
             <a
               class="orbit-main-photo"
               id="orbit-featured"
-              href={`${base}/${heroCar.id}`}
+              href={`/demo/${heroCar.id}`}
               aria-label={`Ver ${heroCar.brand} ${heroCar.model} — destaque ${heroIndex + 1} de ${cars.length}`}
             >
               {#each cars as featured, index (featured.id)}
@@ -648,7 +736,7 @@
                   class:active={heroIndex === index}
                   src={photo(featured.image, 1800)}
                   srcset={responsivePhoto(featured.image)}
-                  sizes={heroImageSizes}
+                  sizes={heroVersion === 2 ? '(max-width: 700px) 92vw, 57vw' : heroImageSizes}
                   alt={heroIndex === index
                     ? `${featured.brand} ${featured.model} — imagem ilustrativa`
                     : ''}
@@ -701,6 +789,11 @@
         </div>
       </section>
 
+      <div class="hero-versions" role="group" aria-label="Escolher composição do hero">
+        {#each [1, 2] as version}
+          <button type="button" aria-label={`Versão ${version} do hero`} aria-pressed={heroVersion === version} title={['Original', 'Fotografia imersiva'][version - 1]} onclick={() => heroVersion = version}>{version}</button>
+        {/each}
+      </div>
       <OrbitStats />
 
       <section class="showroom" id="selecao">
@@ -773,6 +866,8 @@
         </div>
       </section>
 
+      <div class="home-brands"><PublicStockBrands directory={brandDirectory} /></div>
+
       <section class="about" id="sobre">
         <div class="about-head" use:entrance>
           <h2>Não vendemos<br />a mesma escolha<br /><span>a toda a gente.</span></h2>
@@ -802,7 +897,7 @@
     </main>
   {/if}
 
-  {#if !about && !catalog && !privacy && !errorStatus}<section class="services">
+  {#if !favorites && !compare && !about && !catalog && !privacy && !errorStatus}<section class="services">
       <p class="kicker">O CARRO É SÓ O INÍCIO.</p>
       <div>
         {#each [['01', 'Dar o próximo passo.', 'Conheça a viatura ao seu ritmo. Combine uma visita e esclareça as suas dúvidas.', 'Quero combinar uma visita.'], ['02', 'Mudar de companhia.', 'Tem uma viatura para retoma? Conte-nos um pouco sobre ela e sobre os seus planos.', 'Gostava de falar sobre uma retoma.'], ['03', 'Saber os detalhes.', 'Equipamento, documentação e condições: reúna a informação antes de decidir.', 'Gostava de esclarecer algumas dúvidas.']] as service, index}<article
@@ -811,13 +906,13 @@
             <span>{service[0]}<ArrowUpRight size={22} /></span>
             <h3>{service[1]}</h3>
             <p>{service[2]}</p>
-            <button onclick={() => contact(service[3])}>Vamos conversar <Plus size={15} /></button>
+            <button onclick={() => contact(service[3])}><span class="service-cta-label">Vamos conversar</span><ArrowUpRight size={15} aria-hidden="true" /></button>
           </article>{/each}
       </div>
     </section>{/if}
   {#if (catalog || privacy) && !errorStatus}
     <OrbitFaq />
-  {:else if about || catalog || privacy || publicVehicle || errorStatus}
+  {:else if favorites || compare || about || catalog || privacy || publicVehicle || errorStatus}
     <!-- The shared contact/footer follows the content without duplicating the homepage FAQ. -->
   {:else if !id}
     <VisitInvitation onContact={contact} logoSrc={'/logo-transparent.png'} />
@@ -852,7 +947,7 @@
     bind:this={contactDialog}
     class="contact-dialog"
     aria-labelledby="contact-heading"
-    aria-describedby="contact-description"
+    aria-describedby={sent ? 'contact-description' : undefined}
     onkeydown={contactKeydown}
     onpointerdown={(event) => {
       contactPointerStartedOutside = outsideContact(event);
@@ -877,7 +972,6 @@
       <button class="pill primary" onclick={() => contactDialog.close()}
         >Continuar a descobrir <ArrowUpRight size={18} /></button
       >{:else}<h2 id="contact-heading">O que tem<br />em mente?</h2>
-      <p id="contact-description">Formulário de demonstração. Não envia mensagens.</p>
       <form
         onsubmit={async (event) => {
           event.preventDefault();
@@ -932,9 +1026,9 @@
   </dialog>
 </div>
 
-{#snippet vehicleCard(vehicle: CatalogCar | PublicCard, index: number)}
-  <article class="vehicle-card" use:entrance={(index % 2) * 110}>
-    <a class="card-image" href={'href' in vehicle ? vehicle.href : `${base}/${vehicle.id}`}
+{#snippet vehicleCard(vehicle: CatalogCar | PublicCard, index: number, animate: boolean = true)}
+  <article class="vehicle-card" use:conditionalEntrance={animate ? (index % 2) * 110 : false}>
+    <a class="card-image" href={'href' in vehicle ? vehicle.href : `/demo/${vehicle.id}`}
       ><img
         src={photo(vehicle.image, 1100)}
         srcset={responsivePhoto(vehicle.image, 1600)}
@@ -947,32 +1041,77 @@
     >
     <div class="card-body">
     <div class="card-info">
-      <a href={'href' in vehicle ? vehicle.href : `${base}/${vehicle.id}`}
+      <a href={'href' in vehicle ? vehicle.href : `/demo/${vehicle.id}`}
         ><span>{vehicle.brand}</span>
         <h3>{vehicle.model}</h3></a
-      ><button
+      >{#if 'approved' in vehicle}<FavoriteButton id={vehicle.id} name={`${vehicle.brand} ${vehicle.model}`} />{:else}<button
         class="save"
         class:saved={saved.includes(vehicle.id)}
         onclick={() => toggleSave(vehicle.id)}
         aria-label={`${saved.includes(vehicle.id) ? 'Remover' : 'Guardar'} ${vehicle.brand} ${vehicle.model}`}
         aria-pressed={saved.includes(vehicle.id)}
         ><Heart size={18} fill={saved.includes(vehicle.id) ? 'currentColor' : 'none'} /></button
-      >
+      >{/if}
     </div>
     <div class="card-specs">
       <span>{vehicle.year}</span><span>{number(vehicle.km)} km</span><span>{vehicle.fuel}</span>
     </div>
     <div class="card-price">
       <strong>{'approved' in vehicle ? publicPrice(vehicle.price) : eur(vehicle.price)}</strong><a
-        href={'href' in vehicle ? vehicle.href : `${base}/${vehicle.id}`}
+        href={'href' in vehicle ? vehicle.href : `/demo/${vehicle.id}`}
         ><span class="card-cta-label">Ver viatura</span> <ArrowUpRight size={14} /></a
       >
     </div>
+    {#if 'approved' in vehicle}<div class="card-compare"><CompareButton id={vehicle.id} name={`${vehicle.brand} ${vehicle.model}`} /></div>{/if}
     </div>
   </article>
 {/snippet}
 
 <style>
+  .home-brands { width: var(--orbit-frame); max-width: var(--orbit-frame-max); margin: var(--orbit-space-section) auto 0; }
+  .nav-favorites { position: relative; display: inline-grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; color: var(--text); border-radius: 50%; }
+  .nav-favorites.filled { color: var(--red); }
+  .nav-favorites[aria-current="page"] { background: color-mix(in srgb, var(--text) 6%, transparent); }
+  .nav-favorites .favorite-count { position: absolute; top: 0; right: 0; width: 24px; min-width: 24px; flex: 0 0 24px; height: 16px; padding: 0 3px; border-radius: 10px; display: grid; place-items: center; background: var(--bg); color: var(--text); font-size: 9px; border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .nav-favorites .favorite-count.empty { visibility: hidden; }
+  .favorite-label { display: none; color: var(--text); }
+  .desktop-theme :global(button) { border: 1px solid var(--line); border-radius: 4px; min-height: 44px; padding-inline: 10px; }
+  @media (min-width: 1001px) {
+    .design.orbit .header-actions { gap: 12px; }
+    .nav-favorites { display: inline-flex; gap: 8px; width: auto; padding-inline: 10px; border-radius: 4px; font-size: 12px; text-decoration: none; }
+    .favorite-label { display: inline; }
+    .nav-favorites .favorite-count { position: static; }
+    .nav-favorites:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+  }
+  .nav-favorites:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+  .mobile-theme { display: none; }
+  @media (max-width: 700px) {
+    .desktop-theme { display: none; }
+    .mobile-theme { display: block; border-top: 1px solid var(--line); padding-top: 8px; }
+    .mobile-theme :global(button) { min-height: 44px; gap: 9px; }
+    .mobile-theme :global(button span) { display: inline; }
+    .design.orbit .stand-header .logo { width: 96px; flex-basis: 96px; padding: 0; }
+    .design.orbit .stand-header .logo img { width: 100%; }
+    .design.orbit > header.stand-header { padding-inline: 16px; gap: 8px; }
+  }
+  .comparison-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 7px; border: 1px solid var(--line); border-radius: 50%; font-size: 10px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .has-comparison .comparison-count { background: var(--red); border-color: var(--red); color: white; }
+  .nav-phone-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; line-height: 1.1; }
+  .nav-phone-number { font-size: 10px; letter-spacing: .01em; font-weight: 400; white-space: nowrap; }
+  @media (max-width: 1000px) {
+    .nav-phone-number { display: none; }
+    .nav-favorites .favorite-count { top: 5px; right: 0; background: transparent; border: 0; font-size: 10px; font-weight: 500; }
+  }
+  .card-compare { margin-top: 14px; }
+  .detail-compare { margin-top: 16px; }
+  @media (min-width: 701px) and (max-width: 1050px) { .design.orbit .stand-header nav { gap: 18px; } }
+  @media (max-width: 380px) {
+    .design.orbit > header.stand-header { padding-inline: 8px; gap: 4px; }
+    .design.orbit .stand-header .logo { width: 78px; flex-basis: 78px; padding: 0; }
+    .design.orbit .stand-header .logo img { width: 100%; }
+    .design.orbit .nav-phone { gap: 6px; padding-inline: 8px; }
+    .nav-phone-number { font-size: 9px; }
+  }
   .design.orbit {
     font-family: 'Orbit Inter', Arial, sans-serif;
   }
@@ -1004,7 +1143,7 @@
     --orbit-frame-max: 1720px;
   }
   .design.orbit.orbit-company {
-    --company-nav-height: 80px;
+    --company-nav-height: 94px;
   }
   .design.orbit.orbit-company header {
     position: sticky;
@@ -1017,15 +1156,12 @@
     border-bottom: 1px solid var(--line);
     transform: none;
   }
-  .design.orbit.orbit-company .nav-reserve {
-    display: none;
-  }
   .design.orbit.orbit-company :global(#contactos) {
     scroll-margin-top: calc(var(--company-nav-height) + 20px);
   }
   @media (max-width: 700px) {
     .design.orbit.orbit-company {
-      --company-nav-height: 72px;
+      --company-nav-height: 82px;
     }
   }
   .design.orbit-catalog header,
@@ -1814,8 +1950,8 @@
     gap: 30px;
     align-items: center;
     font-size: 10px;
-    padding: 0 0 10px;
-    border-bottom: 1px solid var(--line);
+    padding: 0;
+    border: 0;
     margin-top: 30px;
   }
 
@@ -3814,5 +3950,21 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .card-cta-label::after { transition: transform 300ms ease, opacity 300ms ease; }
+  }
+  .services button > .service-cta-label { position: relative; }
+  .services button > .service-cta-label::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -3px;
+    height: 1px; background: var(--red); transform: scaleX(0); transform-origin: left;
+  }
+  .services button:focus-visible > .service-cta-label::after { transform: scaleX(1); }
+  .services button :global(svg) { color: var(--text); }
+  .services button:focus-visible :global(svg) { rotate: 45deg; }
+  @media (hover: hover) {
+    .services button:hover > .service-cta-label::after { transform: scaleX(1); }
+    .services button:hover :global(svg) { rotate: 45deg; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .services button > .service-cta-label::after { transition: transform 220ms ease; }
+    .services button :global(svg) { transition: rotate 220ms ease; }
   }
 </style>

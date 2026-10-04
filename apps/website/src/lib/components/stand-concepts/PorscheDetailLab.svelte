@@ -67,7 +67,6 @@
     relatedVehicles?: PublicVehicle[];
     errorStatus?: number;
   } = $props();
-  const base = '/stand-orbit';
   const car = $derived(
     publicVehicle
       ? {
@@ -323,7 +322,7 @@
       close: () => (navOpen = false),
     }}
   >
-    <a class="logo" href={base}
+    <a class="logo" href="/"
       ><img
         src={isDark ? '/logo-transparent-white-v3.png' : '/logo-transparent.png'}
         alt="Auto Nunes Martins — início"
@@ -338,19 +337,19 @@
       use:mobileNavigation={{ open: navOpen, close: () => (navOpen = false) }}
     >
       <a
-        href={base}
+        href="/"
         aria-current={!id && !catalog && !privacy && !about && !publicVehicle && !errorStatus
           ? 'page'
           : undefined}
         onclick={() => (navOpen = false)}>Início</a
       >
       <a
-        href={`${base}/viaturas`}
+        href="/viaturas"
         aria-current={catalog ? 'page' : undefined}
         onclick={() => (navOpen = false)}
         >Viaturas
       </a><a
-        href={`${base}/quem-somos`}
+        href="/quem-somos"
         aria-current={about ? 'page' : undefined}
         onclick={() => (navOpen = false)}>{'Quem somos'}</a
       >
@@ -386,7 +385,7 @@
           ? 'Consulte a seleção atual de viaturas aprovadas para o website.'
           : 'Tente novamente mais tarde.'}
       </p>
-      <a class="pill" href="/stand-orbit/viaturas">Voltar às viaturas <ArrowUpRight size={18} /></a>
+      <a class="pill" href="/viaturas">Voltar às viaturas <ArrowUpRight size={18} /></a>
     </main>
   {:else if catalog}
     <OrbitCatalog card={vehicleCard} {stock} />
@@ -398,12 +397,12 @@
     <main class="not-found">
       <p class="kicker">DESVIO DE PERCURSO</p>
       <h1>Esta viatura<br />não está por aqui.</h1>
-      <a class="pill" href={base}>Voltar à seleção <ArrowUpRight size={18} /></a>
+      <a class="pill" href="/">Voltar à seleção <ArrowUpRight size={18} /></a>
     </main>
   {:else if car}
     <main class="vehicle-page">
       <div class="breadcrumbs">
-        <a href={`${base}/viaturas`}><ArrowLeft size={14} /> Voltar às viaturas</a><span
+        <a href="/viaturas"><ArrowLeft size={14} /> Voltar às viaturas</a><span
           >{car.brand} / {car.model}</span
         ><button
           onclick={() => toggleSave(car.id)}
@@ -585,7 +584,7 @@
           <h2>Continue a explorar.</h2>
           <div class="related-grid">
             {#each suggestions as item}<a
-                href={publicVehicle ? publicHref(item.id) : `${base}/${item.id}`}
+                href={publicVehicle ? publicHref(item.id) : `/demo/${item.id}`}
                 ><div>
                   <img
                     src={photo(item.image, 900)}
@@ -638,7 +637,7 @@
             <a
               class="orbit-main-photo"
               id="orbit-featured"
-              href={`${base}/${heroCar.id}`}
+              href={`/demo/${heroCar.id}`}
               aria-label={`Ver ${heroCar.brand} ${heroCar.model} — destaque ${heroIndex + 1} de ${cars.length}`}
             >
               {#each cars as featured, index (featured.id)}
@@ -809,7 +808,7 @@
             <span>{service[0]}<ArrowUpRight size={22} /></span>
             <h3>{service[1]}</h3>
             <p>{service[2]}</p>
-            <button onclick={() => contact(service[3])}>Vamos conversar <Plus size={15} /></button>
+            <button onclick={() => contact(service[3])}><span class="service-cta-label">Vamos conversar</span><ArrowUpRight size={15} aria-hidden="true" /></button>
           </article>{/each}
       </div>
     </section>{/if}
@@ -850,7 +849,7 @@
     bind:this={contactDialog}
     class="contact-dialog"
     aria-labelledby="contact-heading"
-    aria-describedby="contact-description"
+    aria-describedby={sent ? 'contact-description' : undefined}
     onkeydown={contactKeydown}
     onpointerdown={(event) => {
       contactPointerStartedOutside = outsideContact(event);
@@ -875,7 +874,6 @@
       <button class="pill primary" onclick={() => contactDialog.close()}
         >Continuar a descobrir <ArrowUpRight size={18} /></button
       >{:else}<h2 id="contact-heading">O que tem<br />em mente?</h2>
-      <p id="contact-description">Formulário de demonstração. Não envia mensagens.</p>
       <form
         onsubmit={async (event) => {
           event.preventDefault();
@@ -932,7 +930,7 @@
 
 {#snippet vehicleCard(vehicle: CatalogCar | PublicCard, index: number)}
   <article class="vehicle-card" use:entrance={(index % 2) * 110}>
-    <a class="card-image" href={'href' in vehicle ? vehicle.href : `${base}/${vehicle.id}`}
+    <a class="card-image" href={'href' in vehicle ? vehicle.href : `/demo/${vehicle.id}`}
       ><img
         src={photo(vehicle.image, 1100)}
         srcset={responsivePhoto(vehicle.image, 1600)}
@@ -944,7 +942,7 @@
       ></a
     >
     <div class="card-info">
-      <a href={'href' in vehicle ? vehicle.href : `${base}/${vehicle.id}`}
+      <a href={'href' in vehicle ? vehicle.href : `/demo/${vehicle.id}`}
         ><span>{vehicle.brand}</span>
         <h3>{vehicle.model}</h3></a
       ><button
@@ -961,7 +959,7 @@
     </div>
     <div class="card-price">
       <strong>{'approved' in vehicle ? publicPrice(vehicle.price) : eur(vehicle.price)}</strong><a
-        href={'href' in vehicle ? vehicle.href : `${base}/${vehicle.id}`}
+        href={'href' in vehicle ? vehicle.href : `/demo/${vehicle.id}`}
         >Ver viatura <ArrowUpRight size={14} /></a
       >
     </div>
@@ -1756,8 +1754,8 @@
     gap: 30px;
     align-items: center;
     font-size: 10px;
-    padding: 0 0 10px;
-    border-bottom: 1px solid var(--line);
+    padding: 0;
+    border: 0;
     margin-top: 30px;
   }
 
@@ -3666,5 +3664,21 @@
     .orbit:global(.motion-on) .orbit-intro {
       --hero-nav-space: 82px;
     }
+  }
+  .services button > .service-cta-label { position: relative; }
+  .services button > .service-cta-label::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -3px;
+    height: 1px; background: var(--red); transform: scaleX(0); transform-origin: left;
+  }
+  .services button:focus-visible > .service-cta-label::after { transform: scaleX(1); }
+  .services button :global(svg) { color: var(--text); }
+  .services button:focus-visible :global(svg) { rotate: 45deg; }
+  @media (hover: hover) {
+    .services button:hover > .service-cta-label::after { transform: scaleX(1); }
+    .services button:hover :global(svg) { rotate: 45deg; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .services button > .service-cta-label::after { transition: transform 220ms ease; }
+    .services button :global(svg) { transition: rotate 220ms ease; }
   }
 </style>

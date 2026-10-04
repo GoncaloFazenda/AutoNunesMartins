@@ -1,14 +1,20 @@
 # Independent applications
 
+Before any public website launch/readiness review, consult [publication-readiness.md](publication-readiness.md). Legal fields and contact/service confirmations remain pending; the manual readiness check is separate from builds and does not certify compliance.
+
 ## Local commands
 
 | Application | Workspace | Development URL |
 | --- | --- | --- |
-| Public website | `@anm/website` | http://localhost:5173/stand-orbit |
+| Public website | `@anm/website` | http://localhost:5173/ |
 | CRM | `@anm/crm` | http://localhost:5174/ |
 | Backend | `@anm/backend` | http://localhost:4000 |
 
-Run `yarn dev` for all three, or `yarn dev:website` / `yarn dev:crm` individually. Orbit is the official website and the root redirects to `/stand-orbit`. Alternative designs, card comparisons and `/stand-orbit/referencias` were extracted to the independent sibling project `AutoNunesMartins-DesignArchive` (local port 5180). Porsche demo/reference routes remain in Orbit, with `noindex`; they are not real offers. See `design-archive-audit.md` for scope and validation.
+Run `yarn dev` for all three, or `yarn dev:website` / `yarn dev:crm` individually. The official website serves `/`, `/viaturas`, `/viaturas/[slug]`, `/quem-somos` and `/politica-de-privacidade`. The former `/stand-orbit` routes were removed without aliases or redirects because the site is not public yet. Existing catalog query normalization remains unchanged. Canonical, Open Graph, JSON-LD and photo URLs use the new paths and the existing request origin; no production domain or DNS was changed.
+
+Alternative designs, card comparisons and `/stand-orbit/referencias` remain in the independent sibling project `AutoNunesMartins-DesignArchive` (local port 5180). Retained fictional cars use `/demo/[id]`, and the Porsche reference uses `/demo/porsche-lab`; both retain `noindex` and emit no commercial JSON-LD. Existing prepublication indexing settings remain unchanged. There is no sitemap in the website. See `design-archive-audit.md` for the archive scope and earlier validation.
+
+Route migration validation (2026-10-04): website suite 226 tests passed; Svelte check 0 errors, 1 existing warning. HTTP checks confirmed the new pages, published detail and photo proxy return 200; removed prefixed paths return 404 without a Location header. Catalog pagination and brand/model queries retain their canonical parameters. Published detail canonical, Open Graph, JSON-LD offer and image URLs use `/viaturas/...`. Browser checks covered homepage navigation, page 2 and brand filtering. CRM, backend, archive and production domain settings were not changed.
 
 ## Configuration and security boundaries
 
