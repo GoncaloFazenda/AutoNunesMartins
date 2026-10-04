@@ -4,7 +4,7 @@ type Options = { open: boolean; close: () => void };
 export function mobileNavigation(nav: HTMLElement, initial: Options) {
   let options = initial;
   let frame = 0;
-  const mobile = window.matchMedia('(max-width: 700px)');
+  const mobile = window.matchMedia('(max-width: 1000px)');
   const header = nav.closest('header')!;
   const sync = () => {
     nav.inert = mobile.matches && !options.open;

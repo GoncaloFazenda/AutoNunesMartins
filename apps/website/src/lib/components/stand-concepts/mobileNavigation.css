@@ -1,5 +1,8 @@
-@media (max-width: 700px) {
+@media (max-width: 1000px) {
   .design .stand-header #stand-navigation {
+    position: absolute;
+    left: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -86,6 +89,7 @@
     border-radius: 2px;
   }
   .design .stand-header .mobile-menu {
+    display: grid;
     min-width: 44px;
     min-height: 44px;
   }
@@ -94,7 +98,7 @@
     border-color: var(--red);
   }
 }
-@media (max-width: 700px) and (prefers-reduced-motion: reduce) {
+@media (max-width: 1000px) and (prefers-reduced-motion: reduce) {
   .design .stand-header #stand-navigation,
   .design .stand-header #stand-navigation > :is(a, button) {
     transition: none;
@@ -102,6 +106,6 @@
   }
 }
 
-@media (max-width: 700px) and (prefers-reduced-motion: no-preference) {
+@media (max-width: 1000px) and (prefers-reduced-motion: no-preference) {
   .design .stand-header #stand-navigation .nav-label::after { transition: transform 180ms ease-out; }
 }

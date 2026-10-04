@@ -1,0 +1,40 @@
+.design.orbit.orbit-inner { position: relative; }
+/* A permanent slot makes height changes independent of page layout. */
+.design.orbit.orbit-inner > .nav-reserve {
+  display: block;
+  height: var(--nav-row-height, 94px);
+}
+.design.orbit.orbit-inner.orbit-inner > .stand-header {
+  position: absolute;
+  top: var(--nav-address-height, 0px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  transform: none;
+}
+.design.orbit.orbit-inner:not(.nav-compact) > .stand-header { background: var(--bg); }
+.design.orbit.orbit-inner.nav-compact { --nav-progress: 1; }
+.design.orbit.orbit-inner.nav-compact > .stand-header {
+  position: fixed;
+  top: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .design.orbit.orbit-inner > .stand-header.stand-header.stand-header {
+    transition: height 180ms ease-out, min-height 180ms ease-out, background-color 180ms ease-out, transform 180ms ease-out;
+  }
+}
+
+@media (max-width: 1000px) {
+  .design.orbit.orbit-catalog > .stand-header.catalog-nav-hidden:not(:has(:focus-visible, [aria-expanded='true'])) {
+    transform: translateY(-100%);
+  }
+  .design.orbit.orbit-inner.orbit-inner > .stand-header:has(:focus-visible) {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .design.orbit.orbit-inner.orbit-inner > .stand-header {
+    transition: none;
+  }
+}

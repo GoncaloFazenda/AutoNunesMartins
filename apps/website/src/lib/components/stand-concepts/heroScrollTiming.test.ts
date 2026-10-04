@@ -26,7 +26,7 @@ function startupProgress(viewport: number, stageHeight: number, documentTop: num
   };
   runInNewContext(`${startup}\nwindow.initializeOrbitDocument();`, {
     window: {},
-    location: { pathname: '/stand-orbit' },
+    location: { pathname: '/' },
     addEventListener: () => {},
     setTimeout: () => {},
     matchMedia: () => ({ matches: false }),

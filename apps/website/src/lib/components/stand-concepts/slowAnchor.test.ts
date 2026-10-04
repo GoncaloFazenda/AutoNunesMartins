@@ -7,6 +7,7 @@ function setup(reduced = false) {
   let sequence = 0;
   const attributes = new Set<string>();
   const target = Object.assign(new EventTarget(), {
+    isConnected: true,
     getBoundingClientRect: () => ({ top: 1200 }),
     hasAttribute: (name: string) => attributes.has(name),
     setAttribute: (name: string) => attributes.add(name),
@@ -23,7 +24,7 @@ function setup(reduced = false) {
   const url = new URL('https://example.test/viaturas');
   vi.stubGlobal('location', url);
   vi.stubGlobal('window', windowMock);
-  vi.stubGlobal('document', { getElementById: () => target, documentElement: { scrollHeight: 4000 } });
+  vi.stubGlobal('document', { getElementById: () => target, querySelector: () => null, documentElement: { scrollHeight: 4000 } });
   vi.stubGlobal('getComputedStyle', () => ({ scrollMarginTop: '0px' }));
   vi.stubGlobal('performance', { now: () => 0 });
   vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { frames.set(++sequence, callback); return sequence; });

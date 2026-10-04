@@ -2,7 +2,7 @@
 // Keep scene formulas aligned with scrollTiming.ts; no auth or private API access.
 
 // Restoring a document is not a user-requested smooth scroll.
-if (location.pathname === '/stand-orbit' || location.pathname.startsWith('/stand-orbit/')) {
+if (location.pathname === '/' || /^\/(viaturas|quem-somos|politica-de-privacidade|demo)(\/|$)/.test(location.pathname)) {
   document.documentElement.setAttribute('data-orbit-restoring', '');
   const cancelRestore = function () {
     document.documentElement.removeAttribute('data-orbit-restore-y');
@@ -61,6 +61,12 @@ window.initializeOrbitDocument = function () {
       }
     } catch (_) {
       /* Fall back to SvelteKit/browser scroll restoration. */
+    }
+    // Match the inner-page navigation before the first restored-scroll paint.
+    var innerNavRoot = document.querySelector('.orbit-inner');
+    if (innerNavRoot) {
+      var contactStrip = innerNavRoot.querySelector('.nav-contact-strip');
+      innerNavRoot.classList.toggle('nav-compact', scrollY > (contactStrip ? contactStrip.offsetHeight : 0) + 2);
     }
     var orbitRoot = document.querySelector('.orbit-home, .orbit-company');
     var orbitHero = orbitRoot && orbitRoot.querySelector('.orbit-intro');

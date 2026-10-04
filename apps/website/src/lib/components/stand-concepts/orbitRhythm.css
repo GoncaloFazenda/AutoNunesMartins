@@ -66,7 +66,8 @@
 .design.orbit .not-found h1 { font-size: clamp(36px, 4.5vw, 64px); max-width: 22ch; line-height: 1.06; letter-spacing: -.05em; }
 .design.orbit .not-found > p:not(.kicker) { color: var(--muted); line-height: 1.75; margin-block: 24px; }
 .design.orbit-home.nav-pinned .nav-reserve { display: block; height: 94px; }
-.design.orbit.orbit-home.nav-pinned > header {
+.design.orbit.orbit-home.nav-pinned > header,
+.design.orbit.orbit-inner.nav-compact > header.stand-header {
   position: fixed;
   inset: 0 0 auto;
   z-index: 50;
@@ -86,6 +87,7 @@
 }
 .design.orbit:not(.dark) > header.stand-header,
 .design.orbit.orbit-home:not(.dark) > header.stand-header,
+.design.orbit.orbit-inner.nav-compact:not(.dark) > header.stand-header,
 .design.orbit.orbit-company:not(.dark) > header.stand-header {
   background: color-mix(in srgb, var(--orbit-nav-surface) 94%, transparent);
   backdrop-filter: blur(8px);

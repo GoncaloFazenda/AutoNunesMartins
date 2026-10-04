@@ -1,0 +1,91 @@
+/* The contact strip stays in document flow; only the navigation can pin. */
+.design.orbit.has-address {
+  --nav-address-height: 30px;
+  --nav-row-height: 94px;
+  --nav-compact-row-height: 80px;
+  --nav-full-height: var(--nav-row-height);
+  --nav-visible-height: var(--nav-full-height);
+  --nav-inline-space: max(2.5%, calc((100vw - 1640px) / 2));
+}
+.design.orbit.has-address:is(.orbit-home, .orbit-catalog, .orbit-privacy, .orbit-detail) {
+  --nav-inline-space: max(24px, 2%, calc((100% - 1720px) / 2));
+}
+.design.orbit.has-address.orbit-company { --nav-row-height: var(--company-nav-height); }
+.design.orbit.has-address.orbit-home.nav-pinned,
+.design.orbit.has-address.orbit-inner.nav-compact {
+  --nav-visible-height: var(--nav-compact-row-height);
+}
+.design.orbit.has-address.has-address > header.stand-header {
+  box-sizing: border-box;
+  height: var(--nav-visible-height);
+  min-height: var(--nav-visible-height);
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-inline: var(--nav-inline-space);
+}
+.design.orbit.has-address.orbit-home.nav-pinned > .nav-reserve { height: var(--nav-full-height); }
+.design.orbit .nav-contact-strip {
+  position: relative;
+  width: 100%;
+  height: var(--nav-address-height);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  font: 400 11px/1.3 'Orbit Inter', Arial, sans-serif;
+  letter-spacing: 0;
+}
+.design.orbit .nav-contact-inner {
+  height: 100%;
+  margin-inline: var(--nav-inline-space);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+.design.orbit .nav-contact-inner > * { flex-shrink: 0; }
+.design.orbit .nav-contact-left { display: flex; align-items: center; gap: 20px; }
+.design.orbit .nav-contact-left > * + * { border-left: 1px solid var(--line); padding-left: 20px; }
+.design.orbit .nav-contact-inner:focus-visible { outline: 1px solid var(--muted); outline-offset: -2px; }
+.design.orbit .nav-address { display: flex; gap: 6px; align-items: center; margin: 0; font: inherit; }
+.design.orbit .nav-address > svg { flex-shrink: 0; }
+.design.orbit .nav-hours { display: flex; align-items: center; gap: 14px; }
+.design.orbit .nav-hours > svg { flex-shrink: 0; margin-right: -8px; }
+.design.orbit .nav-hours > span { display: flex; gap: 5px; }
+.design.orbit .nav-hours > span > span:last-child { color: var(--text); }
+.design.orbit .nav-email a { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
+.design.orbit .nav-email svg { flex-shrink: 0; }
+.design.orbit .nav-email a:is(:hover, :focus-visible) { color: var(--text); text-decoration: underline; }
+.design.orbit.has-address :is(section[id], [id='selecao'], a, button, input, select) {
+  scroll-margin-top: calc(var(--nav-visible-height) + 20px);
+}
+.design.orbit.has-address.orbit-company #contactos { scroll-margin-top: calc(var(--nav-visible-height) + 20px); }
+.design.orbit.has-address.orbit-home.nav-pinned .catalog-controls { top: calc(var(--nav-visible-height) + 24px); }
+.design.orbit.has-address.orbit-home .orbit-intro { --hero-nav-space: calc(var(--nav-full-height) + var(--nav-address-height)); }
+@media (min-width: 701px) and (prefers-reduced-motion: no-preference) {
+  .design.orbit.has-address.orbit-home .orbit-intro {
+    --p: clamp(0, tan(atan2(calc((100svh - var(--intro-height)) / 2 - var(--nav-full-height) - var(--nav-address-height)), 4svh)), 1);
+  }
+}
+@media (max-width: 1000px) {
+  .design.orbit.has-address > header.stand-header #stand-navigation {
+    top: 100%;
+    max-height: calc(100dvh - var(--nav-visible-height));
+  }
+}
+@media (max-width: 700px) {
+  .design.orbit.has-address {
+    --nav-row-height: 82px;
+    --nav-compact-row-height: 72px;
+  }
+  .design.orbit.has-address.has-address { --nav-inline-space: 16px; }
+  .design.orbit.has-address.orbit-company { --nav-row-height: var(--company-nav-height); }
+}
+@media (max-width: 380px) {
+  .design.orbit.has-address.has-address { --nav-inline-space: 8px; }
+}

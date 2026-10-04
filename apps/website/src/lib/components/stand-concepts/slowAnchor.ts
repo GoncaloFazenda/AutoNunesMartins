@@ -1,35 +1,25 @@
-/** Opt-in same-document anchor animation; router/global scrolling stays untouched. */
-export function slowAnchor(node: HTMLAnchorElement, recordHistory: (url: URL) => void) {
+/** Shared, interruptible 800 ms anchor movement; never changes global scroll behavior. */
+export function createAnchorScroller() {
   let frame = 0;
   let removeFocusTarget: (() => void) | undefined;
+  const events = ['wheel', 'touchstart', 'pointerdown', 'keydown', 'popstate'] as const;
   const stop = () => {
     cancelAnimationFrame(frame);
     frame = 0;
-    window.removeEventListener('wheel', stop);
-    window.removeEventListener('touchstart', stop);
-    window.removeEventListener('pointerdown', stop);
-    window.removeEventListener('keydown', stop);
-    window.removeEventListener('popstate', stop);
+    events.forEach(event => window.removeEventListener(event, stop));
   };
-  const click = (event: MouseEvent) => {
-    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
-        event.shiftKey || event.altKey || node.hasAttribute('download') ||
-        (node.target && node.target !== '_self')) return;
-    const url = new URL(node.href, location.href);
-    if (!url.hash || url.origin !== location.origin || url.pathname !== location.pathname ||
-        url.search !== location.search) return;
-    let id: string;
-    try { id = decodeURIComponent(url.hash.slice(1)); } catch { return; }
-    const target = document.getElementById(id);
-    if (!target) return;
-    event.preventDefault();
+  const scroll = (target: HTMLElement) => {
     stop();
     removeFocusTarget?.();
-    if (url.hash !== location.hash) recordHistory(url);
     const start = window.scrollY;
-    const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
-    const end = Math.max(0, Math.min(start + target.getBoundingClientRect().top - margin,
-      document.documentElement.scrollHeight - window.innerHeight));
+    const destination = () => {
+      const header = document.querySelector<HTMLElement>('.design header');
+      const rect = header?.getBoundingClientRect();
+      const visibleHeader = rect && rect.top <= 1 && rect.bottom > 0 ? rect.bottom + 20 : 0;
+      const margin = Math.max(parseFloat(getComputedStyle(target).scrollMarginTop) || 0, visibleHeader);
+      return Math.max(0, Math.min(window.scrollY + target.getBoundingClientRect().top - margin,
+        document.documentElement.scrollHeight - window.innerHeight));
+    };
     const finish = () => {
       stop();
       if (!target.hasAttribute('tabindex')) {
@@ -44,29 +34,53 @@ export function slowAnchor(node: HTMLAnchorElement, recordHistory: (url: URL) =>
       }
       target.focus({ preventScroll: true });
     };
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(end - start) < 1) {
-      window.scrollTo({ top: end, behavior: 'instant' });
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(destination() - start) < 1) {
+      window.scrollTo({ top: destination(), behavior: 'instant' });
       finish();
       return;
     }
-    window.addEventListener('wheel', stop, { passive: true });
-    window.addEventListener('touchstart', stop, { passive: true });
-    window.addEventListener('pointerdown', stop, { passive: true });
-    window.addEventListener('keydown', stop);
-    window.addEventListener('popstate', stop);
+    events.forEach(event => window.addEventListener(event, stop, { passive: true }));
     const began = performance.now();
     const step = (now: number) => {
+      if (!target.isConnected) { stop(); return; }
       const progress = Math.min(1, (now - began) / 800);
       const eased = progress < .5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
-      window.scrollTo({ top: start + (end - start) * eased, behavior: 'instant' });
+      window.scrollTo({ top: start + (destination() - start) * eased, behavior: 'instant' });
       if (progress < 1) frame = requestAnimationFrame(step);
       else finish();
     };
     frame = requestAnimationFrame(step);
   };
+  return { scroll, stop, destroy() { stop(); removeFocusTarget?.(); } };
+}
+
+export function anchorTarget(hash: string): HTMLElement | null {
+  try { return hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null; }
+  catch { return null; }
+}
+
+export function internalAnchor(event: MouseEvent, link: HTMLAnchorElement, current: URL): URL | null {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey ||
+    event.altKey || link.hasAttribute('download') || (link.target && link.target !== '_self')) return null;
+  const url = new URL(link.href, current);
+  return url.origin === current.origin && url.hash.length > 1 && /^https?:$/.test(url.protocol) ? url : null;
+}
+
+/** Small adapter for isolated consumers; the public site uses one delegated controller. */
+export function slowAnchor(node: HTMLAnchorElement, recordHistory: (url: URL) => void) {
+  const scroller = createAnchorScroller();
+  const click = (event: MouseEvent) => {
+    const url = internalAnchor(event, node, new URL(location.href));
+    if (!url || url.pathname !== location.pathname || url.search !== location.search) return;
+    const target = anchorTarget(url.hash);
+    if (!target) return;
+    event.preventDefault();
+    if (url.hash !== location.hash) recordHistory(url);
+    scroller.scroll(target);
+  };
   node.addEventListener('click', click);
   return {
     update(next: (url: URL) => void) { recordHistory = next; },
-    destroy() { stop(); removeFocusTarget?.(); node.removeEventListener('click', click); },
+    destroy() { scroller.destroy(); node.removeEventListener('click', click); },
   };
 }
