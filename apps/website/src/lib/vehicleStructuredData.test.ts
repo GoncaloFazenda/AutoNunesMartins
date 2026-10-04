@@ -16,7 +16,7 @@ describe('Public vehicle JSON-LD', () => {
       mileageFromOdometer: { value: 83491, unitCode: 'KMT' }, fuelType: 'Gasolina', vehicleTransmission: 'Manual',
       numberOfDoors: 5, seatingCapacity: 7, color: 'Branco', category: 'Monovolume',
       offers: { price: '17141.78', priceCurrency: 'EUR', availability: 'https://schema.org/InStock' },
-      image: [`${origin}/stand-orbit/viaturas/${minimal.slug}/photos/0`],
+      image: [`${origin}/viaturas/${minimal.slug}/photos/0`],
     });
     expect(result.additionalProperty).toEqual([
       { '@type': 'PropertyValue', name: 'Ano', value: 2023 },
