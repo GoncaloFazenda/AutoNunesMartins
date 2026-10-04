@@ -223,6 +223,36 @@ describe('public query validation and search boundary', () => {
 });
 
 describe('public HTTP responses never disclose private inventory', () => {
+  it('returns all available public brands without pagination or reserved/sold/private stock', async () => {
+    mocks.db.vehicle.groupBy.mockResolvedValue([
+      { brand: 'Audi', _count: { _all: 4 }, privateField: 'SECRET' },
+      { brand: 'Volkswagen', _count: { _all: 2 } },
+    ]);
+    const response = await fetch(`${base}/api/public/vehicles/brands`);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([{ value: 'Audi', count: 4 }, { value: 'Volkswagen', count: 2 }]);
+    expect(mocks.db.vehicle.groupBy).toHaveBeenCalledWith({
+      by: ['brand'],
+      where: { ...publicVehicleWhere(), status: 'AVAILABLE' },
+      _count: { _all: true }, orderBy: { brand: 'asc' },
+    });
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(mocks.db.vehicle.findMany).not.toHaveBeenCalled();
+    expect(mocks.auth).not.toHaveBeenCalled();
+  });
+  it('refreshes the directory when available stock disappears and keeps errors opaque', async () => {
+    expect(await (await fetch(`${base}/api/public/vehicles/brands`)).json()).toEqual([{ value: 'BMW', count: 1 }]);
+    mocks.db.vehicle.groupBy.mockResolvedValueOnce([]);
+    expect(await (await fetch(`${base}/api/public/vehicles/brands`)).json()).toEqual([]);
+    mocks.db.vehicle.groupBy.mockRejectedValueOnce(new Error('SECRET database URL'));
+    const response = await fetch(`${base}/api/public/vehicles/brands`);
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('SECRET');
+  });
+  it('does not allow filters to widen the available-brand directory', async () => {
+    expect((await fetch(`${base}/api/public/vehicles/brands?status=RESERVED`)).status).toBe(400);
+    expect(mocks.db.vehicle.groupBy).not.toHaveBeenCalled();
+  });
   it('projects unknown price and optional photos without losing reserved availability', () => {
     expect(
       publicVehicleDto({
@@ -537,8 +567,16 @@ describe('nearest-price recommendations', () => {
   mocks.db.vehicle.findMany.mockResolvedValueOnce([candidate('1','21800.25'),candidate('2','20000'),fixture()]).mockResolvedValueOnce([candidate('3','22000.25'),candidate('1','21800.25'),candidate('4','23000')]);
   const response=await fetch(base+'/api/public/vehicles/'+slug+'/related');
   expect(response.status).toBe(200);
-  expect((await response.json()).map((v: {price:string})=>v.price)).toEqual(['21800.25','22000.25','23000.00']);
+  expect((await response.json()).map((v: {price:string})=>v.price)).toEqual(['21800.25','22000.25','23000.00','20000.00']);
   for(const [query] of mocks.db.vehicle.findMany.mock.calls) expect(query.where).toMatchObject({webPublished:true,publicSlug:{not:null},status:{in:['AVAILABLE','RESERVED']},soldDate:null,sale:{is:null},id:{not:id}});
+ });
+ it('takes five from each price side before selecting the nearest five across the full eligible stock', async () => {
+  mocks.db.vehicle.findMany.mockResolvedValueOnce([candidate('1','21800'),candidate('2','21700'),candidate('3','21600'),candidate('4','21500'),candidate('5','21400')]).mockResolvedValueOnce([candidate('6','22000'),candidate('7','22100'),candidate('8','22200'),candidate('9','22300'),candidate('10','22400')]);
+  const response = await fetch(base+'/api/public/vehicles/'+slug+'/related');
+  const rows = await response.json();
+  expect(rows.map((v:{price:string})=>v.price)).toEqual(['22000.00','21800.00','22100.00','21700.00','22200.00']);
+  expect(rows).toHaveLength(5);
+  for (const [query] of mocks.db.vehicle.findMany.mock.calls) expect(query.take).toBe(5);
  });
  it.each([null,'0','-1','NaN'])('omits suggestions for invalid source price %s',async(price)=>{
   mocks.db.vehicle.findFirst.mockResolvedValue(candidate('1',price));

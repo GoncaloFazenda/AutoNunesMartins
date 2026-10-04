@@ -36,6 +36,7 @@ export const publicVehicleSchema = z
   });
 export type PublicVehicle = z.infer<typeof publicVehicleSchema>;
 const facet = z.object({ value: z.string(), count: z.number().int().nonnegative() });
+export const publicBrandFacetsSchema = z.array(facet);
 const range = z.object({ min: z.number().nullable(), max: z.number().nullable() });
 export const publicCatalogSchema = z.object({
   items: z.array(publicVehicleSchema).max(30),
@@ -44,7 +45,7 @@ export const publicCatalogSchema = z.object({
   pageSize: z.number().int().min(1).max(30),
   totalPages: z.number().int().nonnegative(),
   facets: z.object({
-    brands: z.array(facet).max(100),
+    brands: publicBrandFacetsSchema.max(100),
     models: z.array(facet.extend({ brand: z.string() })).max(100),
     fuels: z.array(facet),
     transmissions: z.array(facet),
@@ -85,7 +86,7 @@ export const publicPrice = (value: string | number | null) =>
         minimumFractionDigits: Number(value) % 1 ? 2 : 0,
         maximumFractionDigits: 2,
       }).format(Number(value));
-export const publicHref = (slug: string) => `/stand-orbit/viaturas/${slug}`;
+export const publicHref = (slug: string) => `/viaturas/${slug}`;
 export const publicPhoto = (slug: string, index: number) => `${publicHref(slug)}/photos/${index}`;
 export function publicCard(vehicle: PublicVehicle) {
   return {
@@ -117,7 +118,7 @@ export function publicCatalogSeo(params: URLSearchParams, origin: string, stock:
     )?.value ?? '';
   const label = [brand, model].filter(Boolean).join(' ');
   const heading = label ? `${label} usados` : 'Viaturas usadas';
-  const canonical = new URL('/stand-orbit/viaturas', origin);
+  const canonical = new URL('/viaturas', origin);
   for (const key of [
     'q',
     'marca',

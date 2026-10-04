@@ -6,6 +6,7 @@ import {
   getPublicPhotoPath,
   getPublicVehicle,
   listPublicVehicles,
+  listAvailablePublicBrands,
   relatedPublicVehicles,
 } from '../lib/data/publicVehicle.js';
 import { getBucketName, getSupabase } from '../lib/data/storage.js';
@@ -28,6 +29,16 @@ router.get('/', async (req, res) => {
   } catch {
     logger.error('Public vehicle listing unavailable');
     res.status(503).json({ error: 'Public catalogue temporarily unavailable' });
+  }
+});
+
+router.get('/brands', async (req, res) => {
+  if (Object.keys(req.query).length) { res.status(400).json({ error: 'Brand directory does not accept filters' }); return; }
+  try {
+    res.json(await listAvailablePublicBrands(prisma));
+  } catch {
+    logger.error('Public brand directory unavailable');
+    res.status(503).json({ error: 'Public brand directory temporarily unavailable' });
   }
 });
 

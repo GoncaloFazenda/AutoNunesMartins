@@ -68,7 +68,7 @@ describe('Public website projection', () => {
   );
   it('uses stable detail/photo URLs, preserves cents and never invents equipment', () => {
     const card = publicCard(publicVehicleSchema.parse(vehicle));
-    expect(card.href).toBe(`/stand-orbit/viaturas/${vehicle.slug}`);
+    expect(card.href).toBe(`/viaturas/${vehicle.slug}`);
     expect(card.image).toBe(`${card.href}/photos/0`);
     expect(card).not.toHaveProperty('power');
     expect(card).not.toHaveProperty('transmission');

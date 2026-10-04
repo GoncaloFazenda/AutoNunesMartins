@@ -105,6 +105,17 @@ export function publicVehicleDto(row: PublicRow) {
   };
 }
 
+/** Brand navigation counts only available, published vehicles, without pagination. */
+export async function listAvailablePublicBrands(db: PrismaClient) {
+  const brands = await db.vehicle.groupBy({
+    by: ['brand'],
+    where: { ...publicVehicleWhere(), status: 'AVAILABLE' },
+    _count: { _all: true },
+    orderBy: { brand: 'asc' },
+  });
+  return brands.map(brand => ({ value: brand.brand, count: brand._count._all }));
+}
+
 export async function listPublicVehicles(db: PrismaClient, query: PublicVehicleQuery) {
   const where = publicVehicleWhere(query);
   return db.$transaction(
@@ -184,7 +195,7 @@ export async function getPublicVehicle(db: PrismaClient, slug: string) {
   return row ? publicVehicleDto(row) : null;
 }
 
-/** The nearest three must be among the nearest three on either side of the price. */
+/** The nearest five must be among the nearest five on either side of the price. */
 export async function relatedPublicVehicles(db: PrismaClient, slug: string) {
   return db.$transaction(async (tx) => {
     const current = await tx.vehicle.findFirst({
@@ -199,12 +210,12 @@ export async function relatedPublicVehicles(db: PrismaClient, slug: string) {
       tx.vehicle.findMany({
         where: { ...where, publicPrice: { gt: 0, lte: price } },
         select: publicVehicleSelect,
-        orderBy: [{ publicPrice: 'desc' }, { publicSlug: 'asc' }], take: 3,
+        orderBy: [{ publicPrice: 'desc' }, { publicSlug: 'asc' }], take: 5,
       }),
       tx.vehicle.findMany({
         where: { ...where, publicPrice: { gt: price } },
         select: publicVehicleSelect,
-        orderBy: [{ publicPrice: 'asc' }, { publicSlug: 'asc' }], take: 3,
+        orderBy: [{ publicPrice: 'asc' }, { publicSlug: 'asc' }], take: 5,
       }),
     ]);
     return [...new Map([...below, ...above]
@@ -212,7 +223,7 @@ export async function relatedPublicVehicles(db: PrismaClient, slug: string) {
       .map(row => [row.publicSlug, row])).values()]
       .sort((a, b) => a.publicPrice!.minus(price).abs().comparedTo(b.publicPrice!.minus(price).abs())
         || a.publicSlug!.localeCompare(b.publicSlug!))
-      .slice(0, 3).map(publicVehicleDto);
+      .slice(0, 5).map(publicVehicleDto);
   }, { isolationLevel: 'RepeatableRead' });
 }
 

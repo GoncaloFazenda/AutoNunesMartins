@@ -49,6 +49,6 @@ export async function loadRelatedVehicles(slug: string) {
   try {
     const response = await publicRequest(`/${slug}/related`);
     if (!response.ok) return [];
-    return publicVehicleSchema.array().max(3).parse(await response.json());
+    return publicVehicleSchema.array().max(5).parse(await response.json());
   } catch { return []; }
 }

@@ -1,10 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 vi.mock('$env/static/public', () => ({ PUBLIC_BACKEND_URL: 'http://public-backend.test:3001' }));
-import { loadPublicStock, loadPublicVehicle, publicRequest } from './publicVehicles';
+import { loadPublicStock, loadPublicVehicle, loadRelatedVehicles, publicRequest } from './publicVehicles';
 import { emptyStock } from '../publicVehicles';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('Public BFF without CRM authentication', () => {
+  it.each([0, 1, 3, 5])('accepts %i real related vehicles without filling empty slots', async count => {
+    const rows = Array.from({ length: count }, (_, i) => ({ slug: `car-${String(i).padStart(12, 'a')}`, brand: 'Marca', model: 'Modelo', year: 2023, fuel: 'GASOLINE', mileage: 20000, price: '20000.00', currency: 'EUR', description: null, transmission: null, availability: 'AVAILABLE', photos: [] }));
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(rows)));
+    expect(await loadRelatedVehicles('source-012345abcdef')).toEqual(rows);
+  });
   it('rejects a model without a brand before fetching', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
